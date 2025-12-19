@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { REGION_DATA } from "~/config/RegionConfig";
+import { APP_CONSTANTS } from "~/config/constants";
 
 interface MapState {
   center: LngLatLike;
@@ -36,8 +36,8 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
         // We might want to ensure we have a fallback if the region changed while the app was closed?
         // But for now, let's stick to the existing logic.
         return {
-          center: parsed.center || REGION_DATA.defaultCenter,
-          zoom: parsed.zoom || REGION_DATA.defaultZoom,
+          center: parsed.center || APP_CONSTANTS.defaultCenter,
+          zoom: parsed.zoom || APP_CONSTANTS.defaultZoom,
           userLocation: parsed.userLocation || null,
           hasLocationPermission: parsed.hasLocationPermission || false,
         };
@@ -46,8 +46,8 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     return {
-      center: REGION_DATA.defaultCenter,
-      zoom: REGION_DATA.defaultZoom,
+      center: APP_CONSTANTS.defaultCenter,
+      zoom: APP_CONSTANTS.defaultZoom,
       userLocation: null,
       hasLocationPermission: false,
     };

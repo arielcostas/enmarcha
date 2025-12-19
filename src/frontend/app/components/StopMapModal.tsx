@@ -9,7 +9,7 @@ import React, {
 import Map, { Layer, Marker, Source, type MapRef } from "react-map-gl/maplibre";
 import { Sheet } from "react-modal-sheet";
 import { useApp } from "~/AppContext";
-import { REGION_DATA } from "~/config/RegionConfig";
+import { APP_CONSTANTS } from "~/config/constants";
 import { getLineColour } from "~/data/LineColors";
 import type { Stop } from "~/data/StopDataProvider";
 import { loadStyle } from "~/maps/styleloader";
@@ -243,7 +243,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
       !selectedBus ||
       !selectedBus.schedule?.shapeId ||
       selectedBus.currentPosition?.shapeIndex === undefined ||
-      !REGION_DATA.shapeEndpoint
+      !APP_CONSTANTS.shapeEndpoint
     ) {
       setShapeData(null);
       setPreviousShapeData(null);
@@ -263,7 +263,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
       sLat?: number,
       sLon?: number
     ) => {
-      let url = `${REGION_DATA.shapeEndpoint}?shapeId=${sId}`;
+      let url = `${APP_CONSTANTS.shapeEndpoint}?shapeId=${sId}`;
       if (bIndex !== undefined) url += `&busShapeIndex=${bIndex}`;
       if (sIndex !== undefined) url += `&stopShapeIndex=${sIndex}`;
       else if (sLat && sLon) url += `&stopLat=${sLat}&stopLon=${sLon}`;

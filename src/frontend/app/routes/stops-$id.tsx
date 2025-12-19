@@ -10,7 +10,7 @@ import { StopHelpModal } from "~/components/StopHelpModal";
 import { StopMapModal } from "~/components/StopMapModal";
 import { ConsolidatedCirculationList } from "~/components/Stops/ConsolidatedCirculationList";
 import { ConsolidatedCirculationListSkeleton } from "~/components/Stops/ConsolidatedCirculationListSkeleton";
-import { REGION_DATA } from "~/config/RegionConfig";
+import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { useAutoRefresh } from "~/hooks/useAutoRefresh";
 import StopDataProvider, { type Stop } from "../data/StopDataProvider";
@@ -58,7 +58,7 @@ const loadConsolidatedData = async (
   stopId: string
 ): Promise<ConsolidatedCirculation[]> => {
   const resp = await fetch(
-    `${REGION_DATA.consolidatedCirculationsEndpoint}?stopId=${stopId}`,
+    `${APP_CONSTANTS.consolidatedCirculationsEndpoint}?stopId=${stopId}`,
     {
       headers: {
         Accept: "application/json",
@@ -123,8 +123,7 @@ export default function Estimates() {
   // Helper function to get the display name for the stop
   const getStopDisplayName = useCallback(() => {
     if (customName) return customName;
-    if (stopData?.name.intersect) return stopData.name.intersect;
-    if (stopData?.name.original) return stopData.name.original;
+    if (stopData?.name) return stopData.name;
     return `Parada ${stopId}`;
   }, [customName, stopData, stopId]);
 

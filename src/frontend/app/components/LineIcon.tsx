@@ -4,9 +4,16 @@ import "./LineIcon.css";
 interface LineIconProps {
   line: string;
   mode?: "rounded" | "pill" | "default";
+  colour?: string;
+  textColour?: string;
 }
 
-const LineIcon: React.FC<LineIconProps> = ({ line, mode = "default" }) => {
+const LineIcon: React.FC<LineIconProps> = ({
+  line,
+  mode = "default",
+  colour,
+  textColour,
+}) => {
   const actualLine = useMemo(() => {
     return line.trim().replace("510", "NAD");
   }, [line]);
@@ -15,16 +22,26 @@ const LineIcon: React.FC<LineIconProps> = ({ line, mode = "default" }) => {
     return /^[a-zA-Z]/.test(actualLine) ? actualLine : `L${actualLine}`;
   }, [actualLine]);
 
-  const cssVarName = `--line-${formattedLine.toLowerCase()}`;
-  const cssTextVarName = `--line-${formattedLine.toLowerCase()}-text`;
+  const actualLineColour = useMemo(() => {
+    const actualColour = colour?.startsWith("#") ? colour : `#${colour}`;
+    return colour ? actualColour : `var(--line-${formattedLine.toLowerCase()})`;
+  }, [formattedLine]);
+  const actualTextColour = useMemo(() => {
+    const actualTextColour = textColour?.startsWith("#")
+      ? textColour
+      : `#${textColour}`;
+    return textColour
+      ? actualTextColour
+      : `var(--line-${formattedLine.toLowerCase()}-text, #000000)`;
+  }, [formattedLine]);
 
   return (
     <span
       className={`line-icon-${mode}`}
       style={
         {
-          "--line-colour": `var(${cssVarName})`,
-          "--line-text-colour": `var(${cssTextVarName}, #000000)`,
+          "--line-colour": actualLineColour,
+          "--line-text-colour": actualTextColour,
         } as React.CSSProperties
       }
     >

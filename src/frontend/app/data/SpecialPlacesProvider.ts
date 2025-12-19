@@ -1,5 +1,3 @@
-import { REGION_DATA } from "~/config/RegionConfig";
-
 export interface SpecialPlace {
   name: string;
   type: "stop" | "address";
@@ -9,8 +7,8 @@ export interface SpecialPlace {
   longitude?: number;
 }
 
-const STORAGE_KEY_HOME = `specialPlace_home_${REGION_DATA.id}`;
-const STORAGE_KEY_WORK = `specialPlace_work_${REGION_DATA.id}`;
+const STORAGE_KEY_HOME = `specialPlace_home`;
+const STORAGE_KEY_WORK = `specialPlace_work`;
 
 function getHome(): SpecialPlace | null {
   try {

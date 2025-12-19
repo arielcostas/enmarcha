@@ -1,19 +1,13 @@
-import { REGION_DATA } from "~/config/RegionConfig";
+import { APP_CONSTANTS } from "~/config/constants";
 
 export interface CachedStopList {
   timestamp: number;
   data: Stop[];
 }
 
-export type StopName = {
-  original: string;
-  intersect?: string;
-};
-
 export interface Stop {
   stopId: string;
-  type?: "bus" | "train";
-  name: StopName;
+  name: string;
   latitude?: number;
   longitude?: number;
   lines: string[];
@@ -41,13 +35,13 @@ function normalizeId(id: number | string): string {
 
 // Initialize cachedStops and customNames once per region
 async function initStops() {
-  if (!cachedStopsByRegion[REGION_DATA.id]) {
-    const response = await fetch(REGION_DATA.stopsEndpoint);
+  if (!cachedStopsByRegion[APP_CONSTANTS.id]) {
+    const response = await fetch(APP_CONSTANTS.stopsEndpoint);
     const rawStops = (await response.json()) as any[];
 
     // build array and map
-    stopsMapByRegion[REGION_DATA.id] = {};
-    cachedStopsByRegion[REGION_DATA.id] = rawStops.map((raw) => {
+    stopsMapByRegion[APP_CONSTANTS.id] = {};
+    cachedStopsByRegion[APP_CONSTANTS.id] = rawStops.map((raw) => {
       const id = normalizeId(raw.stopId);
       const entry = {
         ...raw,
@@ -55,21 +49,23 @@ async function initStops() {
         type: raw.type || (id.startsWith("renfe:") ? "train" : "bus"),
         favourite: false,
       } as Stop;
-      stopsMapByRegion[REGION_DATA.id][id] = entry;
+      stopsMapByRegion[APP_CONSTANTS.id][id] = entry;
       return entry;
     });
 
     // load custom names
-    const rawCustom = localStorage.getItem(`customStopNames_${REGION_DATA.id}`);
+    const rawCustom = localStorage.getItem(
+      `customStopNames_${APP_CONSTANTS.id}`
+    );
     if (rawCustom) {
       const parsed = JSON.parse(rawCustom);
       const normalized: Record<string, string> = {};
       for (const [key, value] of Object.entries(parsed)) {
         normalized[normalizeId(key)] = value as string;
       }
-      customNamesByRegion[REGION_DATA.id] = normalized;
+      customNamesByRegion[APP_CONSTANTS.id] = normalized;
     } else {
-      customNamesByRegion[REGION_DATA.id] = {};
+      customNamesByRegion[APP_CONSTANTS.id] = {};
     }
   }
 }
@@ -92,9 +88,9 @@ async function getStops(): Promise<Stop[]> {
 async function getStopById(stopId: string | number): Promise<Stop | undefined> {
   await initStops();
   const id = normalizeId(stopId);
-  const stop = stopsMapByRegion[REGION_DATA.id]?.[id];
+  const stop = stopsMapByRegion[APP_CONSTANTS.id]?.[id];
   if (stop) {
-    const rawFav = localStorage.getItem(`favouriteStops_${REGION_DATA.id}`);
+    const rawFav = localStorage.getItem(`favouriteStops_${APP_CONSTANTS.id}`);
     const favouriteStops = rawFav
       ? (JSON.parse(rawFav) as (number | string)[]).map(normalizeId)
       : [];
@@ -105,32 +101,29 @@ async function getStopById(stopId: string | number): Promise<Stop | undefined> {
 
 // Updated display name to include custom names
 function getDisplayName(stop: Stop): string {
-  const customNames = customNamesByRegion[REGION_DATA.id] || {};
-  if (customNames[stop.stopId]) return customNames[stop.stopId];
-  const nameObj = stop.name;
-  return nameObj.intersect || nameObj.original;
+  return stop.name;
 }
 
 // New: set or remove custom names
 function setCustomName(stopId: string | number, label: string) {
   const id = normalizeId(stopId);
-  if (!customNamesByRegion[REGION_DATA.id]) {
-    customNamesByRegion[REGION_DATA.id] = {};
+  if (!customNamesByRegion[APP_CONSTANTS.id]) {
+    customNamesByRegion[APP_CONSTANTS.id] = {};
   }
-  customNamesByRegion[REGION_DATA.id][id] = label;
+  customNamesByRegion[APP_CONSTANTS.id][id] = label;
   localStorage.setItem(
-    `customStopNames_${REGION_DATA.id}`,
-    JSON.stringify(customNamesByRegion[REGION_DATA.id])
+    `customStopNames_${APP_CONSTANTS.id}`,
+    JSON.stringify(customNamesByRegion[APP_CONSTANTS.id])
   );
 }
 
 function removeCustomName(stopId: string | number) {
   const id = normalizeId(stopId);
-  if (customNamesByRegion[REGION_DATA.id]?.[id]) {
-    delete customNamesByRegion[REGION_DATA.id][id];
+  if (customNamesByRegion[APP_CONSTANTS.id]?.[id]) {
+    delete customNamesByRegion[APP_CONSTANTS.id][id];
     localStorage.setItem(
-      `customStopNames_${REGION_DATA.id}`,
-      JSON.stringify(customNamesByRegion[REGION_DATA.id])
+      `customStopNames_${APP_CONSTANTS.id}`,
+      JSON.stringify(customNamesByRegion[APP_CONSTANTS.id])
     );
   }
 }
@@ -138,7 +131,7 @@ function removeCustomName(stopId: string | number) {
 // New: get custom label for a stop
 function getCustomName(stopId: string | number): string | undefined {
   const id = normalizeId(stopId);
-  return customNamesByRegion[REGION_DATA.id]?.[id];
+  return customNamesByRegion[APP_CONSTANTS.id]?.[id];
 }
 
 function addFavourite(stopId: string | number) {
@@ -231,7 +224,7 @@ function getFavouriteIds(): string[] {
 
 // New function to load stops from network
 async function loadStopsFromNetwork(): Promise<Stop[]> {
-  const response = await fetch(REGION_DATA.stopsEndpoint);
+  const response = await fetch(APP_CONSTANTS.stopsEndpoint);
   const rawStops = (await response.json()) as any[];
   return rawStops.map((raw) => {
     const id = normalizeId(raw.stopId);
@@ -242,6 +235,10 @@ async function loadStopsFromNetwork(): Promise<Stop[]> {
       favourite: false,
     } as Stop;
   });
+}
+
+function getTileUrlTemplate(): string {
+  return window.location.origin + "/api/tiles/stops/{z}/{x}/{y}";
 }
 
 export default {
@@ -258,4 +255,5 @@ export default {
   getRecent,
   getFavouriteIds,
   loadStopsFromNetwork,
+  getTileUrlTemplate,
 };

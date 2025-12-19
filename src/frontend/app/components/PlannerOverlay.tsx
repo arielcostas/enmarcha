@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import PlaceListItem from "~/components/PlaceListItem";
-import { REGION_DATA } from "~/config/RegionConfig";
 import {
   reverseGeocode,
   searchPlaces,
@@ -59,7 +58,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
     []
   );
   const [recentPlaces, setRecentPlaces] = useState<PlannerSearchResult[]>([]);
-  const RECENT_KEY = `recentPlaces_${REGION_DATA.id}`;
+  const RECENT_KEY = `recentPlaces`;
   const clearRecentPlaces = useCallback(() => {
     setRecentPlaces([]);
     try {

@@ -7,9 +7,25 @@
     "height": 64,
     "pixelRatio": 2
   },
-  "stop-vitrasa-cancelled": {
-    "id": "stop-vitrasa-cancelled",
+  "stop-santiago": {
+    "id": "stop-santiago",
     "x": 64,
+    "y": 0,
+    "width": 64,
+    "height": 64,
+    "pixelRatio": 2
+  },
+  "stop-coruna": {
+    "id": "stop-coruna",
+    "x": 128,
+    "y": 0,
+    "width": 64,
+    "height": 64,
+    "pixelRatio": 2
+  },
+  "stop-xunta": {
+    "id": "stop-xunta",
+    "x": 192,
     "y": 0,
     "width": 64,
     "height": 64,
@@ -17,7 +33,15 @@
   },
   "stop-renfe": {
     "id": "stop-renfe",
-    "x": 128,
+    "x": 256,
+    "y": 0,
+    "width": 64,
+    "height": 64,
+    "pixelRatio": 2
+  },
+  "stop-feve": {
+    "id": "stop-feve",
+    "x": 320,
     "y": 0,
     "width": 64,
     "height": 64,

@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { type ReactNode } from "react";
-import { type RegionId } from "./config/RegionConfig";
+import { type RegionId } from "./config/constants";
 import { MapProvider, useMap } from "./contexts/MapContext";
 import {
   SettingsProvider,

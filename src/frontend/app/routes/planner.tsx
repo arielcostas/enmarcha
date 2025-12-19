@@ -9,7 +9,7 @@ import { useLocation } from "react-router";
 import { useApp } from "~/AppContext";
 import LineIcon from "~/components/LineIcon";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
-import { REGION_DATA } from "~/config/RegionConfig";
+import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { type Itinerary } from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
@@ -392,7 +392,7 @@ const ItineraryDetail = ({
           if (!arrivalsByStop[stopKey]) {
             try {
               const resp = await fetch(
-                `${REGION_DATA.consolidatedCirculationsEndpoint}?stopId=${encodeURIComponent(leg.from.stopCode || leg.from.stopId)}`,
+                `${APP_CONSTANTS.consolidatedCirculationsEndpoint}?stopId=${encodeURIComponent(leg.from.stopCode || leg.from.stopId)}`,
                 { headers: { Accept: "application/json" } }
               );
 
@@ -424,9 +424,11 @@ const ItineraryDetail = ({
           ref={mapRef}
           initialViewState={{
             longitude:
-              origin?.lon || (REGION_DATA.defaultCenter as [number, number])[0],
+              origin?.lon ||
+              (APP_CONSTANTS.defaultCenter as [number, number])[0],
             latitude:
-              origin?.lat || (REGION_DATA.defaultCenter as [number, number])[1],
+              origin?.lat ||
+              (APP_CONSTANTS.defaultCenter as [number, number])[1],
             zoom: 13,
           }}
           mapStyle={mapStyle}

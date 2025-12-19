@@ -4,19 +4,27 @@ import { useTranslation } from "react-i18next";
 import { Sheet } from "react-modal-sheet";
 import { Link } from "react-router";
 import { ConsolidatedCirculationList } from "~/components/Stops/ConsolidatedCirculationList";
-import { REGION_DATA } from "~/config/RegionConfig";
-import type { Stop } from "~/data/StopDataProvider";
-import { type ConsolidatedCirculation } from "../routes/stops-$id";
-import { ErrorDisplay } from "./ErrorDisplay";
-import LineIcon from "./LineIcon";
-import { StopAlert } from "./StopAlert";
+import { APP_CONSTANTS } from "~/config/constants";
+import { type ConsolidatedCirculation } from "../../routes/stops-$id";
+import { ErrorDisplay } from "../ErrorDisplay";
+import LineIcon from "../LineIcon";
 import "./StopSummarySheet.css";
 import { StopSummarySheetSkeleton } from "./StopSummarySheetSkeleton";
 
-interface StopSheetProps {
+export interface StopSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  stop: Stop;
+  stop: {
+    stopId: string;
+    stopCode?: string;
+    stopFeed?: string;
+    name: string;
+    lines: {
+      line: string;
+      colour?: string;
+      textColour?: string;
+    }[];
+  };
 }
 
 interface ErrorInfo {
@@ -29,7 +37,7 @@ const loadConsolidatedData = async (
   stopId: string
 ): Promise<ConsolidatedCirculation[]> => {
   const resp = await fetch(
-    `${REGION_DATA.consolidatedCirculationsEndpoint}?stopId=${stopId}`,
+    `${APP_CONSTANTS.consolidatedCirculationsEndpoint}?stopId=${stopId}`,
     {
       headers: {
         Accept: "application/json",
@@ -116,21 +124,24 @@ export const StopSheet: React.FC<StopSheetProps> = ({
         <Sheet.Content drag="y">
           <div className="stop-sheet-content">
             <div className="stop-sheet-header">
-              <h2 className="stop-sheet-title">{stop.name.original}</h2>
-              <span className="stop-sheet-id">({stop.stopId})</span>
+              <h2 className="stop-sheet-title">{stop.name}</h2>
+              <span className="stop-sheet-id">({stop.stopCode})</span>
             </div>
 
-            <div
-              className={`stop-sheet-lines-container ${stop.lines.length >= 10 ? "scrollable" : ""}`}
-            >
-              {stop.lines.map((line) => (
-                <div key={line} className="stop-sheet-line-icon">
-                  <LineIcon line={line} mode="rounded" />
-                </div>
+            <div className={`d-flex flex-wrap flex-row gap-2`}>
+              {stop.lines.map((lineObj) => (
+                <LineIcon
+                  key={lineObj.line}
+                  line={lineObj.line}
+                  mode="pill"
+                  colour={lineObj.colour}
+                  textColour={lineObj.textColour}
+                />
               ))}
             </div>
 
-            <StopAlert stop={stop} compact />
+            {/* TODO: Enable stop alerts when available */}
+            {/*<StopAlert stop={stop} compact />*/}
 
             {loading ? (
               <StopSummarySheetSkeleton />
@@ -158,7 +169,7 @@ export const StopSheet: React.FC<StopSheetProps> = ({
                   ) : (
                     <ConsolidatedCirculationList
                       data={data.slice(0, 4)}
-                      driver={stop.stopId.split(":")[0]}
+                      driver={stop.stopFeed}
                       reduced
                     />
                   )}

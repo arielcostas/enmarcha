@@ -31,7 +31,7 @@ export default function StopList() {
     () =>
       new Fuse(data || [], {
         threshold: 0.3,
-        keys: ["name.original", "name.intersect", "stopId"],
+        keys: ["name", "stopId"],
       }),
     [data]
   );

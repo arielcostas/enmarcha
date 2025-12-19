@@ -1,8 +1,7 @@
-import StopDataProvider, { type Stop } from "../data/StopDataProvider";
+import StopDataProvider from "../data/StopDataProvider";
 import "./map.css";
 
 import { DEFAULT_STYLE, loadStyle } from "app/maps/styleloader";
-import type { Feature as GeoJsonFeature, Point } from "geojson";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Map, {
@@ -16,8 +15,11 @@ import Map, {
 } from "react-map-gl/maplibre";
 import { useNavigate } from "react-router";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
-import { StopSheet } from "~/components/StopSummarySheet";
-import { REGION_DATA } from "~/config/RegionConfig";
+import {
+  StopSheet,
+  type StopSheetProps,
+} from "~/components/map/StopSummarySheet";
+import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { usePlanner } from "~/hooks/usePlanner";
 import { useApp } from "../AppContext";
@@ -28,19 +30,9 @@ export default function StopMap() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   usePageTitle(t("navbar.map", "Mapa"));
-  const [stops, setStops] = useState<
-    GeoJsonFeature<
-      Point,
-      {
-        stopId: string;
-        name: string;
-        lines: string[];
-        cancelled?: boolean;
-        prefix: string;
-      }
-    >[]
-  >([]);
-  const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
+  const [selectedStop, setSelectedStop] = useState<
+    StopSheetProps["stop"] | null
+  >(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const { mapState, updateMapState, theme } = useApp();
   const mapRef = useRef<MapRef>(null);
@@ -63,44 +55,9 @@ export default function StopMap() {
       return;
     }
     const feature = features[0];
-    console.debug("Map click feature:", feature);
-    const props: any = feature.properties;
 
     handlePointClick(feature);
   };
-
-  useEffect(() => {
-    StopDataProvider.getStops().then((data) => {
-      const features: GeoJsonFeature<
-        Point,
-        {
-          stopId: string;
-          name: string;
-          lines: string[];
-          cancelled?: boolean;
-          prefix: string;
-        }
-      >[] = data.map((s) => ({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [s.longitude as number, s.latitude as number],
-        },
-        properties: {
-          stopId: s.stopId,
-          name: s.name.original,
-          lines: s.lines,
-          cancelled: s.cancelled ?? false,
-          prefix: s.stopId.startsWith("renfe:")
-            ? "stop-renfe"
-            : s.cancelled
-              ? "stop-vitrasa-cancelled"
-              : "stop-vitrasa",
-        },
-      }));
-      setStops(features);
-    });
-  }, []);
 
   useEffect(() => {
     //const styleName = "carto";
@@ -166,26 +123,29 @@ export default function StopMap() {
 
   const handlePointClick = (feature: any) => {
     const props: any = feature.properties;
-    if (!props || !props.stopId) {
+    // TODO: Move ID to constant, improve type checking
+    if (!props || feature.layer.id !== "stops") {
       console.warn("Invalid feature properties:", props);
       return;
     }
 
-    const stopId = props.stopId;
+    const stopId = props.id;
 
-    // fetch full stop to get lines array
-    StopDataProvider.getStopById(stopId)
-      .then((stop) => {
-        if (!stop) {
-          console.warn("Stop not found:", stopId);
-          return;
-        }
-        setSelectedStop(stop);
-        setIsSheetOpen(true);
-      })
-      .catch((err) => {
-        console.error("Error fetching stop details:", err);
-      });
+    console.debug("Stop clicked:", stopId, props);
+
+    setSelectedStop({
+      stopId: props.id,
+      stopCode: props.code,
+      name: props.name || "Unknown Stop",
+      lines: JSON.parse(props.routes || "[]").map((route) => {
+        return {
+          line: route.shortName,
+          colour: route.colour,
+          textColour: route.textColour,
+        };
+      }),
+    });
+    setIsSheetOpen(true);
   };
 
   return (
@@ -203,7 +163,7 @@ export default function StopMap() {
         style={{ width: "100%", height: "100%" }}
         interactiveLayerIds={["stops", "stops-label"]}
         onClick={onMapClick}
-        minZoom={11}
+        minZoom={5}
         scrollZoom
         pitch={0}
         roll={0}
@@ -214,7 +174,7 @@ export default function StopMap() {
           zoom: mapState.zoom,
         }}
         attributionControl={{ compact: false }}
-        maxBounds={[REGION_DATA.bounds.sw, REGION_DATA.bounds.ne]}
+        maxBounds={[APP_CONSTANTS.bounds.sw, APP_CONSTANTS.bounds.ne]}
       >
         <NavigationControl position="bottom-right" />
         <GeolocateControl
@@ -225,8 +185,10 @@ export default function StopMap() {
 
         <Source
           id="stops-source"
-          type="geojson"
-          data={{ type: "FeatureCollection", features: stops }}
+          type="vector"
+          tiles={[StopDataProvider.getTileUrlTemplate()]}
+          minzoom={11}
+          maxzoom={20}
         />
 
         <Layer
@@ -234,8 +196,26 @@ export default function StopMap() {
           type="symbol"
           minzoom={11}
           source="stops-source"
+          source-layer="stops"
           layout={{
-            "icon-image": ["get", "prefix"],
+            // TODO: Fix ñapa by maybe including this from the server side?
+            "icon-image": [
+              "match",
+              ["get", "feed"],
+              "vitrasa",
+              "stop-vitrasa",
+              "santiago",
+              "stop-santiago",
+              "coruna",
+              "stop-coruna",
+              "xunta",
+              "stop-xunta",
+              "renfe",
+              "stop-renfe",
+              "feve",
+              "stop-feve",
+              "#stop-generic",
+            ],
             "icon-size": [
               "interpolate",
               ["linear"],
@@ -256,6 +236,7 @@ export default function StopMap() {
           id="stops-label"
           type="symbol"
           source="stops-source"
+          source-layer="stops"
           minzoom={16}
           layout={{
             "text-field": ["get", "name"],
@@ -267,10 +248,21 @@ export default function StopMap() {
           }}
           paint={{
             "text-color": [
-              "case",
-              ["==", ["get", "prefix"], "stop-renfe"],
+              "match",
+              ["get", "feed"],
+              "vitrasa",
+              "#95D516",
+              "santiago",
+              "#508096",
+              "coruna",
+              "#E61C29",
+              "xunta",
+              "#007BC4",
+              "renfe",
               "#870164",
-              "#e72b37",
+              "feve",
+              "#EE3D32",
+              "#333333",
             ],
             "text-halo-color": "#FFF",
             "text-halo-width": 1,
