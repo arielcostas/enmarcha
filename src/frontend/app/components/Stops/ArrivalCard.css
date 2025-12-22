@@ -1,0 +1,17 @@
+@import "../../tailwind.css";
+
+.time-running {
+  @apply bg-green-600/20 dark:bg-green-600/25 text-[#1a9e56] dark:text-[#22c55e];
+}
+
+.time-delayed {
+  @apply bg-orange-600/20 dark:bg-orange-600/25 text-[#d06100] dark:text-[#fb923c];
+}
+
+.time-past {
+  @apply bg-gray-600/20 dark:bg-gray-600/25 text-gray-600 dark:text-gray-400;
+}
+
+.time-scheduled {
+  @apply bg-blue-900/20 dark:bg-blue-600/25 text-[#0b3d91] dark:text-[#93c5fd];
+}

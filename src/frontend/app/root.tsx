@@ -20,7 +20,10 @@ const pmtiles = new Protocol();
 maplibregl.addProtocol("pmtiles", pmtiles.tile);
 //#endregion
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./i18n";
+
+const queryClient = new QueryClient();
 
 export const links: Route.LinksFunction = () => [];
 
@@ -89,9 +92,11 @@ export default function App() {
   }
 
   return (
-    <AppProvider>
-      <AppShell />
-    </AppProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppProvider>
+        <AppShell />
+      </AppProvider>
+    </QueryClientProvider>
   );
 }
 

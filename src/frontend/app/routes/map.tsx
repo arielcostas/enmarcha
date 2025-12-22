@@ -146,7 +146,6 @@ export default function StopMap() {
       stopCode: props.code,
       name: props.name || "Unknown Stop",
       lines: routes.map((route) => {
-        console.log(route);
         return {
           line: route.shortName,
           colour: route.colour,

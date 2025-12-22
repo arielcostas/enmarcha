@@ -98,7 +98,7 @@ public class OtpLeg
     public OtpGeometry? LegGeometry { get; set; }
 
     [JsonPropertyName("steps")]
-    public List<OtpWalkStep> Steps { get; set; } = new();
+    public List<OtpWalkStep> Steps { get; set; } = [];
 
     [JsonPropertyName("headsign")]
     public string? Headsign { get; set; }
@@ -113,7 +113,7 @@ public class OtpLeg
     public string? RouteTextColor { get; set; }
 
     [JsonPropertyName("intermediateStops")]
-    public List<OtpPlace> IntermediateStops { get; set; } = new();
+    public List<OtpPlace> IntermediateStops { get; set; } = [];
 }
 
 public class OtpPlace
