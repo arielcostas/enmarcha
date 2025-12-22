@@ -46,7 +46,7 @@ def apply_overrides(stops, overrides):
 
             # Override name if provided
             if "name" in override:
-                stop["name"]["original"] = override["name"]
+                stop["name"] = override["name"]
 
             # Apply or add alternate names
             if "alternateNames" in override:
@@ -92,7 +92,7 @@ def apply_overrides(stops, overrides):
             # Create the new stop
             new_stop = {
                 "stopId": stop_id_int,
-                "name": {"original": override.get("name", f"Stop {stop_id_int}")},
+                "name": override.get("name", f"Stop {stop_id_int}"),
                 "latitude": override.get("location", {}).get("latitude"),
                 "longitude": override.get("location", {}).get("longitude"),
                 "lines": override.get("lines", []),
@@ -143,7 +143,7 @@ def download_stops_vitrasa() -> list[dict]:
 
             processed_stop = {
                 "stopId": "vitrasa:" + str(stop.get("id")),
-                "name": {"original": name},
+                "name": name,
                 "latitude": stop.get("lat"),
                 "longitude": stop.get("lon"),
                 "lines": [line.strip() for line in stop.get("lineas", "").split(",")]
@@ -197,7 +197,7 @@ def download_stops_renfe() -> list[dict]:
 
             processed_stop = {
                 "stopId": "renfe:" + str(stop.get("CODE", 0)),
-                "name": {"original": name},
+                "name": name,
                 "latitude": float(stop.get("LAT", 0).replace(",", ".")),
                 "longitude": float(stop.get("LNG", 0).replace(",", ".")),
                 "lines": [],
