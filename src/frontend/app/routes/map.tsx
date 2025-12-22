@@ -122,7 +122,12 @@ export default function StopMap() {
     Array.isArray(center) ? center[1] : center.lng;
 
   const handlePointClick = (feature: any) => {
-    const props: any = feature.properties;
+    const props: {
+      id: string;
+      code: string;
+      name: string;
+      routes: string;
+    } = feature.properties;
     // TODO: Move ID to constant, improve type checking
     if (!props || feature.layer.id !== "stops") {
       console.warn("Invalid feature properties:", props);
@@ -130,14 +135,18 @@ export default function StopMap() {
     }
 
     const stopId = props.id;
-
-    console.debug("Stop clicked:", stopId, props);
+    const routes: {
+      shortName: string;
+      colour: string;
+      textColour: string;
+    }[] = JSON.parse(props.routes || "[]");
 
     setSelectedStop({
       stopId: props.id,
       stopCode: props.code,
       name: props.name || "Unknown Stop",
-      lines: JSON.parse(props.routes || "[]").map((route) => {
+      lines: routes.map((route) => {
+        console.log(route);
         return {
           line: route.shortName,
           colour: route.colour,

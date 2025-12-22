@@ -1,14 +1,17 @@
 using Costasdev.Busurbano.Backend.GraphClient;
 using Costasdev.Busurbano.Backend.GraphClient.App;
+
+using NetTopologySuite.Features;
 using NetTopologySuite.IO.VectorTiles;
 using NetTopologySuite.IO.VectorTiles.Mapbox;
 
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.Extensions.Caching.Memory;
-using NetTopologySuite.Features;
 using System.Text.Json;
 using Costasdev.Busurbano.Backend.Helpers;
+
+namespace Costasdev.Busurbano.Backend.Controllers;
 
 [ApiController]
 [Route("api/tiles")]
@@ -29,36 +32,25 @@ public class TileController : ControllerBase
         _httpClient = httpClient;
     }
 
-    /*
-    vitrasa:20223: # Castrelos (Pavillón) - Final U1
-  hide: true
-vitrasa:20146: # García Barbón 7 - final líneas A y 18A
-  hide: true
-vitrasa:20220: # (Samil) COIA-SAMIL  - Final L15A
-  hide: true
-vitrasa:20001: # (Samil) Samil por Beiramar  - Final L15B
-  hide: true
-vitrasa:20002: # (Samil) Samil por Torrecedeira  - Final L15C
-  hide: true
-vitrasa:20144: # (Samil) Samil por Coia - Final C3D+C3i
-  hide: true
-vitrasa:20145: # (Samil) Samil por Bouzas - Final C3D+C3i
-  hide: true
-  */
     private static readonly string[] HiddenStops =
     [
-        "vitrasa:20223",
-        "vitrasa:20146",
-        "vitrasa:20220",
-        "vitrasa:20001",
-        "vitrasa:20002",
-        "vitrasa:20144",
-        "vitrasa:20145"
+        "vitrasa:20223", // Castrelos (Pavillón - U1)
+        "vitrasa:20146", // García Barbón, 7 (A, 18A)
+        "vitrasa:20220", // COIA-SAMIL (15)
+        "vitrasa:20001", // Samil por Beiramar (15B)
+        "vitrasa:20002", // Samil por Torrecedeira (15C)
+        "vitrasa:20144", // Samil por Coia (C3d, C3i)
+        "vitrasa:20145"  // Samil por Bouzs (C3d, C3i)
     ];
 
-    [HttpGet("stops/{z}/{x}/{y}")]
-    public async Task<IActionResult> GetTrafficTile(int z, int x, int y)
+    [HttpGet("stops/{z:int}/{x:int}/{y:int}")]
+    public async Task<IActionResult> Stops(int z, int x, int y)
     {
+        if (z < 9 || z > 16)
+        {
+            return BadRequest("Zoom level out of range (9-16)");
+        }
+
         var cacheHit = _cache.TryGetValue($"stops-tile-{z}-{x}-{y}", out byte[]? cachedTile);
         if (cacheHit && cachedTile != null)
         {
@@ -67,15 +59,15 @@ vitrasa:20145: # (Samil) Samil por Bouzas - Final C3D+C3i
         }
 
         // Calculate bounding box in EPSG:4326
-        double n = Math.Pow(2, z);
-        double lonMin = x / n * 360.0 - 180.0;
-        double lonMax = (x + 1) / n * 360.0 - 180.0;
+        var n = Math.Pow(2, z);
+        var lonMin = x / n * 360.0 - 180.0;
+        var lonMax = (x + 1) / n * 360.0 - 180.0;
 
-        double latMaxRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * y / n)));
-        double latMax = latMaxRad * 180.0 / Math.PI;
+        var latMaxRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * y / n)));
+        var latMax = latMaxRad * 180.0 / Math.PI;
 
-        double latMinRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * (y + 1) / n)));
-        double latMin = latMinRad * 180.0 / Math.PI;
+        var latMinRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * (y + 1) / n)));
+        var latMin = latMinRad * 180.0 / Math.PI;
 
         var requestContent = StopTileRequestContent.Query(new StopTileRequestContent.Bbox(lonMin, latMin, lonMax, latMax));
         var request = new HttpRequestMessage(HttpMethod.Post, "http://100.67.54.115:3957/otp/gtfs/v1");
@@ -87,11 +79,13 @@ vitrasa:20145: # (Samil) Samil por Bouzas - Final C3D+C3i
         var response = await _httpClient.SendAsync(request);
         var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<StopTileResponse>>();
 
-        if (responseBody == null || !responseBody.IsSuccess)
+        if (responseBody is not { IsSuccess: true })
         {
-            _logger.LogError("Error fetching stop data: {StatusCode}", response.StatusCode);
-            _logger.LogError("Sent request: {RequestContent}", await request.Content.ReadAsStringAsync());
-            _logger.LogError("Response body: {ResponseBody}", await response.Content.ReadAsStringAsync());
+            _logger.LogError(
+                "Error fetching stop data, received {StatusCode} {ResponseBody}",
+                response.StatusCode,
+                await response.Content.ReadAsStringAsync()
+            );
             return StatusCode(500, "Error fetching stop data");
         }
 
@@ -135,7 +129,9 @@ vitrasa:20145: # (Samil) Samil por Bouzas - Final C3D+C3i
                     // The name of the stop
                     { "name", stop.Name },
                     // Routes
-                    { "routes", JsonSerializer.Serialize(stop.Routes?.OrderBy(
+                    { "routes", JsonSerializer.Serialize(stop.Routes?
+                    .DistinctBy(r => r.ShortName)
+                    .OrderBy(
                         r => r.ShortName,
                         Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
                     ).Select(r => {
