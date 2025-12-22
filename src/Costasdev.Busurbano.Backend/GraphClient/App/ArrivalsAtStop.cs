@@ -5,16 +5,26 @@ namespace Costasdev.Busurbano.Backend.GraphClient.App;
 
 public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
 {
-    public record Args(string Id, int DepartureCount);
+    public const int PastArrivalMinutesIncluded = -15;
+
+    public record Args(string Id, int DepartureCount, bool PastArrivals);
 
     public static string Query(Args args)
     {
+        var startTime = DateTimeOffset.Now;
+        if (args.PastArrivals)
+        {
+            startTime = DateTimeOffset.Now.AddMinutes(PastArrivalMinutesIncluded);
+        }
+
+        var startTimeUnix = startTime.ToUnixTimeSeconds();
+
         return string.Create(CultureInfo.InvariantCulture, $@"
         query Query {{
             stop(id:""{args.Id}"") {{
                 code
                 name
-                arrivals: stoptimesWithoutPatterns(numberOfDepartures:{args.DepartureCount}) {{
+                arrivals: stoptimesWithoutPatterns(numberOfDepartures:{args.DepartureCount}, startTime: {startTimeUnix}) {{
                     headsign
                     scheduledDeparture
                     pickupType
@@ -40,7 +50,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
 
 public class ArrivalsAtStopResponse : AbstractGraphResponse
 {
-    [JsonPropertyName("stop")] public StopItem Stop { get; set; }
+    [JsonPropertyName("stop")] public required StopItem Stop { get; set; }
 
     public class StopItem
     {
@@ -87,9 +97,9 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
 
     public class RouteDetails
     {
-        [JsonPropertyName("color")] public required string Color { get; set; }
+        [JsonPropertyName("color")] public string? Color { get; set; }
 
-        [JsonPropertyName("textColor")] public required string TextColor { get; set; }
+        [JsonPropertyName("textColor")] public string? TextColor { get; set; }
     }
 
     public class PickupType

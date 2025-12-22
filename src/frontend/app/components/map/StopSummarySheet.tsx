@@ -3,7 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Sheet } from "react-modal-sheet";
 import { Link } from "react-router";
-import { ArrivalList } from "~/components/Stops/ArrivalList";
+import { ArrivalList } from "~/components/arrivals/ArrivalList";
 import { useStopArrivals } from "../../hooks/useArrivals";
 import { ErrorDisplay } from "../ErrorDisplay";
 import LineIcon from "../LineIcon";

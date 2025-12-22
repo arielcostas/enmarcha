@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using Costasdev.Busurbano.Backend.GraphClient;
 using Costasdev.Busurbano.Backend.GraphClient.App;
-using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -37,7 +36,14 @@ public partial class ArrivalsController : ControllerBase
         var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
         var todayLocal = nowLocal.Date;
 
-        var requestContent = ArrivalsAtStopContent.Query(new(id, reduced ? 4 : 10));
+        var requestContent = ArrivalsAtStopContent.Query(
+            new ArrivalsAtStopContent.Args(
+                id,
+                reduced ? 4 : 10,
+                ShouldFetchPastArrivals(id)
+            )
+        );
+
         var request = new HttpRequestMessage(HttpMethod.Post, "http://100.67.54.115:3957/otp/gtfs/v1");
         request.Content = JsonContent.Create(new GraphClientRequest
         {
@@ -61,13 +67,20 @@ public partial class ArrivalsController : ControllerBase
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
             //var isRunning = departureTime < nowLocal;
 
+            // TODO: Handle this properly, since many times it's "tomorrow" but not handled properly
+            if (minutesToArrive < ArrivalsAtStopContent.PastArrivalMinutesIncluded)
+            {
+                continue;
+            }
+
             Arrival arrival = new()
             {
+                TripId = item.Trip.GtfsId,
                 Route = new RouteInfo
                 {
                     ShortName = item.Trip.RouteShortName,
-                    Colour = item.Trip.Route.Color,
-                    TextColour = item.Trip.Route.TextColor
+                    Colour = item.Trip.Route.Color ?? "FFFFFF",
+                    TextColour = item.Trip.Route.TextColor ?? "000000"
                 },
                 Headsign = new HeadsignInfo
                 {
@@ -76,7 +89,7 @@ public partial class ArrivalsController : ControllerBase
                 Estimate = new ArrivalDetails
                 {
                     Minutes = minutesToArrive,
-                    Precission = departureTime < nowLocal ? ArrivalPrecission.Past : ArrivalPrecission.Scheduled
+                    Precision = departureTime < nowLocal ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
                 }
             };
 
@@ -89,6 +102,12 @@ public partial class ArrivalsController : ControllerBase
             StopName = stop.Name,
             Arrivals = arrivals
         });
+    }
+
+    private static bool ShouldFetchPastArrivals(string id)
+    {
+        string feedId = id.Split(':', 2)[0];
+        return feedId == "xunta";
     }
 
     [LoggerMessage(LogLevel.Error, "Error fetching stop data, received {statusCode} {responseBody}")]

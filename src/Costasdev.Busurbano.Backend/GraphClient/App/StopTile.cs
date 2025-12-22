@@ -42,35 +42,35 @@ public class StopTileResponse : AbstractGraphResponse
     public record Stop
     {
         [JsonPropertyName("gtfsId")]
-        public required string GtfsId { get; init; }
+        public required string GtfsId { get; set; }
 
         [JsonPropertyName("code")]
-        public string? Code { get; init; }
+        public string? Code { get; set; }
 
         [JsonPropertyName("name")]
-        public required string Name { get; init; }
+        public required string Name { get; set; }
 
         [JsonPropertyName("lat")]
-        public required double Lat { get; init; }
+        public required double Lat { get; set; }
 
         [JsonPropertyName("lon")]
-        public required double Lon { get; init; }
+        public required double Lon { get; set; }
 
         [JsonPropertyName("routes")]
-        public List<Route>? Routes { get; init; }
+        public List<Route>? Routes { get; set; }
     }
 
     public record Route
     {
         [JsonPropertyName("gtfsId")]
-        public required string GtfsId { get; init; }
+        public required string GtfsId { get; set; }
         [JsonPropertyName("shortName")]
-        public required string ShortName { get; init; }
+        public required string ShortName { get; set; }
 
         [JsonPropertyName("color")]
-        public string? Color { get; init; }
+        public string? Color { get; set; }
 
         [JsonPropertyName("textColor")]
-        public string? TextColor { get; init; }
+        public string? TextColor { get; set; }
     }
 }

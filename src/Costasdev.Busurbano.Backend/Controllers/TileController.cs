@@ -46,9 +46,9 @@ public class TileController : ControllerBase
     [HttpGet("stops/{z:int}/{x:int}/{y:int}")]
     public async Task<IActionResult> Stops(int z, int x, int y)
     {
-        if (z < 9 || z > 16)
+        if (z is < 9 or > 20)
         {
-            return BadRequest("Zoom level out of range (9-16)");
+            return BadRequest("Zoom level out of range (9-20)");
         }
 
         var cacheHit = _cache.TryGetValue($"stops-tile-{z}-{x}-{y}", out byte[]? cachedTile);
@@ -96,10 +96,11 @@ public class TileController : ControllerBase
         responseBody.Data?.StopsByBbox?.ForEach(stop =>
         {
             var idParts = stop.GtfsId.Split(':', 2);
+            string feedId = idParts[0];
             string codeWithinFeed = stop.Code ?? string.Empty;
 
             // TODO: Refactor this, maybe do it client-side or smth
-            if (idParts[0] == "vitrasa")
+            if (feedId == "vitrasa")
             {
                 var digits = new string(codeWithinFeed.Where(char.IsDigit).ToArray());
                 if (int.TryParse(digits, out int code))
@@ -108,12 +109,13 @@ public class TileController : ControllerBase
                 }
             }
 
-            if (HiddenStops.Contains($"{idParts[0]}:{codeWithinFeed}"))
+            if (HiddenStops.Contains($"{feedId}:{codeWithinFeed}"))
             {
                 return;
             }
 
-            var fallbackColours = GetFallbackColourForFeed(idParts[0]);
+            var (Color, TextColor) = GetFallbackColourForFeed(idParts[0]);
+            var distinctRoutes = GetDistinctRoutes(feedId, stop.Routes ?? []);
 
             Feature feature = new()
             {
@@ -129,36 +131,34 @@ public class TileController : ControllerBase
                     // The name of the stop
                     { "name", stop.Name },
                     // Routes
-                    { "routes", JsonSerializer.Serialize(stop.Routes?
-                    .DistinctBy(r => r.ShortName)
-                    .OrderBy(
-                        r => r.ShortName,
-                        Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
-                    ).Select(r => {
-                        var colour = r.Color ?? fallbackColours.Color;
-                        string textColour;
+                    { "routes", JsonSerializer
+                        .Serialize(
+                            distinctRoutes.Select(r => {
+                            var colour = r.Color ?? Color;
+                            string textColour;
 
-                        if (r.Color is null) // None is present, use fallback
-                        {
-                            textColour = fallbackColours.TextColor;
-                        }
-                        else if (r.TextColor is null || r.TextColor.EndsWith("000000"))
-                        {
-                            // Text colour not provided, or default-black; check the better contrasting
-                            textColour = ContrastHelper.GetBestTextColour(colour);
-                        }
-                        else
-                        {
-                            // Use provided text colour
-                            textColour = r.TextColor;
-                        }
+                            if (r.Color is null) // None is present, use fallback
+                            {
+                                textColour = TextColor;
+                            }
+                            else if (r.TextColor is null || r.TextColor.EndsWith("000000"))
+                            {
+                                // Text colour not provided, or default-black; check the better contrasting
+                                textColour = ContrastHelper.GetBestTextColour(colour);
+                            }
+                            else
+                            {
+                                // Use provided text colour
+                                textColour = r.TextColor;
+                            }
 
-                        return new {
-                            shortName = r.ShortName,
-                            colour,
-                            textColour
-                        };
-                    })) }
+                            return new {
+                                shortName = r.ShortName,
+                                colour,
+                                textColour
+                            };
+                        }))
+                    }
                 }
             };
 
@@ -176,6 +176,37 @@ public class TileController : ControllerBase
         return File(ms.ToArray(), "application/x-protobuf");
     }
 
+    private static List<StopTileResponse.Route> GetDistinctRoutes(string feedId, List<StopTileResponse.Route> routes)
+    {
+        List<StopTileResponse.Route> distinctRoutes = [];
+        HashSet<string> seen = new();
+
+        foreach (var route in routes)
+        {
+            var seenId = route.ShortName;
+            if (feedId == "xunta")
+            {
+                // For Xunta routes we take only the contract number (XG123, for example)
+                seenId = seenId.Substring(0, 5);
+
+                route.ShortName = seenId;
+            }
+
+            if (seen.Contains(seenId))
+            {
+                continue;
+            }
+
+            seen.Add(seenId);
+            distinctRoutes.Add(route);
+        }
+
+        return [.. distinctRoutes.OrderBy(
+            r => r.ShortName,
+            Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
+        )];
+    }
+
     private static (string Color, string TextColor) GetFallbackColourForFeed(string feed)
     {
         return feed switch
@@ -190,5 +221,4 @@ public class TileController : ControllerBase
 
         };
     }
-
 }

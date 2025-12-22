@@ -12,7 +12,7 @@ export const HeadsignInfoSchema = z.object({
   marquee: z.string().optional().nullable(),
 });
 
-export const ArrivalPrecissionSchema = z.enum([
+export const ArrivalPrecisionSchema = z.enum([
   "confident",
   "unsure",
   "scheduled",
@@ -20,8 +20,8 @@ export const ArrivalPrecissionSchema = z.enum([
 ]);
 
 export const ArrivalDetailsSchema = z.object({
-  minutes: z.number(),
-  precission: ArrivalPrecissionSchema,
+  minutes: z.number().int(),
+  precision: ArrivalPrecisionSchema,
 });
 
 export const DelayBadgeSchema = z.object({
@@ -49,7 +49,7 @@ export const StopArrivalsResponseSchema = z.object({
 
 export type RouteInfo = z.infer<typeof RouteInfoSchema>;
 export type HeadsignInfo = z.infer<typeof HeadsignInfoSchema>;
-export type ArrivalPrecission = z.infer<typeof ArrivalPrecissionSchema>;
+export type ArrivalPrecision = z.infer<typeof ArrivalPrecisionSchema>;
 export type ArrivalDetails = z.infer<typeof ArrivalDetailsSchema>;
 export type DelayBadge = z.infer<typeof DelayBadgeSchema>;
 export type ShiftBadge = z.infer<typeof ShiftBadgeSchema>;

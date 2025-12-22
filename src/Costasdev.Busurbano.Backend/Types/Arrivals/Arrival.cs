@@ -4,6 +4,9 @@ namespace Costasdev.Busurbano.Backend.Types.Arrivals;
 
 public class Arrival
 {
+    [JsonPropertyName("tripId")]
+    public required string TripId { get; set; }
+
     [JsonPropertyName("route")]
     public required RouteInfo Route { get; set; }
 
@@ -49,12 +52,12 @@ public class ArrivalDetails
     [JsonPropertyName("minutes")]
     public required int Minutes { get; set; }
 
-    [JsonPropertyName("precission")]
-    public ArrivalPrecission Precission { get; set; } = ArrivalPrecission.Scheduled;
+    [JsonPropertyName("precision")]
+    public ArrivalPrecision Precision { get; set; } = ArrivalPrecision.Scheduled;
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
-public enum ArrivalPrecission
+public enum ArrivalPrecision
 {
     [JsonStringEnumMemberName("confident")]
     Confident = 0,

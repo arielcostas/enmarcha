@@ -16,11 +16,11 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
   const { t } = useTranslation();
   const { route, headsign, estimate } = arrival;
 
-  const etaValue = Math.max(0, Math.round(estimate.minutes)).toString();
+  const etaValue = estimate.minutes.toString();
   const etaUnit = t("estimates.minutes", "min");
 
   const timeClass = useMemo(() => {
-    switch (estimate.precission) {
+    switch (estimate.precision) {
       case "confident":
         return "time-running";
       case "unsure":
@@ -30,7 +30,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
       default:
         return "time-scheduled";
     }
-  }, [estimate.precission]);
+  }, [estimate.precision]);
 
   return (
     <div
@@ -50,7 +50,9 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
         />
       </div>
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <strong className="text-base text-(--text-color) overflow-hidden text-ellipsis line-clamp-2 leading-tight">
+        <strong
+          className={`text-base overflow-hidden text-ellipsis line-clamp-2 leading-tight ${estimate.precision == "past" ? "line-through" : ""}`}
+        >
           {headsign.destination}
         </strong>
       </div>
