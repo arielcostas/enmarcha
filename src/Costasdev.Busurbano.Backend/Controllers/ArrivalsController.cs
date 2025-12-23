@@ -2,6 +2,7 @@
 using Costasdev.Busurbano.Backend.GraphClient;
 using Costasdev.Busurbano.Backend.GraphClient.App;
 using Costasdev.Busurbano.Backend.Services;
+using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -87,7 +88,8 @@ public partial class ArrivalsController : ControllerBase
             //var isRunning = departureTime < nowLocal;
 
             // TODO: Handle this properly, since many times it's "tomorrow" but not handled properly
-            if (minutesToArrive < ArrivalsAtStopContent.PastArrivalMinutesIncluded)
+            var threshold = ShouldFetchPastArrivals(id) ? ArrivalsAtStopContent.PastArrivalMinutesIncluded : 0;
+            if (minutesToArrive < threshold)
             {
                 continue;
             }
@@ -97,6 +99,7 @@ public partial class ArrivalsController : ControllerBase
                 TripId = item.Trip.GtfsId,
                 Route = new RouteInfo
                 {
+                    GtfsId = item.Trip.Route.GtfsId,
                     ShortName = item.Trip.RouteShortName,
                     Colour = item.Trip.Route.Color ?? "FFFFFF",
                     TextColour = item.Trip.Route.TextColor ?? "000000"
@@ -122,7 +125,8 @@ public partial class ArrivalsController : ControllerBase
             StopCode = stop.Code,
             IsReduced = reduced,
             Arrivals = arrivals,
-            NowLocal = nowLocal
+            NowLocal = nowLocal,
+            StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon }
         });
 
         var feedId = id.Split(':')[0];
@@ -131,6 +135,18 @@ public partial class ArrivalsController : ControllerBase
         {
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
             StopName = _feedService.NormalizeStopName(feedId, stop.Name),
+            StopLocation = new Position
+            {
+                Latitude = stop.Lat,
+                Longitude = stop.Lon
+            },
+            Routes = stop.Routes.Select(r => new RouteInfo
+            {
+                GtfsId =  r.GtfsId,
+                ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                Colour = r.Color ?? "FFFFFF",
+                TextColour = r.TextColor ?? "000000"
+            }).ToList(),
             Arrivals = arrivals
         });
     }

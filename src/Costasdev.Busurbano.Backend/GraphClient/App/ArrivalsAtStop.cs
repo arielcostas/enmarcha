@@ -20,6 +20,14 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
             stop(id:""{args.Id}"") {{
                 code
                 name
+                lat
+                lon
+                routes {{
+                    gtfsId
+                    shortName
+                    color
+                    textColor
+                }}
                 arrivals: stoptimesWithoutPatterns(numberOfDepartures: 100, startTime: {startTimeUnix}, timeRange: 14400) {{
                     headsign
                     scheduledDeparture
@@ -31,6 +39,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                         serviceId
                         routeShortName
                         route {{
+                            gtfsId
                             color
                             textColor
                             longName
@@ -42,6 +51,8 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                         stoptimes {{
                             stop {{
                                 name
+                                lat
+                                lon
                             }}
                             scheduledDeparture
                         }}
@@ -62,6 +73,12 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("code")] public required string Code { get; set; }
 
         [JsonPropertyName("name")] public required string Name { get; set; }
+
+        [JsonPropertyName("lat")] public double Lat { get; set; }
+
+        [JsonPropertyName("lon")] public double Lon { get; set; }
+
+        [JsonPropertyName("routes")] public List<RouteDetails> Routes { get; set; } = [];
 
         [JsonPropertyName("arrivals")] public List<Arrival> Arrivals { get; set; } = [];
     }
@@ -115,6 +132,8 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
     public class StopDetails
     {
         [JsonPropertyName("name")] public required string Name { get; set; }
+        [JsonPropertyName("lat")] public double Lat { get; set; }
+        [JsonPropertyName("lon")] public double Lon { get; set; }
     }
 
     public class DepartureStoptime
@@ -125,6 +144,11 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
 
     public class RouteDetails
     {
+        [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
+        public string GtfsIdValue => GtfsId.Split(':', 2)[1];
+
+        [JsonPropertyName("shortName")] public string? ShortName { get; set; }
+
         [JsonPropertyName("color")] public string? Color { get; set; }
 
         [JsonPropertyName("textColor")] public string? TextColor { get; set; }

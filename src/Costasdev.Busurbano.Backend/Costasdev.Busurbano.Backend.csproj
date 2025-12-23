@@ -22,6 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <ProjectReference Include="..\Costasdev.Busurbano.Sources.TranviasCoruna\Costasdev.Busurbano.Sources.TranviasCoruna.csproj" />
   </ItemGroup>
 </Project>

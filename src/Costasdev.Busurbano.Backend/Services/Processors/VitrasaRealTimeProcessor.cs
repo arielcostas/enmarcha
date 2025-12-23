@@ -1,23 +1,35 @@
+using Costasdev.Busurbano.Backend.Configuration;
 using Costasdev.Busurbano.Backend.GraphClient.App;
+using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
 using Costasdev.VigoTransitApi;
+using Microsoft.Extensions.Options;
 
 namespace Costasdev.Busurbano.Backend.Services.Processors;
 
-public class VitrasaRealTimeProcessor : IArrivalsProcessor
+public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 {
     private readonly VigoTransitApiClient _api;
     private readonly FeedService _feedService;
     private readonly ILogger<VitrasaRealTimeProcessor> _logger;
+    private readonly ShapeTraversalService _shapeService;
+    private readonly AppConfiguration _configuration;
 
-    public VitrasaRealTimeProcessor(HttpClient http, FeedService feedService, ILogger<VitrasaRealTimeProcessor> logger)
+    public VitrasaRealTimeProcessor(
+        HttpClient http,
+        FeedService feedService,
+        ILogger<VitrasaRealTimeProcessor> logger,
+        ShapeTraversalService shapeService,
+        IOptions<AppConfiguration> options)
     {
         _api = new VigoTransitApiClient(http);
         _feedService = feedService;
         _logger = logger;
+        _shapeService = shapeService;
+        _configuration = options.Value;
     }
 
-    public async Task ProcessAsync(ArrivalsContext context)
+    public override async Task ProcessAsync(ArrivalsContext context)
     {
         if (!context.StopId.StartsWith("vitrasa:")) return;
 
@@ -26,6 +38,15 @@ public class VitrasaRealTimeProcessor : IArrivalsProcessor
 
         try
         {
+            // Load schedule
+            var todayDate = context.NowLocal.Date.ToString("yyyy-MM-dd");
+
+            Epsg25829? stopLocation = null;
+            if (context.StopLocation != null)
+            {
+                stopLocation = _shapeService.TransformToEpsg25829(context.StopLocation.Latitude, context.StopLocation.Longitude);
+            }
+
             var realtime = await _api.GetStopEstimates(numericStopId);
             var estimates = realtime.Estimates
                 .Where(e => !string.IsNullOrWhiteSpace(e.Route) && !e.Route.Trim().EndsWith('*'))
@@ -110,6 +131,85 @@ public class VitrasaRealTimeProcessor : IArrivalsProcessor
                         arrival.Headsign.Destination = estimate.Route;
                     }
 
+                    // Calculate position
+                    if (stopLocation != null)
+                    {
+                        Position? currentPosition = null;
+                        int? stopShapeIndex = null;
+
+                        if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
+                            otpArrival.Trip.Geometry?.Points != null)
+                        {
+                            var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)
+                                .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })
+                                .ToList();
+
+                            var shape = _shapeService.CreateShapeFromWgs84(decodedPoints);
+
+                            // Ensure meters is positive
+                            var meters = Math.Max(0, estimate.Meters);
+                            var result = _shapeService.GetBusPosition(shape, stopLocation, meters);
+
+                            currentPosition = result.BusPosition;
+                            stopShapeIndex = result.StopIndex;
+
+                            if (currentPosition != null)
+                            {
+                                _logger.LogInformation("Calculated position from OTP geometry for trip {TripId}: {Lat}, {Lon}", arrival.TripId, currentPosition.Latitude, currentPosition.Longitude);
+                            }
+
+                            // Populate Shape GeoJSON
+                            if (!context.IsReduced && currentPosition != null)
+                            {
+                                var features = new List<object>();
+                                features.Add(new
+                                {
+                                    type = "Feature",
+                                    geometry = new
+                                    {
+                                        type = "LineString",
+                                        coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
+                                    },
+                                    properties = new { type = "route" }
+                                });
+
+                                // Add stops if available
+                                if (otpArrival.Trip.Stoptimes != null)
+                                {
+                                    foreach (var stoptime in otpArrival.Trip.Stoptimes)
+                                    {
+                                        features.Add(new
+                                        {
+                                            type = "Feature",
+                                            geometry = new
+                                            {
+                                                type = "Point",
+                                                coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
+                                            },
+                                            properties = new
+                                            {
+                                                type = "stop",
+                                                name = stoptime.Stop.Name
+                                            }
+                                        });
+                                    }
+                                }
+
+                                arrival.Shape = new
+                                {
+                                    type = "FeatureCollection",
+                                    features = features
+                                };
+                            }
+                        }
+
+                        if (currentPosition != null)
+                        {
+                            arrival.CurrentPosition = currentPosition;
+                            arrival.StopShapeIndex = stopShapeIndex;
+                        }
+                    }
+
                     usedTripIds.Add(arrival.TripId);
                 }
                 else
@@ -126,9 +226,10 @@ public class VitrasaRealTimeProcessor : IArrivalsProcessor
                         TripId = $"vitrasa:rt:{estimate.Line}:{estimate.Route}:{estimate.Minutes}",
                         Route = new RouteInfo
                         {
+                            GtfsId = $"vitrasa:{estimate.Line}",
                             ShortName = estimate.Line,
                             Colour = template?.Route.Colour ?? "FFFFFF",
-                            TextColour = template?.Route.TextColour ?? "000000"
+                            TextColour = template?.Route.TextColour ?? "000000",
                         },
                         Headsign = new HeadsignInfo
                         {

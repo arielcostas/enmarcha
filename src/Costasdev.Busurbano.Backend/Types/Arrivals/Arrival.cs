@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Costasdev.Busurbano.Backend.Types;
 
 namespace Costasdev.Busurbano.Backend.Types.Arrivals;
 
@@ -25,6 +26,12 @@ public class Arrival
     [JsonPropertyName("shape")]
     public object? Shape { get; set; }
 
+    [JsonPropertyName("currentPosition")]
+    public Position? CurrentPosition { get; set; }
+
+    [JsonPropertyName("stopShapeIndex")]
+    public int? StopShapeIndex { get; set; }
+
     [JsonIgnore]
     public List<string> NextStops { get; set; } = [];
 
@@ -34,6 +41,11 @@ public class Arrival
 
 public class RouteInfo
 {
+    [JsonPropertyName("gtfsId")]
+    public required string GtfsId { get; set; }
+
+    public string RouteIdInGtfs => GtfsId.Split(':', 2)[1];
+
     [JsonPropertyName("shortName")]
     public required string ShortName { get; set; }
 

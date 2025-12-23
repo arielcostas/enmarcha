@@ -2,50 +2,22 @@ import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
+import { fetchArrivals } from "~/api/arrivals";
+import { type Arrival, type Position, type RouteInfo } from "~/api/schema";
+import { ArrivalList } from "~/components/arrivals/ArrivalList";
 import { ErrorDisplay } from "~/components/ErrorDisplay";
 import LineIcon from "~/components/LineIcon";
 import { PullToRefresh } from "~/components/PullToRefresh";
-import { StopAlert } from "~/components/StopAlert";
 import { StopHelpModal } from "~/components/StopHelpModal";
 import { StopMapModal } from "~/components/StopMapModal";
-import { ConsolidatedCirculationList } from "~/components/Stops/ConsolidatedCirculationList";
 import { ConsolidatedCirculationListSkeleton } from "~/components/Stops/ConsolidatedCirculationListSkeleton";
-import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { useAutoRefresh } from "~/hooks/useAutoRefresh";
-import StopDataProvider, { type Stop } from "../data/StopDataProvider";
+import StopDataProvider from "../data/StopDataProvider";
 import "./stops-$id.css";
 
-export interface ConsolidatedCirculation {
-  line: string;
-  route: string;
-  schedule?: {
-    running: boolean;
-    minutes: number;
-    serviceId: string;
-    tripId: string;
-    shapeId?: string;
-  };
-  realTime?: {
-    minutes: number;
-    distance: number;
-  };
-  currentPosition?: {
-    latitude: number;
-    longitude: number;
-    orientationDegrees: number;
-    shapeIndex?: number;
-  };
-  isPreviousTrip?: boolean;
-  previousTripShapeId?: string;
-  nextStreets?: string[];
-}
-
-export const getCirculationId = (c: ConsolidatedCirculation): string => {
-  if (c.schedule?.tripId) {
-    return `trip:${c.schedule.tripId}`;
-  }
-  return `rt:${c.line}:${c.route}:${c.realTime?.minutes ?? "?"}`;
+export const getArrivalId = (a: Arrival): string => {
+  return a.tripId;
 };
 
 interface ErrorInfo {
@@ -54,59 +26,18 @@ interface ErrorInfo {
   message?: string;
 }
 
-const loadConsolidatedData = async (
-  stopId: string
-): Promise<ConsolidatedCirculation[]> => {
-  const resp = await fetch(
-    `${APP_CONSTANTS.consolidatedCirculationsEndpoint}?stopId=${stopId}`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    }
-  );
-
-  if (!resp.ok) {
-    throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-  }
-
-  return await resp.json();
-};
-
-export interface ConsolidatedCirculation {
-  line: string;
-  route: string;
-  schedule?: {
-    running: boolean;
-    minutes: number;
-    serviceId: string;
-    tripId: string;
-    shapeId?: string;
-  };
-  realTime?: {
-    minutes: number;
-    distance: number;
-  };
-  currentPosition?: {
-    latitude: number;
-    longitude: number;
-    orientationDegrees: number;
-    shapeIndex?: number;
-  };
-  isPreviousTrip?: boolean;
-  previousTripShapeId?: string;
-  nextStreets?: string[];
-}
-
 export default function Estimates() {
   const { t } = useTranslation();
   const params = useParams();
   const stopId = params.id ?? "";
-  const [customName, setCustomName] = useState<string | undefined>(undefined);
-  const [stopData, setStopData] = useState<Stop | undefined>(undefined);
+  const [stopName, setStopName] = useState<string | undefined>(undefined);
+  const [apiRoutes, setApiRoutes] = useState<RouteInfo[]>([]);
+  const [apiLocation, setApiLocation] = useState<Position | undefined>(
+    undefined
+  );
 
   // Data state
-  const [data, setData] = useState<ConsolidatedCirculation[] | null>(null);
+  const [data, setData] = useState<Arrival[] | null>(null);
   const [dataDate, setDataDate] = useState<Date | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<ErrorInfo | null>(null);
@@ -116,16 +47,15 @@ export default function Estimates() {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isReducedView, setIsReducedView] = useState(false);
-  const [selectedCirculationId, setSelectedCirculationId] = useState<
+  const [selectedArrivalId, setSelectedArrivalId] = useState<
     string | undefined
   >(undefined);
 
   // Helper function to get the display name for the stop
   const getStopDisplayName = useCallback(() => {
-    if (customName) return customName;
-    if (stopData?.name) return stopData.name;
+    if (stopName) return stopName;
     return `Parada ${stopId}`;
-  }, [customName, stopData, stopId]);
+  }, [stopId, stopName]);
 
   usePageTitle(getStopDisplayName());
 
@@ -154,16 +84,16 @@ export default function Estimates() {
     try {
       setDataError(null);
 
-      const body = await loadConsolidatedData(stopId);
-      setData(body);
+      const response = await fetchArrivals(stopId, false);
+      setData(response.arrivals);
+      setStopName(response.stopName);
+      setApiRoutes(response.routes);
+      if (response.stopLocation) {
+        setApiLocation(response.stopLocation);
+      }
       setDataDate(new Date());
-
-      // Load stop data from StopDataProvider
-      const stop = await StopDataProvider.getStopById(stopId);
-      setStopData(stop);
-      setCustomName(StopDataProvider.getCustomName(stopId));
     } catch (error) {
-      console.error("Error loading consolidated data:", error);
+      console.error("Error loading arrivals data:", error);
       setDataError(parseError(error));
       setData(null);
       setDataDate(null);
@@ -214,17 +144,22 @@ export default function Estimates() {
   return (
     <PullToRefresh onRefresh={handleManualRefresh}>
       <div className="page-container stops-page">
-        {stopData && stopData.lines && stopData.lines.length > 0 && (
+        {apiRoutes.length > 0 && (
           <div className={`estimates-lines-container scrollable`}>
-            {stopData.lines.map((line) => (
-              <div key={line} className="estimates-line-icon">
-                <LineIcon line={line} mode="rounded" />
+            {apiRoutes.map((line) => (
+              <div key={line.shortName} className="estimates-line-icon">
+                <LineIcon
+                  line={line.shortName}
+                  colour={line.colour}
+                  textColour={line.textColour}
+                  mode="pill"
+                />
               </div>
             ))}
           </div>
         )}
 
-        {stopData && <StopAlert stop={stopData} />}
+        {/*{stopData && <StopAlert stop={stopData} />}*/}
 
         <div className="estimates-list-container">
           {dataLoading ? (
@@ -281,12 +216,11 @@ export default function Estimates() {
                   )}
                 </div>
               </div>
-              <ConsolidatedCirculationList
-                data={data}
+              <ArrivalList
+                arrivals={data}
                 reduced={isReducedView}
-                driver={stopData?.stopId.split(":")[0]}
-                onCirculationClick={(estimate, idx) => {
-                  setSelectedCirculationId(getCirculationId(estimate));
+                onArrivalClick={(arrival) => {
+                  setSelectedArrivalId(getArrivalId(arrival));
                   setIsMapModalOpen(true);
                 }}
               />
@@ -294,25 +228,29 @@ export default function Estimates() {
           ) : null}
         </div>
 
-        {stopData && (
+        {apiLocation && (
           <StopMapModal
-            stop={stopData}
-            circulations={(data ?? []).map((c) => ({
-              id: getCirculationId(c),
-              line: c.line,
-              route: c.route,
-              currentPosition: c.currentPosition,
-              isPreviousTrip: c.isPreviousTrip,
-              previousTripShapeId: c.previousTripShapeId,
-              schedule: c.schedule
-                ? {
-                    shapeId: c.schedule.shapeId,
-                  }
-                : undefined,
+            stop={{
+              stopId: stopId,
+              name: stopName ?? "",
+              latitude: apiLocation?.latitude,
+              longitude: apiLocation?.longitude,
+              lines: [],
+            }}
+            circulations={(data ?? []).map((a) => ({
+              id: getArrivalId(a),
+              line: a.route.shortName,
+              route: a.headsign.destination,
+              currentPosition: a.currentPosition ?? undefined,
+              stopShapeIndex: a.stopShapeIndex ?? undefined,
+              schedule: {
+                shapeId: undefined,
+              },
+              shape: a.shape,
             }))}
             isOpen={isMapModalOpen}
             onClose={() => setIsMapModalOpen(false)}
-            selectedCirculationId={selectedCirculationId}
+            selectedCirculationId={selectedArrivalId}
           />
         )}
 

@@ -95,6 +95,26 @@ public class ShapeTraversalService
         return FindClosestPointIndex(shape.Points, location);
     }
 
+    public Shape CreateShapeFromWgs84(List<Position> points)
+    {
+        var shape = new Shape();
+        var inverseTransform = _transformation.MathTransform.Inverse();
+
+        foreach (var point in points)
+        {
+            var transformed = inverseTransform.Transform(new[] { point.Longitude, point.Latitude });
+            shape.Points.Add(new Epsg25829 { X = transformed[0], Y = transformed[1] });
+        }
+        return shape;
+    }
+
+    public Epsg25829 TransformToEpsg25829(double lat, double lon)
+    {
+        var inverseTransform = _transformation.MathTransform.Inverse();
+        var transformed = inverseTransform.Transform(new[] { lon, lat });
+        return new Epsg25829 { X = transformed[0], Y = transformed[1] };
+    }
+
     /// <summary>
     /// Calculates the bus position by reverse-traversing the shape from the stop location
     /// </summary>

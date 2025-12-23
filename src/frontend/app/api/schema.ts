@@ -33,17 +33,30 @@ export const ShiftBadgeSchema = z.object({
   shiftTrip: z.string(),
 });
 
+export const PositionSchema = z.object({
+  latitude: z.number(),
+  longitude: z.number(),
+  orientationDegrees: z.number(),
+  shapeIndex: z.number(),
+});
+
 export const ArrivalSchema = z.object({
+  tripId: z.string(),
   route: RouteInfoSchema,
   headsign: HeadsignInfoSchema,
   estimate: ArrivalDetailsSchema,
   delay: DelayBadgeSchema.optional().nullable(),
   shift: ShiftBadgeSchema.optional().nullable(),
+  shape: z.any().optional().nullable(),
+  currentPosition: PositionSchema.optional().nullable(),
+  stopShapeIndex: z.number().optional().nullable(),
 });
 
 export const StopArrivalsResponseSchema = z.object({
   stopCode: z.string(),
   stopName: z.string(),
+  stopLocation: PositionSchema.optional().nullable(),
+  routes: z.array(RouteInfoSchema),
   arrivals: z.array(ArrivalSchema),
 });
 
@@ -53,6 +66,7 @@ export type ArrivalPrecision = z.infer<typeof ArrivalPrecisionSchema>;
 export type ArrivalDetails = z.infer<typeof ArrivalDetailsSchema>;
 export type DelayBadge = z.infer<typeof DelayBadgeSchema>;
 export type ShiftBadge = z.infer<typeof ShiftBadgeSchema>;
+export type Position = z.infer<typeof PositionSchema>;
 export type Arrival = z.infer<typeof ArrivalSchema>;
 export type StopArrivalsResponse = z.infer<typeof StopArrivalsResponseSchema>;
 

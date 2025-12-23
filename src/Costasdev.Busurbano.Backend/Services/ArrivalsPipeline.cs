@@ -1,3 +1,4 @@
+using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
 
 namespace Costasdev.Busurbano.Backend.Services;
@@ -18,6 +19,8 @@ public class ArrivalsContext
     /// Whether to return a reduced number of arrivals (e.g., 4 instead of 10)
     /// </summary>
     public bool IsReduced { get; set; }
+
+    public Position? StopLocation { get; set; }
 
     public required List<Arrival> Arrivals { get; set; }
     public required DateTime NowLocal { get; set; }

@@ -13,6 +13,9 @@ public class FeedService
         { "Rúa da Salguera Entrada", "Rúa da Salgueira" },
         { "Rúa da Salgueira Entrada", "Rúa da Salgueira" },
         { "Estrada de Miraflores", "Estrada Miraflores" },
+        { "Avda. de Europa", "Avda. Europa" },
+        { "Avda. de Galicia", "Avda. Galicia" },
+        { "Avda. de Vigo", "Avda. Vigo" },
         { "FORA DE SERVIZO.G.B.", "" },
         { "Praza de Fernando O Católico", "" },
         { "Rúa da Travesía de Vigo", "Travesía de Vigo" },
@@ -26,7 +29,8 @@ public class FeedService
         { "Avda. das ", " " },
         { "Riós", "Ríos" },
         { "Avda. Beiramar Porto Pesqueiro Berbés", "Berbés" },
-        { "Conde de Torrecedeira", "Torrecedeira" }
+        { "Conde de Torrecedeira", "Torrecedeira" },
+
     };
 
     public (string Color, string TextColor) GetFallbackColourForFeed(string feed)
@@ -65,10 +69,21 @@ public class FeedService
             var lineStr = shortName.Substring(5);
             if (int.TryParse(lineStr, out int line))
             {
-                return $"{contract}.{line}";
+                return $"{contract}.{line:D2}";
             }
         }
         return shortName;
+    }
+
+    public string GetUniqueRouteShortName(string feedId, string shortName)
+    {
+        if (feedId == "xunta" && shortName.StartsWith("XG") && shortName.Length >= 8)
+        {
+            var contract = shortName.Substring(2, 3);
+            return $"XG{contract}";
+        }
+
+        return NormalizeRouteShortName(feedId, shortName);
     }
 
     public string NormalizeStopName(string feedId, string name)
@@ -115,7 +130,7 @@ public class FeedService
     {
         if (nextStops.Count == 0) return null;
 
-        if (feedId == "vitrasa")
+        if (feedId == "vitrasa" || feedId == "coruna")
         {
             var streets = nextStops
                 .Select(GetStreetName)

@@ -29,10 +29,11 @@ export interface ConsolidatedCirculationForMap {
   currentPosition?: Position;
   stopShapeIndex?: number;
   isPreviousTrip?: boolean;
-  previousTripShapeId?: string;
+  previousTripShapeId?: string | null;
   schedule?: {
-    shapeId?: string;
+    shapeId?: string | null;
   };
+  shape?: any;
 }
 
 interface StopMapModalProps {
@@ -70,7 +71,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
       const circulation = circulations.find(
         (c) => c.id === selectedCirculationId
       );
-      if (circulation?.currentPosition) {
+      if (circulation) {
         return circulation;
       }
     }
@@ -97,27 +98,146 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
 
     const points: { lat: number; lon: number }[] = [];
 
-    const addShapePoints = (data: any) => {
-      if (
-        data?.properties?.busPoint &&
-        data?.properties?.stopPoint &&
-        data?.geometry?.coordinates
-      ) {
-        const busIdx = data.properties.busPoint.index;
-        const stopIdx = data.properties.stopPoint.index;
-        const coords = data.geometry.coordinates;
+    const getStopsFromFeatureCollection = (data: any) => {
+      if (!data || data.type !== "FeatureCollection" || !data.features)
+        return [];
+      return data.features.filter((f: any) => f.properties?.type === "stop");
+    };
 
-        const start = Math.min(busIdx, stopIdx);
-        const end = Math.max(busIdx, stopIdx);
-
-        for (let i = start; i <= end; i++) {
-          points.push({ lat: coords[i][1], lon: coords[i][0] });
+    const findClosestStopIndex = (
+      stops: any[],
+      pos: { lat: number; lon: number }
+    ) => {
+      let minDst = Infinity;
+      let index = -1;
+      stops.forEach((s: any, idx: number) => {
+        const [lon, lat] = s.geometry.coordinates;
+        const dst = Math.pow(lat - pos.lat, 2) + Math.pow(lon - pos.lon, 2);
+        if (dst < minDst) {
+          minDst = dst;
+          index = idx;
         }
+      });
+      return index;
+    };
+
+    const findClosestPointIndex = (
+      coords: number[][],
+      pos: { lat: number; lon: number }
+    ) => {
+      let minDst = Infinity;
+      let index = -1;
+      coords.forEach((c, idx) => {
+        const [lon, lat] = c;
+        const dst = Math.pow(lat - pos.lat, 2) + Math.pow(lon - pos.lon, 2);
+        if (dst < minDst) {
+          minDst = dst;
+          index = idx;
+        }
+      });
+      return index;
+    };
+
+    const addShapePoints = (data: any, isPrevious: boolean) => {
+      if (!data) return;
+
+      if (data.type === "FeatureCollection") {
+        const stops = getStopsFromFeatureCollection(data);
+        if (stops.length === 0) return;
+
+        let startIdx = 0;
+        let endIdx = stops.length - 1;
+
+        const currentPos = selectedBus?.currentPosition;
+        const userStopPos =
+          stop.latitude && stop.longitude
+            ? { lat: stop.latitude, lon: stop.longitude }
+            : null;
+
+        if (isPrevious) {
+          // Previous trip: Start from Bus, End at last stop
+          if (currentPos) {
+            const busIdx = findClosestStopIndex(stops, {
+              lat: currentPos.latitude,
+              lon: currentPos.longitude,
+            });
+            if (busIdx !== -1) startIdx = busIdx;
+          }
+        } else {
+          // Current trip: Start from Bus (if not previous), End at User Stop
+          if (!previousShapeData && currentPos) {
+            const busIdx = findClosestStopIndex(stops, {
+              lat: currentPos.latitude,
+              lon: currentPos.longitude,
+            });
+            if (busIdx !== -1) startIdx = busIdx;
+          }
+
+          if (userStopPos) {
+            let userIdx = -1;
+            // Try name match
+            if (stop.name) {
+              userIdx = stops.findIndex(
+                (s: any) => s.properties?.name === stop.name
+              );
+            }
+            // Fallback to coords
+            if (userIdx === -1) {
+              userIdx = findClosestStopIndex(stops, userStopPos);
+            }
+            if (userIdx !== -1) endIdx = userIdx;
+          }
+        }
+
+        // Add stops in range
+        if (startIdx <= endIdx) {
+          for (let i = startIdx; i <= endIdx; i++) {
+            const [lon, lat] = stops[i].geometry.coordinates;
+            points.push({ lat, lon });
+          }
+        }
+        return;
+      }
+
+      const coords = data?.geometry?.coordinates;
+      if (!coords) return;
+
+      let startIdx = 0;
+      let endIdx = coords.length - 1;
+      let foundIndices = false;
+
+      if (data.properties?.busPoint && data.properties?.stopPoint) {
+        startIdx = data.properties.busPoint.index;
+        endIdx = data.properties.stopPoint.index;
+        foundIndices = true;
+      } else {
+        // Fallback: find closest points on the line
+        if (selectedBus?.currentPosition) {
+          const busIdx = findClosestPointIndex(coords, {
+            lat: selectedBus.currentPosition.latitude,
+            lon: selectedBus.currentPosition.longitude,
+          });
+          if (busIdx !== -1) startIdx = busIdx;
+        }
+        if (stop.latitude && stop.longitude) {
+          const stopIdx = findClosestPointIndex(coords, {
+            lat: stop.latitude,
+            lon: stop.longitude,
+          });
+          if (stopIdx !== -1) endIdx = stopIdx;
+        }
+      }
+
+      const start = Math.min(startIdx, endIdx);
+      const end = Math.max(startIdx, endIdx);
+
+      for (let i = start; i <= end; i++) {
+        points.push({ lat: coords[i][1], lon: coords[i][0] });
       }
     };
 
-    addShapePoints(shapeData);
-    addShapePoints(previousShapeData);
+    addShapePoints(previousShapeData, true);
+    addShapePoints(shapeData, false);
 
     if (points.length === 0) {
       if (stop.latitude && stop.longitude) {
@@ -129,6 +249,17 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
           lat: selectedBus.currentPosition.latitude,
           lon: selectedBus.currentPosition.longitude,
         });
+      }
+    } else {
+      // Ensure bus and stop are always included if available, to prevent cutting them off
+      if (selectedBus?.currentPosition) {
+        points.push({
+          lat: selectedBus.currentPosition.latitude,
+          lon: selectedBus.currentPosition.longitude,
+        });
+      }
+      if (stop.latitude && stop.longitude) {
+        points.push({ lat: stop.latitude, lon: stop.longitude });
       }
     }
 
@@ -156,7 +287,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
           .getMap()
           .easeTo({ center: [only.lon, only.lat], zoom: 16, duration: 450 });
       } else {
-        mapRef.current.fitBounds(bounds, {
+        mapRef.current.getMap().fitBounds(bounds, {
           padding: 80,
           duration: 500,
           maxZoom: 17,
@@ -196,7 +327,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
 
   // Fit bounds on initial load
   useEffect(() => {
-    if (!styleSpec || !mapRef.current || hasFitBounds.current || !isOpen)
+    if (!styleSpec || !mapRef.current || !isOpen)
       return;
 
     const map = mapRef.current.getMap();
@@ -238,103 +369,25 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
 
   // Fetch shape for selected bus
   useEffect(() => {
-    if (
-      !isOpen ||
-      !selectedBus ||
-      !selectedBus.schedule?.shapeId ||
-      selectedBus.currentPosition?.shapeIndex === undefined ||
-      !APP_CONSTANTS.shapeEndpoint
-    ) {
+    if (!isOpen || !selectedBus) {
       setShapeData(null);
       setPreviousShapeData(null);
       return;
     }
 
-    const shapeId = selectedBus.schedule.shapeId;
-    const shapeIndex = selectedBus.currentPosition.shapeIndex;
-    const stopShapeIndex = selectedBus.stopShapeIndex;
-    const stopLat = stop.latitude;
-    const stopLon = stop.longitude;
-
-    const fetchShape = async (
-      sId: string,
-      bIndex?: number,
-      sIndex?: number,
-      sLat?: number,
-      sLon?: number
-    ) => {
-      let url = `${APP_CONSTANTS.shapeEndpoint}?shapeId=${sId}`;
-      if (bIndex !== undefined) url += `&busShapeIndex=${bIndex}`;
-      if (sIndex !== undefined) url += `&stopShapeIndex=${sIndex}`;
-      else if (sLat && sLon) url += `&stopLat=${sLat}&stopLon=${sLon}`;
-
-      const res = await fetch(url);
-      if (res.ok) return res.json();
-      return null;
-    };
-
-    const loadShapes = async () => {
-      if (selectedBus.isPreviousTrip && selectedBus.previousTripShapeId) {
-        // Bus is on previous trip
-        // 1. Load previous shape (where bus is)
-        const prevData = await fetchShape(
-          selectedBus.previousTripShapeId,
-          shapeIndex,
-          stopShapeIndex
-        );
-
-        // 2. Load current scheduled shape (where bus is going)
-        // Bus is not on this shape yet, so no bus index
-        const currData = await fetchShape(
-          shapeId,
-          undefined,
-          undefined,
-          stopLat,
-          stopLon
-        );
-
-        if (
-          prevData &&
-          prevData.geometry &&
-          prevData.geometry.coordinates &&
-          prevData.properties?.busPoint?.index !== undefined
-        ) {
-          const busIdx = prevData.properties.busPoint.index;
-          const coords = prevData.geometry.coordinates;
-          // Slice from busIdx - 5 (clamped to 0) to end
-          const startIdx = Math.max(0, busIdx - 5);
-          const slicedCoords = coords.slice(startIdx);
-
-          // Join with the first point of the next shape to close the gap
-          if (currData?.geometry?.coordinates?.length > 0) {
-            slicedCoords.push(currData.geometry.coordinates[0]);
-          }
-
-          prevData.geometry.coordinates = slicedCoords;
-        }
-
-        setPreviousShapeData(prevData);
-        setShapeData(currData);
-      } else {
-        // Normal case
-        const data = await fetchShape(
-          shapeId,
-          shapeIndex,
-          stopShapeIndex,
-          stopLat,
-          stopLon
-        );
-        setShapeData(data);
-        setPreviousShapeData(null);
-      }
+    if (selectedBus.shape) {
+      setShapeData(selectedBus.shape);
+      setPreviousShapeData(null);
       handleCenter();
-    };
+      return;
+    }
 
-    loadShapes().catch((err) => console.error("Failed to load shape", err));
+    setShapeData(null);
+    setPreviousShapeData(null);
   }, [isOpen, selectedBus]);
 
-  if (busesWithPosition.length === 0) {
-    return null; // Don't render if no buses with GPS coordinates
+  if (!selectedBus && busesWithPosition.length === 0) {
+    return null; // Don't render if no buses with GPS coordinates and no selected bus
   }
 
   return (
@@ -378,6 +431,9 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                   }}
                   onPitchStart={() => {
                     userInteracted.current = true;
+                  }}
+                  onLoad={() => {
+                    handleCenter();
                   }}
                 >
                   {/* Previous Shape Layer */}
@@ -460,6 +516,20 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                         layout={{
                           "line-cap": "round",
                           "line-join": "round",
+                        }}
+                      />
+
+                      {/* Stops Layer */}
+                      <Layer
+                        id="route-stops"
+                        type="circle"
+                        filter={["==", "type", "stop"]}
+                        paint={{
+                          "circle-color": "#FFFFFF",
+                          "circle-radius": 4,
+                          "circle-stroke-width": 2,
+                          "circle-stroke-color": getLineColour(selectedBus.line)
+                            .background,
                         }}
                       />
                     </Source>

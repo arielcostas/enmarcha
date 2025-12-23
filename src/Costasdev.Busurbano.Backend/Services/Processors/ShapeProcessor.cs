@@ -20,6 +20,9 @@ public class ShapeProcessor : IArrivalsProcessor
 
         foreach (var arrival in context.Arrivals)
         {
+            // If shape is already populated (e.g. by VitrasaRealTimeProcessor), skip
+            if (arrival.Shape != null) continue;
+
             if (arrival.RawOtpTrip is not ArrivalsAtStopResponse.Arrival otpArrival) continue;
 
             var encodedPoints = otpArrival.Trip.Geometry?.Points;
@@ -34,14 +37,46 @@ public class ShapeProcessor : IArrivalsProcessor
                 var points = Decode(encodedPoints);
                 if (points.Count == 0) continue;
 
-                arrival.Shape = new
+                var features = new List<object>();
+
+                // Route LineString
+                features.Add(new
                 {
                     type = "Feature",
                     geometry = new
                     {
                         type = "LineString",
                         coordinates = points.Select(p => new[] { p.Lon, p.Lat }).ToList()
+                    },
+                    properties = new { type = "route" }
+                });
+
+                // Stops
+                if (otpArrival.Trip.Stoptimes != null)
+                {
+                    foreach (var stoptime in otpArrival.Trip.Stoptimes)
+                    {
+                        features.Add(new
+                        {
+                            type = "Feature",
+                            geometry = new
+                            {
+                                type = "Point",
+                                coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
+                            },
+                            properties = new
+                            {
+                                type = "stop",
+                                name = stoptime.Stop.Name
+                            }
+                        });
                     }
+                }
+
+                arrival.Shape = new
+                {
+                    type = "FeatureCollection",
+                    features = features
                 };
             }
             catch (Exception ex)

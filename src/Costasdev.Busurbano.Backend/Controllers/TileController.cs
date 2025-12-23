@@ -97,6 +97,7 @@ public class TileController : ControllerBase
                 return;
             }
 
+            // TODO: Duplicate from ArrivalsController
             var (Color, TextColor) = _feedService.GetFallbackColourForFeed(idParts[0]);
             var distinctRoutes = GetDistinctRoutes(feedId, stop.Routes ?? []);
 
@@ -166,7 +167,7 @@ public class TileController : ControllerBase
 
         foreach (var route in routes)
         {
-            var seenId = _feedService.NormalizeRouteShortName(feedId, route.ShortName ?? string.Empty);
+            var seenId = _feedService.GetUniqueRouteShortName(feedId, route.ShortName ?? string.Empty);
             route.ShortName = seenId;
 
             if (seen.Contains(seenId))
