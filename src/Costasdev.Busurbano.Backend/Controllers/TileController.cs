@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 using Costasdev.Busurbano.Backend.Helpers;
+using Costasdev.Busurbano.Backend.Services;
 
 namespace Costasdev.Busurbano.Backend.Controllers;
 
@@ -20,28 +21,20 @@ public class TileController : ControllerBase
     private readonly ILogger<TileController> _logger;
     private readonly IMemoryCache _cache;
     private readonly HttpClient _httpClient;
+    private readonly FeedService _feedService;
 
     public TileController(
         ILogger<TileController> logger,
         IMemoryCache cache,
-        HttpClient httpClient
+        HttpClient httpClient,
+        FeedService feedService
     )
     {
         _logger = logger;
         _cache = cache;
         _httpClient = httpClient;
+        _feedService = feedService;
     }
-
-    private static readonly string[] HiddenStops =
-    [
-        "vitrasa:20223", // Castrelos (Pavillón - U1)
-        "vitrasa:20146", // García Barbón, 7 (A, 18A)
-        "vitrasa:20220", // COIA-SAMIL (15)
-        "vitrasa:20001", // Samil por Beiramar (15B)
-        "vitrasa:20002", // Samil por Torrecedeira (15C)
-        "vitrasa:20144", // Samil por Coia (C3d, C3i)
-        "vitrasa:20145"  // Samil por Bouzs (C3d, C3i)
-    ];
 
     [HttpGet("stops/{z:int}/{x:int}/{y:int}")]
     public async Task<IActionResult> Stops(int z, int x, int y)
@@ -97,24 +90,14 @@ public class TileController : ControllerBase
         {
             var idParts = stop.GtfsId.Split(':', 2);
             string feedId = idParts[0];
-            string codeWithinFeed = stop.Code ?? string.Empty;
+            string codeWithinFeed = _feedService.NormalizeStopCode(feedId, stop.Code ?? string.Empty);
 
-            // TODO: Refactor this, maybe do it client-side or smth
-            if (feedId == "vitrasa")
-            {
-                var digits = new string(codeWithinFeed.Where(char.IsDigit).ToArray());
-                if (int.TryParse(digits, out int code))
-                {
-                    codeWithinFeed = code.ToString();
-                }
-            }
-
-            if (HiddenStops.Contains($"{feedId}:{codeWithinFeed}"))
+            if (_feedService.IsStopHidden($"{feedId}:{codeWithinFeed}"))
             {
                 return;
             }
 
-            var (Color, TextColor) = GetFallbackColourForFeed(idParts[0]);
+            var (Color, TextColor) = _feedService.GetFallbackColourForFeed(idParts[0]);
             var distinctRoutes = GetDistinctRoutes(feedId, stop.Routes ?? []);
 
             Feature feature = new()
@@ -129,7 +112,7 @@ public class TileController : ControllerBase
                     // The public identifier, usually feed:code or feed:id, recognisable by users and in other systems
                     { "code", $"{idParts[0]}:{codeWithinFeed}" },
                     // The name of the stop
-                    { "name", stop.Name },
+                    { "name", _feedService.NormalizeStopName(feedId, stop.Name) },
                     // Routes
                     { "routes", JsonSerializer
                         .Serialize(
@@ -176,21 +159,15 @@ public class TileController : ControllerBase
         return File(ms.ToArray(), "application/x-protobuf");
     }
 
-    private static List<StopTileResponse.Route> GetDistinctRoutes(string feedId, List<StopTileResponse.Route> routes)
+    private List<StopTileResponse.Route> GetDistinctRoutes(string feedId, List<StopTileResponse.Route> routes)
     {
         List<StopTileResponse.Route> distinctRoutes = [];
         HashSet<string> seen = new();
 
         foreach (var route in routes)
         {
-            var seenId = route.ShortName;
-            if (feedId == "xunta")
-            {
-                // For Xunta routes we take only the contract number (XG123, for example)
-                seenId = seenId.Substring(0, 5);
-
-                route.ShortName = seenId;
-            }
+            var seenId = _feedService.NormalizeRouteShortName(feedId, route.ShortName ?? string.Empty);
+            route.ShortName = seenId;
 
             if (seen.Contains(seenId))
             {
@@ -205,20 +182,5 @@ public class TileController : ControllerBase
             r => r.ShortName,
             Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
         )];
-    }
-
-    private static (string Color, string TextColor) GetFallbackColourForFeed(string feed)
-    {
-        return feed switch
-        {
-            "vitrasa" => ("#95D516", "#000000"),
-            "santiago" => ("#508096", "#FFFFFF"),
-            "coruna" => ("#E61C29", "#FFFFFF"),
-            "xunta" => ("#007BC4", "#FFFFFF"),
-            "renfe" => ("#870164", "#FFFFFF"),
-            "feve" => ("#EE3D32", "#FFFFFF"),
-            _ => ("#000000", "#FFFFFF"),
-
-        };
     }
 }

@@ -13,8 +13,8 @@ export const APP_CONSTANTS = {
     lng: -8.72246955783102,
   } as LngLatLike,
   bounds: {
-    sw: [-9.629517, 41.463312] as LngLatLike,
-    ne: [-6.289673, 43.711564] as LngLatLike,
+    sw: [-16, 36] as LngLatLike,
+    ne: [2, 45.5] as LngLatLike,
   },
   textColour: "#e72b37",
   defaultZoom: 14,

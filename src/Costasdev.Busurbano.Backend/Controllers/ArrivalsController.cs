@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Costasdev.Busurbano.Backend.GraphClient;
 using Costasdev.Busurbano.Backend.GraphClient.App;
+using Costasdev.Busurbano.Backend.Services;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -14,16 +15,22 @@ public partial class ArrivalsController : ControllerBase
     private readonly ILogger<ArrivalsController> _logger;
     private readonly IMemoryCache _cache;
     private readonly HttpClient _httpClient;
+    private readonly ArrivalsPipeline _pipeline;
+    private readonly FeedService _feedService;
 
     public ArrivalsController(
         ILogger<ArrivalsController> logger,
         IMemoryCache cache,
-        HttpClient httpClient
+        HttpClient httpClient,
+        ArrivalsPipeline pipeline,
+        FeedService feedService
     )
     {
         _logger = logger;
         _cache = cache;
         _httpClient = httpClient;
+        _pipeline = pipeline;
+        _feedService = feedService;
     }
 
     [HttpGet("arrivals")]
@@ -37,11 +44,7 @@ public partial class ArrivalsController : ControllerBase
         var todayLocal = nowLocal.Date;
 
         var requestContent = ArrivalsAtStopContent.Query(
-            new ArrivalsAtStopContent.Args(
-                id,
-                reduced ? 4 : 10,
-                ShouldFetchPastArrivals(id)
-            )
+            new ArrivalsAtStopContent.Args(id, reduced)
         );
 
         var request = new HttpRequestMessage(HttpMethod.Post, "http://100.67.54.115:3957/otp/gtfs/v1");
@@ -60,10 +63,26 @@ public partial class ArrivalsController : ControllerBase
         }
 
         var stop = responseBody.Data.Stop;
+        _logger.LogInformation("Fetched {Count} arrivals for stop {StopName} ({StopId})", stop.Arrivals.Count, stop.Name, id);
+
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
-            var departureTime = todayLocal.AddSeconds(item.ScheduledDepartureSeconds);
+            if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None))
+            {
+                continue;
+            }
+
+            if (item.Trip.Geometry?.Points != null)
+            {
+                _logger.LogDebug("Trip {TripId} has geometry", item.Trip.GtfsId);
+            }
+
+            // Calculate departure time using the service day in the feed's timezone (Europe/Madrid)
+            // This ensures we treat ScheduledDepartureSeconds as relative to the local midnight of the service day
+            var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
+            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
+
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
             //var isRunning = departureTime < nowLocal;
 
@@ -89,17 +108,29 @@ public partial class ArrivalsController : ControllerBase
                 Estimate = new ArrivalDetails
                 {
                     Minutes = minutesToArrive,
-                    Precision = departureTime < nowLocal ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
-                }
+                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
+                },
+                RawOtpTrip = item
             };
 
             arrivals.Add(arrival);
         }
 
+        await _pipeline.ExecuteAsync(new ArrivalsContext
+        {
+            StopId = id,
+            StopCode = stop.Code,
+            IsReduced = reduced,
+            Arrivals = arrivals,
+            NowLocal = nowLocal
+        });
+
+        var feedId = id.Split(':')[0];
+
         return Ok(new StopArrivalsResponse
         {
-            StopCode = stop.Code,
-            StopName = stop.Name,
+            StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
+            StopName = _feedService.NormalizeStopName(feedId, stop.Name),
             Arrivals = arrivals
         });
     }

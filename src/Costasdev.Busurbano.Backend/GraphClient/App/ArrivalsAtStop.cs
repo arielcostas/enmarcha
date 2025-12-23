@@ -5,28 +5,25 @@ namespace Costasdev.Busurbano.Backend.GraphClient.App;
 
 public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
 {
-    public const int PastArrivalMinutesIncluded = -15;
+    public const int PastArrivalMinutesIncluded = -75;
 
-    public record Args(string Id, int DepartureCount, bool PastArrivals);
+    public record Args(string Id, bool Reduced);
 
     public static string Query(Args args)
     {
-        var startTime = DateTimeOffset.Now;
-        if (args.PastArrivals)
-        {
-            startTime = DateTimeOffset.Now.AddMinutes(PastArrivalMinutesIncluded);
-        }
-
+        var startTime = DateTimeOffset.UtcNow.AddMinutes(PastArrivalMinutesIncluded);
         var startTimeUnix = startTime.ToUnixTimeSeconds();
+        var geometryField = args.Reduced ? "" : @"tripGeometry { points }";
 
         return string.Create(CultureInfo.InvariantCulture, $@"
         query Query {{
             stop(id:""{args.Id}"") {{
                 code
                 name
-                arrivals: stoptimesWithoutPatterns(numberOfDepartures:{args.DepartureCount}, startTime: {startTimeUnix}) {{
+                arrivals: stoptimesWithoutPatterns(numberOfDepartures: 100, startTime: {startTimeUnix}, timeRange: 14400) {{
                     headsign
                     scheduledDeparture
+                    serviceDay
                     pickupType
 
                     trip {{
@@ -36,8 +33,16 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                         route {{
                             color
                             textColor
+                            longName
                         }}
                         departureStoptime {{
+                            scheduledDeparture
+                        }}
+                        {geometryField}
+                        stoptimes {{
+                            stop {{
+                                name
+                            }}
                             scheduledDeparture
                         }}
                     }}
@@ -68,9 +73,12 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("scheduledDeparture")]
         public int ScheduledDepartureSeconds { get; set; }
 
+        [JsonPropertyName("serviceDay")]
+        public long ServiceDay { get; set; }
+
         [JsonPropertyName("pickupType")] public required string PickupTypeOriginal { get; set; }
 
-        public PickupType PickupTypeParsed => PickupTypeParsed.Parse(PickupTypeOriginal);
+        public PickupType PickupTypeParsed => PickupType.Parse(PickupTypeOriginal);
 
         [JsonPropertyName("trip")] public required TripDetails Trip { get; set; }
     }
@@ -87,6 +95,26 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         public required DepartureStoptime DepartureStoptime { get; set; }
 
         [JsonPropertyName("route")] public required RouteDetails Route { get; set; }
+
+        [JsonPropertyName("tripGeometry")] public GeometryDetails? Geometry { get; set; }
+
+        [JsonPropertyName("stoptimes")] public List<StoptimeDetails> Stoptimes { get; set; } = [];
+    }
+
+    public class GeometryDetails
+    {
+        [JsonPropertyName("points")] public string? Points { get; set; }
+    }
+
+    public class StoptimeDetails
+    {
+        [JsonPropertyName("stop")] public required StopDetails Stop { get; set; }
+        [JsonPropertyName("scheduledDeparture")] public int ScheduledDeparture { get; set; }
+    }
+
+    public class StopDetails
+    {
+        [JsonPropertyName("name")] public required string Name { get; set; }
     }
 
     public class DepartureStoptime
@@ -100,6 +128,8 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("color")] public string? Color { get; set; }
 
         [JsonPropertyName("textColor")] public string? TextColor { get; set; }
+
+        [JsonPropertyName("longName")] public string? LongName { get; set; }
     }
 
     public class PickupType
@@ -111,7 +141,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
             _value = value;
         }
 
-        public PickupType Parse(string value)
+        public static PickupType Parse(string value)
         {
             return value switch
             {

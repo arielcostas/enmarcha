@@ -1,6 +1,6 @@
 import React from "react";
 import { type Arrival } from "../../api/schema";
-import { ArrivalCard } from "./ArrivalCard";
+import { ReducedArrivalCard } from "./ArrivalCard";
 
 interface ArrivalListProps {
   arrivals: Arrival[];
@@ -14,7 +14,7 @@ export const ArrivalList: React.FC<ArrivalListProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {arrivals.map((arrival, index) => (
-        <ArrivalCard
+        <ReducedArrivalCard
           key={`${arrival.route.shortName}-${index}`}
           arrival={arrival}
           reduced={reduced}

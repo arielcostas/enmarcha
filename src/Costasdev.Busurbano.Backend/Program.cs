@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Costasdev.Busurbano.Backend.Configuration;
 using Costasdev.Busurbano.Backend.Services;
+using Costasdev.Busurbano.Backend.Services.Processors;
 using Costasdev.Busurbano.Backend.Services.Providers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +18,15 @@ builder.Services
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ShapeTraversalService>();
+builder.Services.AddSingleton<FeedService>();
+
+builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, MarqueeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, FeedConfigProcessor>();
+builder.Services.AddScoped<ArrivalsPipeline>();
 
 builder.Services.AddHttpClient<OtpService>();
 builder.Services.AddScoped<VitrasaTransitProvider>();

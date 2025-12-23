@@ -21,6 +21,15 @@ public class Arrival
 
     [JsonPropertyName("shift")]
     public ShiftBadge? Shift { get; set; }
+
+    [JsonPropertyName("shape")]
+    public object? Shape { get; set; }
+
+    [JsonIgnore]
+    public List<string> NextStops { get; set; } = [];
+
+    [JsonIgnore]
+    public object? RawOtpTrip { get; set; }
 }
 
 public class RouteInfo
@@ -78,8 +87,8 @@ public class DelayBadge
 public class ShiftBadge
 {
     [JsonPropertyName("shiftName")]
-    public string ShiftName { get; set; }
+    public required string ShiftName { get; set; }
 
     [JsonPropertyName("shiftTrip")]
-    public string ShiftTrip { get; set; }
+    public required string ShiftTrip { get; set; }
 }

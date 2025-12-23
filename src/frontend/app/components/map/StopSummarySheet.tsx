@@ -56,7 +56,7 @@ export const StopSheet: React.FC<StopSheetProps> = ({
               <span className="stop-sheet-id">({stop.stopCode})</span>
             </div>
 
-            <div className={`d-flex flex-wrap flex-row gap-2`}>
+            <div className={`flex flex-wrap flex-row gap-2`}>
               {stop.lines.map((lineObj) => (
                 <LineIcon
                   key={lineObj.line}
