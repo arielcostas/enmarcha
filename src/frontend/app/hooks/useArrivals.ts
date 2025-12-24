@@ -10,7 +10,7 @@ export const useStopArrivals = (
     queryKey: ["arrivals", stopId, reduced],
     queryFn: () => fetchArrivals(stopId, reduced),
     enabled: !!stopId && enabled,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 15000, // Refresh every 15 seconds
     retry: false, // Disable retries to see errors immediately
   });
 };

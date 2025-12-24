@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Costasdev.Busurbano.Backend.GraphClient;
 using Costasdev.Busurbano.Backend.GraphClient.App;
+using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Services;
 using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
@@ -140,13 +141,19 @@ public partial class ArrivalsController : ControllerBase
                 Latitude = stop.Lat,
                 Longitude = stop.Lon
             },
-            Routes = stop.Routes.Select(r => new RouteInfo
-            {
-                GtfsId =  r.GtfsId,
-                ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                Colour = r.Color ?? "FFFFFF",
-                TextColour = r.TextColor ?? "000000"
-            }).ToList(),
+            Routes = stop.Routes
+                .OrderBy(
+                    r => r.ShortName,
+                    Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
+                )
+                .Select(r => new RouteInfo
+                {
+                    GtfsId = r.GtfsId,
+                    ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                    Colour = r.Color ?? "FFFFFF",
+                    TextColour = r.TextColor ?? "000000"
+                })
+                .ToList(),
             Arrivals = arrivals
         });
     }

@@ -8,9 +8,8 @@ import { ArrivalList } from "~/components/arrivals/ArrivalList";
 import { ErrorDisplay } from "~/components/ErrorDisplay";
 import LineIcon from "~/components/LineIcon";
 import { PullToRefresh } from "~/components/PullToRefresh";
-import { StopHelpModal } from "~/components/StopHelpModal";
-import { StopMapModal } from "~/components/StopMapModal";
-import { ConsolidatedCirculationListSkeleton } from "~/components/Stops/ConsolidatedCirculationListSkeleton";
+import { StopHelpModal } from "~/components/stop/StopHelpModal";
+import { StopMapModal } from "~/components/stop/StopMapModal";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { useAutoRefresh } from "~/hooks/useAutoRefresh";
 import StopDataProvider from "../data/StopDataProvider";
@@ -163,7 +162,7 @@ export default function Estimates() {
 
         <div className="estimates-list-container">
           {dataLoading ? (
-            <ConsolidatedCirculationListSkeleton />
+            <>{/*TODO: New loading skeleton*/}</>
           ) : dataError ? (
             <ErrorDisplay
               error={dataError}

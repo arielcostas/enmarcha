@@ -9,19 +9,16 @@ import {
 import { APP_CONSTANTS } from "~/config/constants";
 
 interface MapState {
-  center: LngLatLike;
-  zoom: number;
+  paths: Record<string, { center: LngLatLike; zoom: number }>;
   userLocation: LngLatLike | null;
   hasLocationPermission: boolean;
 }
 
 interface MapContextProps {
   mapState: MapState;
-  setMapCenter: (center: LngLatLike) => void;
-  setMapZoom: (zoom: number) => void;
   setUserLocation: (location: LngLatLike | null) => void;
   setLocationPermission: (hasPermission: boolean) => void;
-  updateMapState: (center: LngLatLike, zoom: number) => void;
+  updateMapState: (center: LngLatLike, zoom: number, path: string) => void;
 }
 
 const MapContext = createContext<MapContextProps | undefined>(undefined);
@@ -36,8 +33,7 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
         // We might want to ensure we have a fallback if the region changed while the app was closed?
         // But for now, let's stick to the existing logic.
         return {
-          center: parsed.center || APP_CONSTANTS.defaultCenter,
-          zoom: parsed.zoom || APP_CONSTANTS.defaultZoom,
+          paths: parsed.paths || {},
           userLocation: parsed.userLocation || null,
           hasLocationPermission: parsed.hasLocationPermission || false,
         };
@@ -46,28 +42,11 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     return {
-      center: APP_CONSTANTS.defaultCenter,
-      zoom: APP_CONSTANTS.defaultZoom,
+      paths: {},
       userLocation: null,
       hasLocationPermission: false,
     };
   });
-
-  const setMapCenter = (center: LngLatLike) => {
-    setMapState((prev) => {
-      const newState = { ...prev, center };
-      localStorage.setItem("mapState", JSON.stringify(newState));
-      return newState;
-    });
-  };
-
-  const setMapZoom = (zoom: number) => {
-    setMapState((prev) => {
-      const newState = { ...prev, zoom };
-      localStorage.setItem("mapState", JSON.stringify(newState));
-      return newState;
-    });
-  };
 
   const setUserLocation = (userLocation: LngLatLike | null) => {
     setMapState((prev) => {
@@ -85,9 +64,15 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const updateMapState = (center: LngLatLike, zoom: number) => {
+  const updateMapState = (center: LngLatLike, zoom: number, path: string) => {
     setMapState((prev) => {
-      const newState = { ...prev, center, zoom };
+      const newState = {
+        ...prev,
+        paths: {
+          ...prev.paths,
+          [path]: { center, zoom },
+        },
+      };
       localStorage.setItem("mapState", JSON.stringify(newState));
       return newState;
     });
@@ -115,8 +100,6 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
     <MapContext.Provider
       value={{
         mapState,
-        setMapCenter,
-        setMapZoom,
         setUserLocation,
         setLocationPermission,
         updateMapState,

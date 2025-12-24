@@ -3,17 +3,17 @@ import maplibregl, { type StyleSpecification } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import Map, { Layer, Source, type MapRef } from "react-map-gl/maplibre";
+import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { useLocation } from "react-router";
 
 import { useApp } from "~/AppContext";
 import LineIcon from "~/components/LineIcon";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
+import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { type Itinerary } from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
-import { DEFAULT_STYLE, loadStyle } from "~/maps/styleloader";
 import "../tailwind-full.css";
 
 export interface ConsolidatedCirculation {
@@ -371,16 +371,6 @@ const ItineraryDetail = ({
     return () => clearTimeout(timer);
   }, [mapRef.current, itinerary]);
 
-  const { theme } = useApp();
-  const [mapStyle, setMapStyle] = useState<StyleSpecification>(DEFAULT_STYLE);
-
-  useEffect(() => {
-    const styleName = "openfreemap";
-    loadStyle(styleName, theme, { includeTraffic: false })
-      .then((style) => setMapStyle(style))
-      .catch((error) => console.error("Failed to load map style:", error));
-  }, [theme]);
-
   // Fetch next arrivals for bus legs
   useEffect(() => {
     const fetchArrivals = async () => {
@@ -420,7 +410,7 @@ const ItineraryDetail = ({
     <div className="flex flex-col md:flex-row h-full">
       {/* Map Section */}
       <div className="relative h-2/3 md:h-full md:flex-1">
-        <Map
+        <AppMap
           ref={mapRef}
           initialViewState={{
             longitude:
@@ -431,7 +421,7 @@ const ItineraryDetail = ({
               (APP_CONSTANTS.defaultCenter as [number, number])[1],
             zoom: 13,
           }}
-          mapStyle={mapStyle}
+          showTraffic={false}
           attributionControl={false}
         >
           <Source id="route" type="geojson" data={routeGeoJson as any}>
@@ -565,7 +555,7 @@ const ItineraryDetail = ({
               }}
             />
           </Source>
-        </Map>
+        </AppMap>
 
         <button
           onClick={onClose}

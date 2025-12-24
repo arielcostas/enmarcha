@@ -120,10 +120,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 
                     // Calculate delay badge
                     var delayMinutes = estimate.Minutes - scheduledMinutes;
-                    if (delayMinutes != 0)
-                    {
-                        arrival.Delay = new DelayBadge { Minutes = delayMinutes };
-                    }
+                    arrival.Delay = new DelayBadge { Minutes = delayMinutes };
 
                     // Prefer real-time headsign if available and different
                     if (!string.IsNullOrWhiteSpace(estimate.Route))

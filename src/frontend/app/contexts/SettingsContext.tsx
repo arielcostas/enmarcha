@@ -5,10 +5,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { APP_CONFIG } from "~/config/AppConfig";
+import { APP_CONFIG } from "../config/appConfig";
 
 export type Theme = "light" | "dark" | "system";
-export type TableStyle = "regular" | "grouped" | "experimental_consolidated";
 export type MapPositionMode = "gps" | "last";
 
 interface SettingsContextProps {
@@ -19,6 +18,11 @@ interface SettingsContextProps {
   mapPositionMode: MapPositionMode;
   setMapPositionMode: (mode: MapPositionMode) => void;
   resolvedTheme: "light" | "dark";
+
+  showTraffic: boolean;
+  setShowTraffic: (show: boolean) => void;
+  showCameras: boolean;
+  setShowCameras: (show: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextProps | undefined>(
@@ -104,26 +108,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   }, [theme]);
   //#endregion
 
-  //#region Table Style
-  const [tableStyle, setTableStyle] = useState<TableStyle>(() => {
-    const savedTableStyle = localStorage.getItem("tableStyle");
-    if (savedTableStyle) {
-      return savedTableStyle as TableStyle;
-    }
-    return APP_CONFIG.defaultTableStyle;
-  });
-
-  const toggleTableStyle = () => {
-    setTableStyle((prevTableStyle) =>
-      prevTableStyle === "regular" ? "grouped" : "regular"
-    );
-  };
-
-  useEffect(() => {
-    localStorage.setItem("tableStyle", tableStyle);
-  }, [tableStyle]);
-  //#endregion
-
   //#region Map Position Mode
   const [mapPositionMode, setMapPositionMode] = useState<MapPositionMode>(
     () => {
@@ -139,6 +123,26 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   }, [mapPositionMode]);
   //#endregion
 
+  //#region Map Layers
+  const [showTraffic, setShowTraffic] = useState<boolean>(() => {
+    const saved = localStorage.getItem("showTraffic");
+    return saved !== null ? saved === "true" : true;
+  });
+
+  const [showCameras, setShowCameras] = useState<boolean>(() => {
+    const saved = localStorage.getItem("showCameras");
+    return saved !== null ? saved === "true" : false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("showTraffic", showTraffic.toString());
+  }, [showTraffic]);
+
+  useEffect(() => {
+    localStorage.setItem("showCameras", showCameras.toString());
+  }, [showCameras]);
+  //#endregion
+
   return (
     <SettingsContext.Provider
       value={{
@@ -148,6 +152,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         mapPositionMode,
         setMapPositionMode,
         resolvedTheme,
+        showTraffic,
+        setShowTraffic,
+        showCameras,
+        setShowCameras,
       }}
     >
       {children}

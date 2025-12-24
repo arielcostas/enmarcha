@@ -26,6 +26,9 @@
     "map_position_mode": "Posición del mapa:",
     "map_position_gps": "Posición GPS",
     "map_position_last": "Donde lo dejé",
+    "map_layers": "Capas del mapa",
+    "show_traffic": "Mostrar tráfico",
+    "show_cameras": "Mostrar cámaras",
     "language": "Idioma"
   },
   "stoplist": {

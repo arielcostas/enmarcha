@@ -1,4 +1,3 @@
-import maplibregl from "maplibre-gl";
 import React, {
   useCallback,
   useEffect,
@@ -6,13 +5,13 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Map, { Layer, Marker, Source, type MapRef } from "react-map-gl/maplibre";
+import { Layer, Marker, Source, type MapRef } from "react-map-gl/maplibre";
 import { Sheet } from "react-modal-sheet";
 import { useApp } from "~/AppContext";
+import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
 import { getLineColour } from "~/data/LineColors";
 import type { Stop } from "~/data/StopDataProvider";
-import { loadStyle } from "~/maps/styleloader";
 import "./StopMapModal.css";
 
 export interface Position {
@@ -52,7 +51,6 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
   selectedCirculationId,
 }) => {
   const { theme } = useApp();
-  const [styleSpec, setStyleSpec] = useState<any | null>(null);
   const mapRef = useRef<MapRef | null>(null);
   const hasFitBounds = useRef(false);
   const userInteracted = useRef(false);
@@ -296,19 +294,6 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
     } catch {}
   }, [stop, selectedBus, shapeData, previousShapeData]);
 
-  // Load style without traffic layers for the stop map
-  useEffect(() => {
-    let mounted = true;
-    loadStyle("openfreemap", theme, { includeTraffic: false })
-      .then((style) => {
-        if (mounted) setStyleSpec(style);
-      })
-      .catch((err) => console.error("Failed to load map style", err));
-    return () => {
-      mounted = false;
-    };
-  }, [theme]);
-
   // Resize map and fit bounds when modal opens
   useEffect(() => {
     if (isOpen && mapRef.current) {
@@ -327,35 +312,11 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
 
   // Fit bounds on initial load
   useEffect(() => {
-    if (!styleSpec || !mapRef.current || !isOpen)
-      return;
-
-    const map = mapRef.current.getMap();
-
-    // Handle missing sprite images to suppress console warnings
-    const handleStyleImageMissing = (e: any) => {
-      if (!map || map.hasImage(e.id)) return;
-      map.addImage(e.id, {
-        width: 1,
-        height: 1,
-        data: new Uint8Array(4),
-      });
-    };
-
-    map.on("styleimagemissing", handleStyleImageMissing);
+    if (!mapRef.current || !isOpen) return;
 
     handleCenter();
     hasFitBounds.current = true;
-
-    return () => {
-      if (mapRef.current) {
-        const map = mapRef.current.getMap();
-        if (map) {
-          map.off("styleimagemissing", handleStyleImageMissing);
-        }
-      }
-    };
-  }, [styleSpec, stop, selectedBus, isOpen, handleCenter]);
+  }, [stop, selectedBus, isOpen, handleCenter]);
 
   // Reset bounds when modal opens/closes
   useEffect(() => {
@@ -398,45 +359,42 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
           <div className="stop-map-modal">
             {/* Map Container */}
             <div className="stop-map-modal__map-container">
-              {styleSpec && (
-                <Map
-                  mapLib={maplibregl as any}
-                  initialViewState={{
-                    latitude: center.latitude,
-                    longitude: center.longitude,
-                    zoom: 16,
-                  }}
-                  style={{ width: "100%", height: "50vh" }}
-                  mapStyle={styleSpec}
-                  attributionControl={{
-                    compact: false,
-                    customAttribution:
-                      "Concello de Vigo & Viguesa de Transportes SL",
-                  }}
-                  ref={mapRef}
-                  interactive={true}
-                  onMove={(e) => {
-                    if (e.originalEvent) {
-                      userInteracted.current = true;
-                    }
-                  }}
-                  onDragStart={() => {
+              <AppMap
+                ref={mapRef}
+                initialViewState={{
+                  latitude: center.latitude,
+                  longitude: center.longitude,
+                  zoom: 16,
+                }}
+                style={{ width: "100%", height: "50vh" }}
+                showTraffic={false}
+                attributionControl={{
+                  compact: false,
+                  customAttribution:
+                    "Concello de Vigo & Viguesa de Transportes SL",
+                }}
+                onMove={(e) => {
+                  if (e.originalEvent) {
                     userInteracted.current = true;
-                  }}
-                  onZoomStart={() => {
-                    userInteracted.current = true;
-                  }}
-                  onRotateStart={() => {
-                    userInteracted.current = true;
-                  }}
-                  onPitchStart={() => {
-                    userInteracted.current = true;
-                  }}
-                  onLoad={() => {
-                    handleCenter();
-                  }}
-                >
-                  {/* Previous Shape Layer */}
+                  }
+                }}
+                onDragStart={() => {
+                  userInteracted.current = true;
+                }}
+                onZoomStart={() => {
+                  userInteracted.current = true;
+                }}
+                onRotateStart={() => {
+                  userInteracted.current = true;
+                }}
+                onPitchStart={() => {
+                  userInteracted.current = true;
+                }}
+                onLoad={() => {
+                  handleCenter();
+                }}
+              >
+                {/* Previous Shape Layer */}
                   {previousShapeData && selectedBus && (
                     <Source
                       id="prev-route-shape"
@@ -610,8 +568,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                       </div>
                     </Marker>
                   )}
-                </Map>
-              )}
+                </AppMap>
 
               {/* Floating controls */}
               <div className="map-modal-controls">

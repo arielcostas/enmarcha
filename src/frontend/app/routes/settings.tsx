@@ -7,7 +7,16 @@ import "../tailwind-full.css";
 export default function Settings() {
   const { t, i18n } = useTranslation();
   usePageTitle(t("navbar.settings", "Ajustes"));
-  const { theme, setTheme, mapPositionMode, setMapPositionMode } = useApp();
+  const {
+    theme,
+    setTheme,
+    mapPositionMode,
+    setMapPositionMode,
+    showTraffic,
+    setShowTraffic,
+    showCameras,
+    setShowCameras,
+  } = useApp();
 
   const THEMES = [
     {
@@ -81,6 +90,37 @@ export default function Settings() {
           <option value="gps">{t("about.map_position_gps")}</option>
           <option value="last">{t("about.map_position_last")}</option>
         </select>
+      </section>
+
+      {/* Map Layers */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 text-text">
+          {t("about.map_layers", "Capas del mapa")}
+        </h2>
+        <div className="space-y-4">
+          <label className="flex items-center justify-between p-4 rounded-lg border border-border bg-surface cursor-pointer hover:bg-surface/50 transition-colors">
+            <span className="text-text font-medium">
+              {t("about.show_traffic", "Mostrar tráfico")}
+            </span>
+            <input
+              type="checkbox"
+              checked={showTraffic}
+              onChange={(e) => setShowTraffic(e.target.checked)}
+              className="w-5 h-5 rounded border-border text-primary focus:ring-primary/50"
+            />
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-lg border border-border bg-surface cursor-pointer hover:bg-surface/50 transition-colors">
+            <span className="text-text font-medium">
+              {t("about.show_cameras", "Mostrar cámaras")}
+            </span>
+            <input
+              type="checkbox"
+              checked={showCameras}
+              onChange={(e) => setShowCameras(e.target.checked)}
+              className="w-5 h-5 rounded border-border text-primary focus:ring-primary/50"
+            />
+          </label>
+        </div>
       </section>
 
       {/* Language Selection */}
