@@ -10,32 +10,28 @@
   "lang": "es",
   "background_color": "#F7F7FF",
   "theme_color": "#27187E",
-  "categories": ["productivity"],
+  "categories": [
+    "productivity"
+  ],
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/logo-512.jpg",
-      "sizes": "512x512",
-      "type": "image/jpg",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo-256.jpg",
-      "sizes": "256x256",
-      "type": "image/jpg",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo-256.png",
-      "sizes": "256x256",
+      "src": "/icon-square.png",
+      "sizes": "any",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon",
-      "purpose": "any maskable"
+      "src": "/icon-transparent.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any monochrome"
+    },
+    {
+      "src": "/icon-transparent.png",
+      "type": "image/png",
+      "sizes": "any",
+      "purpose": "any monochrome"
     }
   ],
   "screenshots": [
@@ -60,7 +56,6 @@
       "form_factor": "narrow",
       "label": "Estimaciones de llegada a parada"
     },
-
     {
       "src": "/screenshots/stoplist-wide.jpeg",
       "sizes": "1788x891",

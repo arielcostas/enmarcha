@@ -36,11 +36,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="icon" type="image/jpg" href="/logo-512.jpg" />
-        <link rel="icon" href="/favicon.ico" sizes="64x64" />
-        <link rel="apple-touch-icon" href="/logo-512.jpg" sizes="512x512" />
+
+        <link rel="icon" type="image/png" href="/icon-round.png" />
+        <link rel="apple-touch-icon" href="/icon-round.png" sizes="256x256" />
+
         <meta name="theme-color" content="#F7F7FF" />
-        <link rel="canonical" href="https://busurbano.costas.dev/" />
+        <link rel="canonical" href="https://enmarcha.app/" />
 
         <meta
           name="description"
@@ -52,12 +53,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
         <meta name="author" content="Ariel Costas Guerrero" />
 
-        <meta property="og:title" content="Busurbano Web" />
+        <meta property="og:title" content="EnMarcha" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://busurbano.costas.dev/" />
+        <meta property="og:url" content="https://enmarcha.app/" />
         <meta
           property="og:image"
-          content="https://busurbano.costas.dev/logo-512.jpg"
+          content="https://enmarcha.app/icon-round.png"
         />
         <meta
           property="og:description"
