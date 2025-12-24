@@ -16,7 +16,7 @@ import Map, {
 import { useNavigate } from "react-router";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import {
-  StopSheet,
+  StopSummarySheet,
   type StopSheetProps,
 } from "~/components/map/StopSummarySheet";
 import { APP_CONSTANTS } from "~/config/constants";
@@ -278,7 +278,7 @@ export default function StopMap() {
         />
 
         {selectedStop && (
-          <StopSheet
+          <StopSummarySheet
             isOpen={isSheetOpen}
             onClose={() => setIsSheetOpen(false)}
             stop={selectedStop}

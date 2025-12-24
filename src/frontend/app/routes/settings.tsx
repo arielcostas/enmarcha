@@ -31,7 +31,7 @@ export default function Settings() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Theme Selection */}
       <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold mb-4 text-text">
           {t("about.theme", "Tema")}
         </h2>
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
@@ -42,12 +42,12 @@ export default function Settings() {
               className={`
                 p-4 sm:p-6 flex flex-col items-center justify-center gap-2
                 rounded-lg border-2 transition-all duration-200
-                hover:bg-gray-50 dark:hover:bg-gray-800
-                focus:outline-none focus:ring focus:ring-blue-500 dark:focus:ring-offset-gray-900
+                hover:bg-surface/50
+                focus:outline-none focus:ring focus:ring-primary/50
                 ${
                   value === theme
-                    ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 font-semibold"
-                    : "border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300"
+                    ? "border-primary bg-primary/10 text-primary font-semibold"
+                    : "border-border text-muted"
                 }
               `}
             >
@@ -62,17 +62,17 @@ export default function Settings() {
       <section className="mb-8">
         <label
           htmlFor="mapPositionMode"
-          className="block text-lg font-medium text-gray-900 dark:text-gray-100 mb-3"
+          className="block text-lg font-medium text-text mb-3"
         >
           {t("about.map_position_mode")}
         </label>
         <select
           id="mapPositionMode"
           className="
-            w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700
-            bg-white dark:bg-gray-800
-            text-gray-900 dark:text-gray-100
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            w-full px-4 py-3 rounded-lg border border-border
+            bg-surface
+            text-text
+            focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent
             transition-colors duration-200
           "
           value={mapPositionMode}
@@ -87,17 +87,17 @@ export default function Settings() {
       <section>
         <label
           htmlFor="language"
-          className="block text-lg font-medium text-gray-900 dark:text-gray-100 mb-3"
+          className="block text-lg font-medium text-text mb-3"
         >
           {t("about.language", "Idioma")}
         </label>
         <select
           id="language"
           className="
-            w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700
-            bg-white dark:bg-gray-800
-            text-gray-900 dark:text-gray-100
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            w-full px-4 py-3 rounded-lg border border-border
+            bg-surface
+            text-text
+            focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent
             transition-colors duration-200
           "
           value={i18n.language}

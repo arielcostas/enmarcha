@@ -1,35 +1,36 @@
 :root {
   --colour-scheme: light;
-  --background-color: #ffffff;
-  --text-color: #333333;
-  --subtitle-color: #444444;
-  --border-color: #eeeeee;
-  --button-background-color: #007bff;
-  --button-hover-background-color: #0069d9;
+  --background-color: #f7f7ff;
+  --text-color: #1a1b26;
+  --subtitle-color: #4a4b56;
+  --border-color: #e1e1ef;
+  --button-background-color: #27187e;
+  --primary-color: var(--button-background-color);
+  --button-hover-background-color: #1e1263;
   --button-disabled-background-color: #cccccc;
   --star-color: #ffcc00;
-  --message-background-color: #f8f9fa;
+  --message-background-color: #ffffff;
 
   /* Skeletons */
-  --skeleton-base: #f0f0f0;
-  --skeleton-highlight: #e0e0e0;
+  --skeleton-base: #eef0f7;
+  --skeleton-highlight: #e1e4f0;
 
   /* Timetable component variables */
   --text-primary: var(--text-color);
-  --text-secondary: #666666;
+  --text-secondary: #6a6b76;
   --surface-future: var(--background-color);
-  --surface-next: #eef6ff; /* slightly accented surface for next card */
-  --surface-past: hsl(0 0% 90% / 1);
-  --accent-next: #1e88e5; /* accent color for next card left border */
+  --surface-next: #eef0ff; /* slightly accented surface for next card */
+  --surface-past: hsl(240 20% 90% / 1);
+  --accent-next: #27187e; /* accent color for next card left border */
   --card-border: var(--border-color);
-  --card-background: #f8f9fa;
-  --service-background: #f0f0f0;
-  --service-background-past: #e8e8e8;
+  --card-background: #ffffff;
+  --service-background: #f0f1f9;
+  --service-background-past: #e8e9f0;
 
   /* Alert color variables */
-  --alert-info-bg: rgba(59, 130, 246, 0.1);
-  --alert-info-border: rgba(59, 130, 246, 0.5);
-  --alert-info-text: #1e40af;
+  --alert-info-bg: rgba(39, 24, 126, 0.05);
+  --alert-info-border: rgba(39, 24, 126, 0.2);
+  --alert-info-text: #27187e;
 
   --alert-warning-bg: rgba(255, 152, 0, 0.1);
   --alert-warning-border: rgba(255, 152, 0, 0.5);
@@ -41,46 +42,49 @@
 
   /* Error display colors */
   --error-icon-color: #e74c3c;
-  --error-title-color: #2c3e50;
-  --error-message-color: #7f8c8d;
+  --error-title-color: #1a1b26;
+  --error-message-color: #4a4b56;
 
   color-scheme: light;
-  font-family:
-    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  font-family: var(--font-ui);
 }
 
 [data-theme="dark"] {
   --colour-scheme: dark;
-  --background-color: #121212;
-  --text-color: #ffffff;
-  --subtitle-color: #bbbbbb;
-  --border-color: #444444;
-  --button-background-color: #1f93f2;
-  --button-hover-background-color: #1872d9;
-  --button-disabled-background-color: #555555;
+  --background-color: #1a1b26;
+  --text-color: #f7f7ff;
+  --subtitle-color: #a1a1b0;
+  --border-color: #2d2e3d;
+  --button-background-color: #8b7fff;
+  --primary-color: var(--button-background-color);
+  --button-hover-background-color: #7a6eff;
+  --button-disabled-background-color: #444444;
   --star-color: #ffcc00;
-  --message-background-color: #333333;
+  --message-background-color: #242533;
 
   /* Skeletons (dark) */
-  --skeleton-base: #2a2a2a;
-  --skeleton-highlight: #3a3a3a;
+  --skeleton-base: #2d2e3d;
+  --skeleton-highlight: #3d3e4d;
 
   /* Timetable component dark overrides */
   --text-primary: var(--text-color);
-  --text-secondary: #bbbbbb;
-  --surface-future: #1e1e1e;
-  --surface-next: #17212b;
-  --surface-past: #1a1a1a;
-  --accent-next: #64b5f6;
+  --text-secondary: #a1a1b0;
+  --surface-future: #242533;
+  --surface-next: #1e1f2e;
+  --surface-past: #1c1d29;
+  --accent-next: #8b7fff;
   --card-border: var(--border-color);
-  --card-background: #1e1e1e;
-  --service-background: #222222;
-  --service-background-past: #1f1f1f;
+  --card-background: #242533;
+  --service-background: #2a2b3a;
+  --service-background-past: #222331;
 
   /* Alert color variables (dark) */
-  --alert-info-bg: rgba(59, 130, 246, 0.15);
-  --alert-info-border: rgba(59, 130, 246, 0.4);
+  --alert-info-bg: rgba(77, 59, 255, 0.15);
+  --alert-info-border: rgba(77, 59, 255, 0.4);
   --alert-info-text: #93c5fd;
 
   --alert-warning-bg: rgba(255, 152, 0, 0.15);
@@ -93,10 +97,19 @@
 
   /* Error display colors (dark) */
   --error-icon-color: #e74c3c;
-  --error-title-color: #e0e0e0;
-  --error-message-color: #b0b0b0;
+  --error-title-color: #f7f7ff;
+  --error-message-color: #a1a1b0;
 
   color-scheme: dark;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
 }
 
 body {
@@ -116,6 +129,13 @@ body {
 
   /* Disable browser's native pull-to-refresh on mobile */
   overscroll-behavior-y: contain;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
 }
 
 .main-content {
@@ -147,6 +167,7 @@ body {
 }
 
 .page-title {
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-color);
@@ -154,6 +175,7 @@ body {
 }
 
 .page-subtitle {
+  font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 500;
   color: var(--subtitle-color);
@@ -161,6 +183,7 @@ body {
 }
 
 .message {
+  font-family: var(--font-display);
   background-color: var(--message-background-color);
   padding: 1rem;
   border-radius: 0.5rem;

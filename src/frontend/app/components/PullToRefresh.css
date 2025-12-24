@@ -20,21 +20,21 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--surface-color, #f8f9fa);
-  border: 2px solid var(--border-color, #e9ecef);
+  background: var(--message-background-color);
+  border: 2px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
 
 .refresh-icon-container.active {
-  background: var(--primary-color, #007bff);
-  border-color: var(--primary-color, #007bff);
+  background: var(--primary-color);
+  border-color: var(--primary-color);
 }
 
 .refresh-icon {
   width: 20px;
   height: 20px;
-  color: var(--text-secondary, #6c757d);
+  color: var(--text-secondary);
   transition: color 0.2s ease;
 }
 

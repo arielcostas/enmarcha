@@ -14,6 +14,7 @@
     "checkformat": "prettier --check ."
   },
   "dependencies": {
+    "@fontsource-variable/outfit": "^5.2.8",
     "@fontsource-variable/roboto": "^5.2.8",
     "@react-router/node": "^7.9.6",
     "@react-router/serve": "^7.9.6",

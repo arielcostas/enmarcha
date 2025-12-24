@@ -6,7 +6,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 
-import "@fontsource-variable/roboto";
+import "@fontsource-variable/outfit";
 import type { Route } from "./+types/root";
 import "./root.css";
 
@@ -39,7 +39,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <link rel="icon" type="image/jpg" href="/logo-512.jpg" />
         <link rel="icon" href="/favicon.ico" sizes="64x64" />
         <link rel="apple-touch-icon" href="/logo-512.jpg" sizes="512x512" />
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#F7F7FF" />
         <link rel="canonical" href="https://busurbano.costas.dev/" />
 
         <meta

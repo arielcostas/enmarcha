@@ -1,3 +1,5 @@
+@import "../../tailwind.css";
+
 /* Stop Sheet Styles */
 .react-modal-sheet-container {
   background-color: var(--background-color) !important;
@@ -29,6 +31,7 @@
 }
 
 .stop-sheet-title {
+  font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-color);
@@ -36,6 +39,7 @@
 }
 
 .stop-sheet-id {
+  font-family: var(--font-display);
   font-size: 1rem;
   color: var(--subtitle-color);
 }
@@ -85,6 +89,7 @@
 }
 
 .stop-sheet-subtitle {
+  font-family: var(--font-display);
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--text-color);
@@ -92,6 +97,7 @@
 }
 
 .stop-sheet-no-estimates {
+  font-family: var(--font-display);
   text-align: center;
   padding: 32px 16px;
   color: var(--subtitle-color);
@@ -183,6 +189,7 @@
 }
 
 .stop-sheet-timestamp {
+  font-family: var(--font-ui);
   font-size: 0.8rem;
   color: var(--subtitle-color);
   text-align: center;
@@ -194,35 +201,19 @@
 }
 
 .stop-sheet-reload {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-color);
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex: 1;
-  justify-content: center;
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-transparent text-text text-sm font-sans cursor-pointer transition-all flex-1;
 }
 
 .stop-sheet-reload:hover:not(:disabled) {
-  background: var(--message-background-color);
-  border-color: var(--button-background-color);
+  @apply bg-surface border-primary;
 }
 
 .stop-sheet-reload:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  @apply opacity-60 cursor-not-allowed;
 }
 
 .reload-icon {
-  width: 14px;
-  height: 14px;
-  transition: transform 0.5s ease;
+  @apply w-4 h-4 transition-transform duration-500;
 }
 
 .reload-icon.spinning {
@@ -239,22 +230,11 @@
 }
 
 .stop-sheet-view-all {
-  display: block;
-  padding: 0.5rem 0.75rem;
-  background-color: var(--button-background-color);
-  color: white;
-  text-decoration: none;
-  text-align: center;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 0.85rem;
-  transition: background-color 0.2s ease;
-  flex: 2;
+  @apply block px-4 py-2.5 bg-primary text-white no-underline text-center rounded-xl font-semibold text-sm font-sans transition-colors flex-[1.5];
 }
 
 .stop-sheet-view-all:hover {
-  background-color: var(--button-hover-background-color);
-  text-decoration: none;
+  @apply bg-primary/90 no-underline;
 }
 
 /* Error display adjustments for sheet */

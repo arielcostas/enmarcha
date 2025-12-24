@@ -26,7 +26,7 @@ export interface StopSheetProps {
   };
 }
 
-export const StopSheet: React.FC<StopSheetProps> = ({
+export const StopSummarySheet: React.FC<StopSheetProps> = ({
   isOpen,
   onClose,
   stop,

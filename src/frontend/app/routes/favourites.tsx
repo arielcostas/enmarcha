@@ -183,19 +183,19 @@ function SpecialPlaceCard({
   setLabel,
 }: SpecialPlaceCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div className="bg-surface border border-border rounded-lg p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <span className="text-2xl" aria-hidden="true">
             {icon}
           </span>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+            <h3 className="font-semibold text-text mb-1">
               {label}
             </h3>
             {place ? (
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                <p className="font-medium text-gray-900 dark:text-gray-100">
+              <div className="text-sm text-muted">
+                <p className="font-medium text-text">
                   {place.name}
                 </p>
                 {place.type === "stop" && place.stopId && (
@@ -272,21 +272,21 @@ function FavouriteStopItem({
   };
 
   return (
-    <li className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+    <li className="bg-surface border border-border rounded-lg">
       <div className="flex items-stretch justify-between gap-2">
         <Link
           to={`/stops/${stop.stopId}`}
-          className="flex-1 min-w-0 p-3 no-underline hover:bg-gray-50 dark:hover:bg-gray-800/80 rounded-l-lg transition-colors"
+          className="flex-1 min-w-0 p-3 no-underline hover:bg-surface/80 rounded-l-lg transition-colors"
         >
           <div className="flex items-center gap-2 mb-1">
             <span className="text-yellow-500 text-base" aria-label="Favourite">
               ★
             </span>
-            <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+            <span className="text-xs text-muted font-medium">
               ({stop.stopId})
             </span>
           </div>
-          <div className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <div className="font-semibold text-text mb-2">
             {StopDataProvider.getDisplayName(stop)}
           </div>
           <div className="flex flex-wrap gap-1 items-center">

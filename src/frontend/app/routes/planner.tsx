@@ -125,14 +125,14 @@ const ItinerarySummary = ({
 
   return (
     <div
-      className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow mb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700"
+      className="bg-surface p-4 rounded-lg shadow mb-3 cursor-pointer hover:bg-surface/80 border border-border"
       onClick={onClick}
     >
       <div className="flex justify-between items-center mb-2">
-        <div className="font-bold text-lg text-slate-900 dark:text-slate-100">
+        <div className="font-bold text-lg text-text">
           {startTime} - {endTime}
         </div>
-        <div className="text-gray-600 dark:text-gray-400">
+        <div className="text-muted">
           {durationMinutes} min
         </div>
       </div>
@@ -155,10 +155,10 @@ const ItinerarySummary = ({
 
           return (
             <React.Fragment key={idx}>
-              {idx > 0 && <span className="text-slate-400">›</span>}
+              {idx > 0 && <span className="text-muted/50">›</span>}
               {isWalk ? (
-                <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-800 whitespace-nowrap">
-                  <Footprints className="w-4 h-4 text-slate-600" />
+                <div className="flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-sm text-text whitespace-nowrap border border-border">
+                  <Footprints className="w-4 h-4 text-muted" />
                   <span className="font-semibold">
                     {legDurationMinutes} {t("estimates.minutes")}
                   </span>
@@ -176,21 +176,21 @@ const ItinerarySummary = ({
         })}
       </div>
 
-      <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 mt-1">
+      <div className="flex items-center justify-between text-sm text-muted mt-1">
         <span>
           {t("planner.walk")}: {formatDistance(walkTotals.meters)}
           {walkTotals.minutes
-            ? ` • ${walkTotals.minutes} ${t("estimates.minutes")}`
+            ? ` • ${walkTotals.minutes} {t("estimates.minutes")}`
             : ""}
         </span>
         <span className="flex items-center gap-3">
-          <span className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
+          <span className="flex items-center gap-1 font-semibold text-text">
             <Coins className="w-4 h-4" />
             {cashFare === "0.00"
               ? t("planner.free")
               : t("planner.fare", { amount: cashFare })}
           </span>
-          <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
+          <span className="flex items-center gap-1 text-muted">
             <CreditCard className="w-4 h-4" />
             {cardFare === "0.00"
               ? t("planner.free")

@@ -24,11 +24,11 @@ export default function LinesPage() {
             href={line.scheduleUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
+            className="flex items-center gap-3 p-4 bg-surface rounded-lg shadow hover:shadow-lg transition-shadow border border-border"
           >
             <LineIcon line={line.lineNumber} mode="rounded" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm md:text-md font-semibold text-gray-900 dark:text-gray-100">
+              <p className="text-sm md:text-md font-semibold text-text">
                 {line.routeName}
               </p>
             </div>

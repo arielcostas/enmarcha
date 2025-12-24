@@ -13,5 +13,5 @@
 }
 
 .time-scheduled {
-  @apply bg-blue-900/20 dark:bg-blue-600/25 text-[#0b3d91] dark:text-[#93c5fd];
+  @apply bg-primary/20 dark:bg-primary/25 text-primary dark:text-primary;
 }

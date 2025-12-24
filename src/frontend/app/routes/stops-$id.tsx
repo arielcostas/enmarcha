@@ -181,13 +181,13 @@ export default function Estimates() {
                     className={`cursor-pointer transition-colors ${
                       favourited
                         ? "fill-[var(--star-color)] text-[var(--star-color)]"
-                        : "text-slate-500"
+                        : "text-muted"
                     }`}
                     onClick={toggleFavourite}
                   />
 
                   <CircleHelp
-                    className="text-slate-500 cursor-pointer"
+                    className="text-muted cursor-pointer"
                     onClick={() => setIsHelpModalOpen(true)}
                   />
                 </div>
@@ -205,12 +205,12 @@ export default function Estimates() {
                 <div>
                   {isReducedView ? (
                     <EyeClosed
-                      className="text-slate-500"
+                      className="text-muted"
                       onClick={() => setIsReducedView(false)}
                     />
                   ) : (
                     <Eye
-                      className="text-slate-500"
+                      className="text-muted"
                       onClick={() => setIsReducedView(true)}
                     />
                   )}

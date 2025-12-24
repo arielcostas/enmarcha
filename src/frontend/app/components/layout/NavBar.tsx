@@ -112,7 +112,9 @@ export default function NavBar({ orientation = "horizontal" }: NavBarProps) {
             title={item.name}
             aria-label={item.name}
           >
-            <Icon size={24} />
+            <div className={styles.iconWrapper}>
+              <Icon size={24} />
+            </div>
             <span>{item.name}</span>
           </Link>
         );

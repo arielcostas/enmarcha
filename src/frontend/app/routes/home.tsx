@@ -241,7 +241,7 @@ export default function StopList() {
     <div className="flex flex-col gap-4 py-4 pb-8">
       {/* Search Section */}
       <div className="w-full px-4">
-        <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold mb-2 text-text">
           {t("stoplist.search_label", "Buscar paradas")}
         </h3>
         <input
@@ -250,11 +250,11 @@ export default function StopList() {
           onChange={handleStopSearch}
           className="
             w-full px-4 py-3 text-base
-            border border-gray-300 dark:border-gray-700 rounded-xl
-            bg-white dark:bg-gray-800
-            text-gray-900 dark:text-gray-100
-            placeholder:text-gray-500 dark:placeholder:text-gray-400 placeholder:opacity-80
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            border border-border rounded-xl
+            bg-surface
+            text-text
+            placeholder:text-muted placeholder:opacity-80
+            focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent
             transition-all duration-200
           "
         />
@@ -263,7 +263,7 @@ export default function StopList() {
       {/* Search Results */}
       {searchResults && searchResults.length > 0 ? (
         <div className="w-full px-4 flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-lg font-semibold text-text">
             {t("stoplist.search_results", "Resultados de la búsqueda")}
           </h2>
           <ul className="list-none p-0 m-0 flex flex-col gap-2 md:grid md:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">

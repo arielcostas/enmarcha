@@ -8,8 +8,8 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "lang": "es",
-  "background_color": "#ffffff",
-  "theme_color": "#007bff",
+  "background_color": "#F7F7FF",
+  "theme_color": "#27187E",
   "categories": ["productivity"],
   "prefer_related_applications": false,
   "icons": [
