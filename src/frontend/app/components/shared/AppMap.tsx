@@ -195,10 +195,6 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
         onRotateStart={onRotateStart}
         onPitchStart={onPitchStart}
         onLoad={onLoad}
-        dragPan={{
-          linearity: 0.4,
-          deceleration: 3000,
-        }}
       >
         {showNavigation && <NavigationControl position="bottom-right" />}
         {showGeolocate && (
