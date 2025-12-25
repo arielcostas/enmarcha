@@ -47,8 +47,9 @@
 
   color-scheme: light;
   --font-display: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-ui: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-ui:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
 
   font-family: var(--font-ui);
 }
@@ -215,6 +216,6 @@ textarea {
   color: var(--ml-c-link-2);
 }
 
-.maplibregl-ctrl-icon:before {
-  display: none;
+.maplibregl-ctrl button .maplibregl-ctrl-icon:before {
+  display: none !important;
 }

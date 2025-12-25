@@ -1,7 +1,7 @@
 import StopDataProvider from "../data/StopDataProvider";
 import "./map.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Layer,
@@ -10,16 +10,14 @@ import {
   type MapRef,
 } from "react-map-gl/maplibre";
 import { useNavigate } from "react-router";
-import { PlannerOverlay } from "~/components/PlannerOverlay";
-import { AppMap } from "~/components/shared/AppMap";
 import {
   StopSummarySheet,
   type StopSheetProps,
 } from "~/components/map/StopSummarySheet";
-import { APP_CONSTANTS } from "~/config/constants";
+import { PlannerOverlay } from "~/components/PlannerOverlay";
+import { AppMap } from "~/components/shared/AppMap";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { usePlanner } from "~/hooks/usePlanner";
-import { useApp } from "../AppContext";
 import "../tailwind-full.css";
 
 // Componente principal del mapa
@@ -142,7 +140,7 @@ export default function StopMap() {
               "stop-renfe",
               "feve",
               "stop-feve",
-              "#stop-generic",
+              "stop-generic",
             ],
             "icon-size": [
               "interpolate",

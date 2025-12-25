@@ -144,7 +144,7 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
           }
         }
       };
-    }, [syncState, updateMapState]);
+    }, [mapPositionMode, mapRef.current, updateMapState]);
 
     const getLatitude = (center: any) =>
       Array.isArray(center) ? center[0] : center.lat;
@@ -181,7 +181,7 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
     return (
       <Map
         ref={mapRef}
-        mapLib={maplibregl as any}
+        mapLib={maplibregl}
         mapStyle={mapStyle}
         style={{ width: "100%", height: "100%", ...style }}
         initialViewState={viewState}
