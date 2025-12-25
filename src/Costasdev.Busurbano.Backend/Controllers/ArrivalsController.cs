@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Costasdev.Busurbano.Backend.Configuration;
 using Costasdev.Busurbano.Backend.GraphClient;
 using Costasdev.Busurbano.Backend.GraphClient.App;
 using Costasdev.Busurbano.Backend.Helpers;
@@ -7,6 +8,7 @@ using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
 namespace Costasdev.Busurbano.Backend.Controllers;
 
@@ -19,13 +21,15 @@ public partial class ArrivalsController : ControllerBase
     private readonly HttpClient _httpClient;
     private readonly ArrivalsPipeline _pipeline;
     private readonly FeedService _feedService;
+    private readonly AppConfiguration _config;
 
     public ArrivalsController(
         ILogger<ArrivalsController> logger,
         IMemoryCache cache,
         HttpClient httpClient,
         ArrivalsPipeline pipeline,
-        FeedService feedService
+        FeedService feedService,
+        IOptions<AppConfiguration> configOptions
     )
     {
         _logger = logger;
@@ -33,6 +37,7 @@ public partial class ArrivalsController : ControllerBase
         _httpClient = httpClient;
         _pipeline = pipeline;
         _feedService = feedService;
+        _config = configOptions.Value;
     }
 
     [HttpGet("arrivals")]
@@ -49,7 +54,7 @@ public partial class ArrivalsController : ControllerBase
             new ArrivalsAtStopContent.Args(id, reduced)
         );
 
-        var request = new HttpRequestMessage(HttpMethod.Post, "http://100.67.54.115:3957/otp/gtfs/v1");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
         request.Content = JsonContent.Create(new GraphClientRequest
         {
             Query = requestContent

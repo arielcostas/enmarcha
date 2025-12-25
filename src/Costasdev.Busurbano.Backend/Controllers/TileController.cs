@@ -11,6 +11,8 @@ using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Services;
+using Costasdev.Busurbano.Backend.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Costasdev.Busurbano.Backend.Controllers;
 
@@ -22,18 +24,21 @@ public class TileController : ControllerBase
     private readonly IMemoryCache _cache;
     private readonly HttpClient _httpClient;
     private readonly FeedService _feedService;
+    private readonly AppConfiguration _config;
 
     public TileController(
         ILogger<TileController> logger,
         IMemoryCache cache,
         HttpClient httpClient,
-        FeedService feedService
+        FeedService feedService,
+        IOptions<AppConfiguration> configOptions
     )
     {
         _logger = logger;
         _cache = cache;
         _httpClient = httpClient;
         _feedService = feedService;
+        _config = configOptions.Value;
     }
 
     [HttpGet("stops/{z:int}/{x:int}/{y:int}")]
@@ -63,7 +68,7 @@ public class TileController : ControllerBase
         var latMin = latMinRad * 180.0 / Math.PI;
 
         var requestContent = StopTileRequestContent.Query(new StopTileRequestContent.Bbox(lonMin, latMin, lonMax, latMax));
-        var request = new HttpRequestMessage(HttpMethod.Post, "http://100.67.54.115:3957/otp/gtfs/v1");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
         request.Content = JsonContent.Create(new GraphClientRequest
         {
             Query = requestContent

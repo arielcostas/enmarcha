@@ -5,8 +5,11 @@ public class AppConfiguration
     public required string VitrasaScheduleBasePath { get; set; }
     public required string RenfeScheduleBasePath { get; set; }
 
-    public string OtpGeocodingBaseUrl { get; set; } = "https://planificador-rutas-api.vigo.org/v1";
-    public string OtpPlannerBaseUrl { get; set; } = "https://planificador-rutas.vigo.org/otp/routers/default";
+    [Obsolete]
+    public required string OtpGeocodingBaseUrl { get; set; } = "https://planificador-rutas-api.vigo.org/v1";
+    [Obsolete]
+    public required string OtpPlannerBaseUrl { get; set; } = "https://planificador-rutas.vigo.org/otp/routers/default";
+    public required string OpenTripPlannerBaseUrl { get; set; }
 
     // Default Routing Parameters
     public double WalkSpeed { get; set; } = 1.4;
@@ -20,6 +23,6 @@ public class AppConfiguration
     public double WalkReluctance { get; set; } = 2.0; // Slightly penalize walking to add slack
 
     // Fare Configuration
-    public double FareCashPerBus { get; set; } = 1.63;
-    public double FareCardPerBus { get; set; } = 0.67;
+    [Obsolete] public double FareCashPerBus { get; set; } = 1.63;
+    [Obsolete] public double FareCardPerBus { get; set; } = 0.67;
 }
