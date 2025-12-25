@@ -29,6 +29,9 @@
     "map_layers": "Capas do mapa",
     "show_traffic": "Amosar tráfico",
     "show_cameras": "Amosar cámaras",
+    "show_stops_bus": "Amosar paradas de autobús",
+    "show_stops_coach": "Amosar paradas de autobús interurbano",
+    "show_stops_train": "Amosar paradas de tren",
     "language": "Idioma"
   },
   "stoplist": {

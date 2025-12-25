@@ -1,7 +1,8 @@
 import StopDataProvider from "../data/StopDataProvider";
 import "./map.css";
 
-import { useRef, useState } from "react";
+import type { FilterSpecification } from "maplibre-gl";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Layer,
@@ -10,6 +11,7 @@ import {
   type MapRef,
 } from "react-map-gl/maplibre";
 import { useNavigate } from "react-router";
+import { useApp } from "~/AppContext";
 import {
   StopSummarySheet,
   type StopSheetProps,
@@ -23,6 +25,11 @@ import "../tailwind-full.css";
 // Componente principal del mapa
 export default function StopMap() {
   const { t } = useTranslation();
+  const {
+    showBusStops: showCitybusStops,
+    showCoachStops: showIntercityBusStops,
+    showTrainStops,
+  } = useApp();
   const navigate = useNavigate();
   usePageTitle(t("navbar.map", "Mapa"));
   const [selectedStop, setSelectedStop] = useState<
@@ -50,6 +57,20 @@ export default function StopMap() {
     handlePointClick(feature);
   };
 
+  const stopLayerFilter = useMemo(() => {
+    const filter: FilterSpecification = ["any"];
+    if (showCitybusStops) {
+      filter.push(["==", ["get", "transitKind"], "bus"]);
+    }
+    if (showIntercityBusStops) {
+      filter.push(["==", ["get", "transitKind"], "coach"]);
+    }
+    if (showTrainStops) {
+      filter.push(["==", ["get", "transitKind"], "train"]);
+    }
+    return filter;
+  }, [showCitybusStops, showIntercityBusStops, showTrainStops]);
+
   const getLatitude = (center: any) =>
     Array.isArray(center) ? center[0] : center.lat;
   const getLongitude = (center: any) =>
@@ -63,7 +84,7 @@ export default function StopMap() {
       routes: string;
     } = feature.properties;
     // TODO: Move ID to constant, improve type checking
-    if (!props || feature.layer.id !== "stops") {
+    if (!props || feature.layer.id.startsWith("stops") === false) {
       console.warn("Invalid feature properties:", props);
       return;
     }
@@ -123,25 +144,9 @@ export default function StopMap() {
           minzoom={11}
           source="stops-source"
           source-layer="stops"
+          filter={stopLayerFilter}
           layout={{
-            // TODO: Fix ñapa by maybe including this from the server side?
-            "icon-image": [
-              "match",
-              ["get", "feed"],
-              "vitrasa",
-              "stop-vitrasa",
-              "santiago",
-              "stop-santiago",
-              "coruna",
-              "stop-coruna",
-              "xunta",
-              "stop-xunta",
-              "renfe",
-              "stop-renfe",
-              "feve",
-              "stop-feve",
-              "stop-generic",
-            ],
+            "icon-image": ["get", "icon"],
             "icon-size": [
               "interpolate",
               ["linear"],
@@ -164,6 +169,7 @@ export default function StopMap() {
           source="stops-source"
           source-layer="stops"
           minzoom={16}
+          filter={stopLayerFilter}
           layout={{
             "text-field": ["get", "name"],
             "text-font": ["Noto Sans Bold"],
@@ -177,7 +183,7 @@ export default function StopMap() {
               "match",
               ["get", "feed"],
               "vitrasa",
-              "#95D516",
+              "#81D002",
               "santiago",
               "#508096",
               "coruna",
@@ -188,7 +194,7 @@ export default function StopMap() {
               "#870164",
               "feve",
               "#EE3D32",
-              "#333333",
+              "#27187D",
             ],
             "text-halo-color": "#FFF",
             "text-halo-width": 1,

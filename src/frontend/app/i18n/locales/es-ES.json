@@ -29,6 +29,9 @@
     "map_layers": "Capas del mapa",
     "show_traffic": "Mostrar tráfico",
     "show_cameras": "Mostrar cámaras",
+    "show_stops_bus": "Mostrar paradas de autobús",
+    "show_stops_coach": "Mostrar paradas de autobús interurbano",
+    "show_stops_train": "Mostrar paradas de tren",
     "language": "Idioma"
   },
   "stoplist": {

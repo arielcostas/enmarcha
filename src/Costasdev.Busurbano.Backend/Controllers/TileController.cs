@@ -84,7 +84,7 @@ public class TileController : ControllerBase
 
         var tileDef = new NetTopologySuite.IO.VectorTiles.Tiles.Tile(x, y, z);
         VectorTile vt = new() { TileId = tileDef.Id };
-        var lyr = new Layer { Name = "stops" };
+        var stopsLayer = new Layer { Name = "stops" };
 
         responseBody.Data?.StopsByBbox?.ForEach(stop =>
         {
@@ -108,12 +108,13 @@ public class TileController : ControllerBase
                 {
                     // The ID will be used to request the arrivals
                     { "id", stop.GtfsId },
-                    // The feed is the first part of the GTFS ID, corresponding to the feed where the info comes from, used for icons probably
+                    // The feed is the first part of the GTFS ID
                     { "feed", idParts[0] },
                     // The public identifier, usually feed:code or feed:id, recognisable by users and in other systems
                     { "code", $"{idParts[0]}:{codeWithinFeed}" },
-                    // The name of the stop
                     { "name", _feedService.NormalizeStopName(feedId, stop.Name) },
+                    { "icon", GetIconNameForFeed(feedId) },
+                    { "transitKind", GetTransitKind(feedId) },
                     // Routes
                     { "routes", JsonSerializer
                         .Serialize(
@@ -146,10 +147,10 @@ public class TileController : ControllerBase
                 }
             };
 
-            lyr.Features.Add(feature);
+            stopsLayer.Features.Add(feature);
         });
 
-        vt.Layers.Add(lyr);
+        vt.Layers.Add(stopsLayer);
 
         using var ms = new MemoryStream();
         vt.Write(ms, minLinealExtent: 1, minPolygonalExtent: 2);
@@ -158,6 +159,31 @@ public class TileController : ControllerBase
         Response.Headers.Append("X-Cache-Hit", "false");
 
         return File(ms.ToArray(), "application/x-protobuf");
+    }
+
+    private string GetIconNameForFeed(string feedId)
+    {
+        return feedId switch
+        {
+            "vitrasa" => "stop-vitrasa",
+            "santiago" => "stop-santiago",
+            "coruna" => "stop-coruna",
+            "xunta" => "stop-xunta",
+            "renfe" => "stop-renfe",
+            "feve" => "stop-feve",
+            _ => "stop-generic",
+        };
+    }
+
+    private string GetTransitKind(string feedId)
+    {
+        return feedId switch
+        {
+            "vitrasa" or "santiago" or "coruna" => "bus",
+            "xunta" => "coach",
+            "renfe" or "feve" => "train",
+            _ => "unknown",
+        };
     }
 
     private List<StopTileResponse.Route> GetDistinctRoutes(string feedId, List<StopTileResponse.Route> routes)

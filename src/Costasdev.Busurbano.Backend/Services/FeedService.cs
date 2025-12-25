@@ -37,7 +37,7 @@ public class FeedService
     {
         return feed switch
         {
-            "vitrasa" => ("#95D516", "#000000"),
+            "vitrasa" => ("#81D002", "#000000"),
             "santiago" => ("#508096", "#FFFFFF"),
             "coruna" => ("#E61C29", "#FFFFFF"),
             "xunta" => ("#007BC4", "#FFFFFF"),

@@ -29,6 +29,9 @@
     "map_layers": "Map layers",
     "show_traffic": "Show traffic",
     "show_cameras": "Show cameras",
+    "show_stops_bus": "Show bus stops",
+    "show_stops_coach": "Show coach stops",
+    "show_stops_train": "Show train stops",
     "language": "Language"
   },
   "stoplist": {

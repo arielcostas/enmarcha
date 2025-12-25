@@ -9,7 +9,6 @@ import { Layer, Marker, Source, type MapRef } from "react-map-gl/maplibre";
 import { Sheet } from "react-modal-sheet";
 import { useApp } from "~/AppContext";
 import { AppMap } from "~/components/shared/AppMap";
-import { APP_CONSTANTS } from "~/config/constants";
 import { getLineColour } from "~/data/LineColors";
 import type { Stop } from "~/data/StopDataProvider";
 import "./StopMapModal.css";
@@ -370,8 +369,6 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                 showTraffic={false}
                 attributionControl={{
                   compact: false,
-                  customAttribution:
-                    "Concello de Vigo & Viguesa de Transportes SL",
                 }}
                 onMove={(e) => {
                   if (e.originalEvent) {
@@ -395,180 +392,180 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                 }}
               >
                 {/* Previous Shape Layer */}
-                  {previousShapeData && selectedBus && (
-                    <Source
-                      id="prev-route-shape"
-                      type="geojson"
-                      data={previousShapeData}
+                {previousShapeData && selectedBus && (
+                  <Source
+                    id="prev-route-shape"
+                    type="geojson"
+                    data={previousShapeData}
+                  >
+                    {/* 1. Black border */}
+                    <Layer
+                      id="prev-route-shape-border"
+                      type="line"
+                      paint={{
+                        "line-color": "#000000",
+                        "line-width": 6,
+                        "line-opacity": 0.8,
+                      }}
+                      layout={{
+                        "line-cap": "round",
+                        "line-join": "round",
+                      }}
+                    />
+                    {/* 2. White background */}
+                    <Layer
+                      id="prev-route-shape-white"
+                      type="line"
+                      paint={{
+                        "line-color": "#FFFFFF",
+                        "line-width": 4,
+                      }}
+                      layout={{
+                        "line-cap": "round",
+                        "line-join": "round",
+                      }}
+                    />
+                    {/* 3. Colored dashes */}
+                    <Layer
+                      id="prev-route-shape-inner"
+                      type="line"
+                      paint={{
+                        "line-color": getLineColour(selectedBus.line)
+                          .background,
+                        "line-width": 4,
+                        "line-dasharray": [2, 2],
+                      }}
+                      layout={{
+                        "line-cap": "round",
+                        "line-join": "round",
+                      }}
+                    />
+                  </Source>
+                )}
+
+                {/* Shape Layer */}
+                {shapeData && selectedBus && (
+                  <Source id="route-shape" type="geojson" data={shapeData}>
+                    <Layer
+                      id="route-shape-border"
+                      type="line"
+                      paint={{
+                        "line-color": "#000000",
+                        "line-width": 5,
+                        "line-opacity": 0.6,
+                      }}
+                      layout={{
+                        "line-cap": "round",
+                        "line-join": "round",
+                      }}
+                    />
+                    <Layer
+                      id="route-shape-inner"
+                      type="line"
+                      paint={{
+                        "line-color": getLineColour(selectedBus.line)
+                          .background,
+                        "line-width": 3,
+                        "line-opacity": 0.7,
+                      }}
+                      layout={{
+                        "line-cap": "round",
+                        "line-join": "round",
+                      }}
+                    />
+
+                    {/* Stops Layer */}
+                    <Layer
+                      id="route-stops"
+                      type="circle"
+                      filter={["==", "type", "stop"]}
+                      paint={{
+                        "circle-color": "#FFFFFF",
+                        "circle-radius": 4,
+                        "circle-stroke-width": 2,
+                        "circle-stroke-color": getLineColour(selectedBus.line)
+                          .background,
+                      }}
+                    />
+                  </Source>
+                )}
+
+                {/* Stop marker */}
+                {stop.latitude && stop.longitude && (
+                  <Marker
+                    longitude={stop.longitude}
+                    latitude={stop.latitude}
+                    anchor="bottom"
+                  >
+                    <div title={`Stop ${stop.stopId}`}>
+                      <svg width="28" height="36" viewBox="0 0 28 36">
+                        <defs>
+                          <filter
+                            id="drop-stop"
+                            x="-20%"
+                            y="-20%"
+                            width="140%"
+                            height="140%"
+                          >
+                            <feDropShadow
+                              dx="0"
+                              dy="1"
+                              stdDeviation="1"
+                              floodOpacity={0.35}
+                            />
+                          </filter>
+                        </defs>
+                        <path
+                          d="M14 0C6.82 0 1 5.82 1 13c0 8.5 11 23 13 23s13-14.5 13-23C27 5.82 21.18 0 14 0z"
+                          fill="#1976d2"
+                          stroke="#fff"
+                          strokeWidth="2"
+                          filter="url(#drop-stop)"
+                        />
+                        <circle cx="14" cy="13" r="5" fill="#fff" />
+                        <circle cx="14" cy="13" r="3" fill="#1976d2" />
+                      </svg>
+                    </div>
+                  </Marker>
+                )}
+
+                {/* Selected bus marker */}
+                {selectedBus?.currentPosition && (
+                  <Marker
+                    longitude={selectedBus.currentPosition.longitude}
+                    latitude={selectedBus.currentPosition.latitude}
+                    anchor="center"
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 6,
+                        transform: `rotate(${selectedBus.currentPosition.orientationDegrees}deg)`,
+                        transformOrigin: "center center",
+                      }}
                     >
-                      {/* 1. Black border */}
-                      <Layer
-                        id="prev-route-shape-border"
-                        type="line"
-                        paint={{
-                          "line-color": "#000000",
-                          "line-width": 6,
-                          "line-opacity": 0.8,
-                        }}
-                        layout={{
-                          "line-cap": "round",
-                          "line-join": "round",
-                        }}
-                      />
-                      {/* 2. White background */}
-                      <Layer
-                        id="prev-route-shape-white"
-                        type="line"
-                        paint={{
-                          "line-color": "#FFFFFF",
-                          "line-width": 4,
-                        }}
-                        layout={{
-                          "line-cap": "round",
-                          "line-join": "round",
-                        }}
-                      />
-                      {/* 3. Colored dashes */}
-                      <Layer
-                        id="prev-route-shape-inner"
-                        type="line"
-                        paint={{
-                          "line-color": getLineColour(selectedBus.line)
-                            .background,
-                          "line-width": 4,
-                          "line-dasharray": [2, 2],
-                        }}
-                        layout={{
-                          "line-cap": "round",
-                          "line-join": "round",
-                        }}
-                      />
-                    </Source>
-                  )}
-
-                  {/* Shape Layer */}
-                  {shapeData && selectedBus && (
-                    <Source id="route-shape" type="geojson" data={shapeData}>
-                      <Layer
-                        id="route-shape-border"
-                        type="line"
-                        paint={{
-                          "line-color": "#000000",
-                          "line-width": 5,
-                          "line-opacity": 0.6,
-                        }}
-                        layout={{
-                          "line-cap": "round",
-                          "line-join": "round",
-                        }}
-                      />
-                      <Layer
-                        id="route-shape-inner"
-                        type="line"
-                        paint={{
-                          "line-color": getLineColour(selectedBus.line)
-                            .background,
-                          "line-width": 3,
-                          "line-opacity": 0.7,
-                        }}
-                        layout={{
-                          "line-cap": "round",
-                          "line-join": "round",
-                        }}
-                      />
-
-                      {/* Stops Layer */}
-                      <Layer
-                        id="route-stops"
-                        type="circle"
-                        filter={["==", "type", "stop"]}
-                        paint={{
-                          "circle-color": "#FFFFFF",
-                          "circle-radius": 4,
-                          "circle-stroke-width": 2,
-                          "circle-stroke-color": getLineColour(selectedBus.line)
-                            .background,
-                        }}
-                      />
-                    </Source>
-                  )}
-
-                  {/* Stop marker */}
-                  {stop.latitude && stop.longitude && (
-                    <Marker
-                      longitude={stop.longitude}
-                      latitude={stop.latitude}
-                      anchor="bottom"
-                    >
-                      <div title={`Stop ${stop.stopId}`}>
-                        <svg width="28" height="36" viewBox="0 0 28 36">
-                          <defs>
-                            <filter
-                              id="drop-stop"
-                              x="-20%"
-                              y="-20%"
-                              width="140%"
-                              height="140%"
-                            >
-                              <feDropShadow
-                                dx="0"
-                                dy="1"
-                                stdDeviation="1"
-                                floodOpacity={0.35}
-                              />
-                            </filter>
-                          </defs>
-                          <path
-                            d="M14 0C6.82 0 1 5.82 1 13c0 8.5 11 23 13 23s13-14.5 13-23C27 5.82 21.18 0 14 0z"
-                            fill="#1976d2"
-                            stroke="#fff"
-                            strokeWidth="2"
-                            filter="url(#drop-stop)"
-                          />
-                          <circle cx="14" cy="13" r="5" fill="#fff" />
-                          <circle cx="14" cy="13" r="3" fill="#1976d2" />
-                        </svg>
-                      </div>
-                    </Marker>
-                  )}
-
-                  {/* Selected bus marker */}
-                  {selectedBus?.currentPosition && (
-                    <Marker
-                      longitude={selectedBus.currentPosition.longitude}
-                      latitude={selectedBus.currentPosition.latitude}
-                      anchor="center"
-                    >
-                      <div
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 6,
-                          transform: `rotate(${selectedBus.currentPosition.orientationDegrees}deg)`,
-                          transformOrigin: "center center",
+                          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
                         }}
                       >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          style={{
-                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                          }}
-                        >
-                          <path
-                            d="M12 2 L22 22 L12 17 L2 22 Z"
-                            fill={getLineColour(selectedBus.line).background}
-                            stroke="#000"
-                            strokeWidth="2"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </div>
-                    </Marker>
-                  )}
-                </AppMap>
+                        <path
+                          d="M12 2 L22 22 L12 17 L2 22 Z"
+                          fill={getLineColour(selectedBus.line).background}
+                          stroke="#000"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+                  </Marker>
+                )}
+              </AppMap>
 
               {/* Floating controls */}
               <div className="map-modal-controls">

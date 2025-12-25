@@ -16,6 +16,12 @@ export default function Settings() {
     setShowTraffic,
     showCameras,
     setShowCameras,
+    showBusStops,
+    setShowBusStops,
+    showCoachStops,
+    setShowCoachStops,
+    showTrainStops,
+    setShowTrainStops,
   } = useApp();
 
   const THEMES = [
@@ -117,6 +123,44 @@ export default function Settings() {
               type="checkbox"
               checked={showCameras}
               onChange={(e) => setShowCameras(e.target.checked)}
+              className="w-5 h-5 rounded border-border text-primary focus:ring-primary/50"
+            />
+          </label>
+
+          <hr className="border-border" />
+          <label className="flex items-center justify-between p-4 rounded-lg border border-border bg-surface cursor-pointer hover:bg-surface/50 transition-colors">
+            <span className="text-text font-medium">
+              {t("about.show_stops_bus", "Mostrar paradas de autobús")}
+            </span>
+            <input
+              type="checkbox"
+              checked={showBusStops}
+              onChange={(e) => setShowBusStops(e.target.checked)}
+              className="w-5 h-5 rounded border-border text-primary focus:ring-primary/50"
+            />
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-lg border border-border bg-surface cursor-pointer hover:bg-surface/50 transition-colors">
+            <span className="text-text font-medium">
+              {t(
+                "about.show_stops_coach",
+                "Mostrar paradas de autobús interurbano"
+              )}
+            </span>
+            <input
+              type="checkbox"
+              checked={showCoachStops}
+              onChange={(e) => setShowCoachStops(e.target.checked)}
+              className="w-5 h-5 rounded border-border text-primary focus:ring-primary/50"
+            />
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-lg border border-border bg-surface cursor-pointer hover:bg-surface/50 transition-colors">
+            <span className="text-text font-medium">
+              {t("about.show_stops_train", "Mostrar paradas de tren")}
+            </span>
+            <input
+              type="checkbox"
+              checked={showTrainStops}
+              onChange={(e) => setShowTrainStops(e.target.checked)}
               className="w-5 h-5 rounded border-border text-primary focus:ring-primary/50"
             />
           </label>

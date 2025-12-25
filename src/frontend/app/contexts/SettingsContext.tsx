@@ -23,6 +23,13 @@ interface SettingsContextProps {
   setShowTraffic: (show: boolean) => void;
   showCameras: boolean;
   setShowCameras: (show: boolean) => void;
+
+  showBusStops: boolean;
+  setShowBusStops: (show: boolean) => void;
+  showCoachStops: boolean;
+  setShowCoachStops: (show: boolean) => void;
+  showTrainStops: boolean;
+  setShowTrainStops: (show: boolean) => void;
 }
 
 const SettingsContext = createContext<SettingsContextProps | undefined>(
@@ -141,6 +148,56 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     localStorage.setItem("showCameras", showCameras.toString());
   }, [showCameras]);
+
+  const [showBusStops, setShowBusStops] = useState<boolean>(() => {
+    const saved = localStorage.getItem("stopsLayers");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.bus ?? true;
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
+
+  const [showCoachStops, setShowCoachStops] = useState<boolean>(() => {
+    const saved = localStorage.getItem("stopsLayers");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.coach ?? true;
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
+
+  const [showTrainStops, setShowTrainStops] = useState<boolean>(() => {
+    const saved = localStorage.getItem("stopsLayers");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.train ?? true;
+      } catch {
+        return true;
+      }
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "stopsLayers",
+      JSON.stringify({
+        bus: showBusStops,
+        coach: showCoachStops,
+        train: showTrainStops,
+      })
+    );
+  }, [showBusStops, showCoachStops, showTrainStops]);
   //#endregion
 
   return (
@@ -156,6 +213,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         setShowTraffic,
         showCameras,
         setShowCameras,
+
+        showBusStops,
+        setShowBusStops,
+        showCoachStops,
+        setShowCoachStops,
+        showTrainStops,
+        setShowTrainStops,
       }}
     >
       {children}
