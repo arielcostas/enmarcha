@@ -1,15 +1,16 @@
 {
   "$schema": "https://raw.githubusercontent.com/SchemaStore/schemastore/refs/heads/master/src/schemas/json/web-manifest.json",
-  "id": "https://busurbano.costas.dev/",
-  "name": "BusUrbano",
-  "description": "Aplicación web para encontrar paradas y tiempos de llegada de los autobuses urbanos.",
-  "short_name": "BusUrbano",
+  "id": "https://enmarcha.app/",
+  "name": "EnMarcha",
+  "description": "Aplicación de transporte pública para Galicia. Consulta horarios, llegadas y rutas de trenes, autobuses interurbanos y distintos urbanos.",
+  "short_name": "EnMarcha",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "lang": "es",
   "background_color": "#F7F7FF",
   "theme_color": "#27187E",
+  "scope": "/",
   "categories": [
     "productivity"
   ],
@@ -19,19 +20,13 @@
       "src": "/icon-square.png",
       "sizes": "any",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     },
     {
-      "src": "/icon-transparent.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
-      "purpose": "any monochrome"
-    },
-    {
-      "src": "/icon-transparent.png",
+      "src": "/icon-inverse.png",
       "type": "image/png",
       "sizes": "any",
-      "purpose": "any monochrome"
+      "purpose": "monochrome"
     }
   ],
   "screenshots": [

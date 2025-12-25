@@ -88,13 +88,6 @@ public partial class ArrivalsController : ControllerBase
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
             //var isRunning = departureTime < nowLocal;
 
-            // TODO: Handle this properly, since many times it's "tomorrow" but not handled properly
-            var threshold = ShouldFetchPastArrivals(id) ? ArrivalsAtStopContent.PastArrivalMinutesIncluded : 0;
-            if (minutesToArrive < threshold)
-            {
-                continue;
-            }
-
             Arrival arrival = new()
             {
                 TripId = item.Trip.GtfsId,
@@ -132,6 +125,9 @@ public partial class ArrivalsController : ControllerBase
 
         var feedId = id.Split(':')[0];
 
+        // Time after an arrival's time to still include it in the response. This is useful without real-time data, for delayed buses.
+        var timeThreshold = GetThresholdForFeed(id);
+
         return Ok(new StopArrivalsResponse
         {
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
@@ -141,7 +137,7 @@ public partial class ArrivalsController : ControllerBase
                 Latitude = stop.Lat,
                 Longitude = stop.Lon
             },
-            Routes = stop.Routes
+            Routes = [.. stop.Routes
                 .OrderBy(
                     r => r.ShortName,
                     Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
@@ -152,16 +148,22 @@ public partial class ArrivalsController : ControllerBase
                     ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
                     Colour = r.Color ?? "FFFFFF",
                     TextColour = r.TextColor ?? "000000"
-                })
-                .ToList(),
-            Arrivals = arrivals
+                })],
+            Arrivals = [.. arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)]
         });
+
     }
 
-    private static bool ShouldFetchPastArrivals(string id)
+    private static int GetThresholdForFeed(string id)
     {
         string feedId = id.Split(':', 2)[0];
-        return feedId == "xunta";
+
+        if (feedId == "vitrasa" || feedId == "coruna")
+        {
+            return 0;
+        }
+
+        return -30;
     }
 
     [LoggerMessage(LogLevel.Error, "Error fetching stop data, received {statusCode} {responseBody}")]

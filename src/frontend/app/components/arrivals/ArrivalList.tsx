@@ -18,6 +18,12 @@ export const ArrivalList: React.FC<ArrivalListProps> = ({
 
   return (
     <div className="flex flex-col gap-3">
+      {arrivals.length === 0 && (
+        <div className="text-center text-muted mt-16">
+          {/* TOOD i18n */}
+          No hay llegadas próximas disponibles para esta parada.
+        </div>
+      )}
       {arrivals.map((arrival, index) =>
         reduced ? (
           <ReducedArrivalCard

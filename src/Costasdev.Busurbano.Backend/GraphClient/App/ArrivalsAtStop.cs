@@ -5,13 +5,11 @@ namespace Costasdev.Busurbano.Backend.GraphClient.App;
 
 public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
 {
-    public const int PastArrivalMinutesIncluded = -75;
-
     public record Args(string Id, bool Reduced);
 
     public static string Query(Args args)
     {
-        var startTime = DateTimeOffset.UtcNow.AddMinutes(PastArrivalMinutesIncluded);
+        var startTime = DateTimeOffset.UtcNow.AddMinutes(-75);
         var startTimeUnix = startTime.ToUnixTimeSeconds();
         var geometryField = args.Reduced ? "" : @"tripGeometry { points }";
 

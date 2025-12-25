@@ -11,7 +11,6 @@ import { PullToRefresh } from "~/components/PullToRefresh";
 import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
 import { usePageTitle } from "~/contexts/PageTitleContext";
-import { useAutoRefresh } from "~/hooks/useAutoRefresh";
 import StopDataProvider from "../data/StopDataProvider";
 import "./stops-$id.css";
 
@@ -114,12 +113,6 @@ export default function Estimates() {
     }
   }, [refreshData]);
 
-  useAutoRefresh({
-    onRefresh: refreshData,
-    interval: 18000,
-    enabled: !dataError,
-  });
-
   useEffect(() => {
     // Initial load
     setDataLoading(true);
@@ -175,7 +168,7 @@ export default function Estimates() {
           ) : data ? (
             <>
               <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-4">
                   <Star
                     className={`cursor-pointer transition-colors ${
                       favourited
