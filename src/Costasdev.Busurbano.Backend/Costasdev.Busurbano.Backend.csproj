@@ -12,16 +12,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Costasdev.VigoTransitApi" Version="0.1.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.33.1" />
-    <PackageReference Include="ProjNet" Version="2.1.0" />
+    <PackageReference Include="Costasdev.VigoTransitApi" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="ProjNet" />
 
-    <PackageReference Include="NetTopologySuite" Version="2.6.0" />
-    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
-    <PackageReference Include="NetTopologySuite.IO.VectorTiles.Mapbox" Version="1.1.0" />
+    <PackageReference Include="NetTopologySuite" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" />
+    <PackageReference Include="NetTopologySuite.IO.VectorTiles.Mapbox" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Costasdev.Busurbano.Sources.OpenTripPlannerGql\Costasdev.Busurbano.Sources.OpenTripPlannerGql.csproj" />
     <ProjectReference Include="..\Costasdev.Busurbano.Sources.TranviasCoruna\Costasdev.Busurbano.Sources.TranviasCoruna.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="GraphClient\" />
   </ItemGroup>
 </Project>

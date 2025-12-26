@@ -1,4 +1,4 @@
-using Costasdev.Busurbano.Backend.GraphClient.App;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 
 namespace Costasdev.Busurbano.Backend.Services.Processors;
 

@@ -1,7 +1,7 @@
 using Costasdev.Busurbano.Backend.Configuration;
-using Costasdev.Busurbano.Backend.GraphClient.App;
 using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 using Costasdev.VigoTransitApi;
 using Microsoft.Extensions.Options;
 

@@ -1,6 +1,3 @@
-using Costasdev.Busurbano.Backend.GraphClient;
-using Costasdev.Busurbano.Backend.GraphClient.App;
-
 using NetTopologySuite.Features;
 using NetTopologySuite.IO.VectorTiles;
 using NetTopologySuite.IO.VectorTiles.Mapbox;
@@ -12,6 +9,8 @@ using System.Text.Json;
 using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Services;
 using Costasdev.Busurbano.Backend.Configuration;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 using Microsoft.Extensions.Options;
 
 namespace Costasdev.Busurbano.Backend.Controllers;

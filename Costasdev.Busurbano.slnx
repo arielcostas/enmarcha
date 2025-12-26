@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="src/Costasdev.Busurbano.Sources.OpenTripPlannerGql/Costasdev.Busurbano.Sources.OpenTripPlannerGql.csproj" />
   <Project Path="src/Costasdev.Busurbano.Sources.TranviasCoruna/Costasdev.Busurbano.Sources.TranviasCoruna.csproj" />
   <Project Path="src\Costasdev.Busurbano.Backend\Costasdev.Busurbano.Backend.csproj" />
   <Project Path="src\Costasdev.Busurbano.ServiceViewer\Costasdev.Busurbano.ServiceViewer.csproj" />

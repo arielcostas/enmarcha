@@ -1,7 +1,8 @@
 ﻿using System.Globalization;
 using System.Text.Json.Serialization;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql;
 
-namespace Costasdev.Busurbano.Backend.GraphClient.App;
+namespace Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 
 public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
 {

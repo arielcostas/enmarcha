@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-namespace Costasdev.Busurbano.Backend.GraphClient.App;
+namespace Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 
 public class StopTileRequestContent : IGraphRequest<StopTileRequestContent.Bbox>
 {

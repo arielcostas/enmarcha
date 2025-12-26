@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Costasdev.Busurbano.Backend.GraphClient;
+namespace Costasdev.Busurbano.Sources.OpenTripPlannerGql;
 
 public class GraphClientRequest
 {

@@ -1,11 +1,11 @@
 ﻿using System.Net;
 using Costasdev.Busurbano.Backend.Configuration;
-using Costasdev.Busurbano.Backend.GraphClient;
-using Costasdev.Busurbano.Backend.GraphClient.App;
 using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Services;
 using Costasdev.Busurbano.Backend.Types;
 using Costasdev.Busurbano.Backend.Types.Arrivals;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
