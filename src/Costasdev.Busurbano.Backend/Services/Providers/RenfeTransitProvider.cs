@@ -6,6 +6,7 @@ using SysFile = System.IO.File;
 
 namespace Costasdev.Busurbano.Backend.Services.Providers;
 
+[Obsolete]
 public class RenfeTransitProvider : ITransitProvider
 {
     private readonly AppConfiguration _configuration;

@@ -17,5 +17,7 @@
       <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
       <PackageVersion Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
       <PackageVersion Include="NetTopologySuite.IO.VectorTiles.Mapbox" Version="1.1.0" />
+
+      <PackageVersion Include="CsvHelper" Version="33.1.0" />
   </ItemGroup>
 </Project>

@@ -21,8 +21,4 @@ public class AppConfiguration
     public int TransferSlackSeconds { get; set; } = 120; // Extra buffer for transfers
     public int MinTransferTimeSeconds { get; set; } = 120; // Minimum transfer time
     public double WalkReluctance { get; set; } = 2.0; // Slightly penalize walking to add slack
-
-    // Fare Configuration
-    [Obsolete] public double FareCashPerBus { get; set; } = 1.63;
-    [Obsolete] public double FareCardPerBus { get; set; } = 0.67;
 }

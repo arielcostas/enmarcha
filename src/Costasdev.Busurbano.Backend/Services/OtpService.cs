@@ -101,130 +101,6 @@ public class OtpService
         }
     }
 
-    public async Task<RoutePlan> GetRoutePlanAsync(double fromLat, double fromLon, double toLat, double toLon, DateTime? time = null, bool arriveBy = false)
-    {
-        try
-        {
-            // Convert the provided time to Europe/Madrid local time and pass explicit offset to OTP
-            var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
-            DateTime utcReference;
-            if (time.HasValue)
-            {
-                var t = time.Value;
-                if (t.Kind == DateTimeKind.Unspecified)
-                    t = DateTime.SpecifyKind(t, DateTimeKind.Utc);
-                utcReference = t.Kind == DateTimeKind.Utc ? t : t.ToUniversalTime();
-            }
-            else
-            {
-                utcReference = DateTime.UtcNow;
-            }
-
-            var localMadrid = TimeZoneInfo.ConvertTimeFromUtc(utcReference, tz);
-            var offsetSeconds = (int)tz.GetUtcOffset(localMadrid).TotalSeconds;
-
-            var dateStr = localMadrid.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
-            var timeStr = localMadrid.ToString("HH:mm", CultureInfo.InvariantCulture);
-
-            var queryParams = new Dictionary<string, string>
-            {
-                { "fromPlace", $"{fromLat.ToString(CultureInfo.InvariantCulture)},{fromLon.ToString(CultureInfo.InvariantCulture)}" },
-                { "toPlace", $"{toLat.ToString(CultureInfo.InvariantCulture)},{toLon.ToString(CultureInfo.InvariantCulture)}" },
-                { "arriveBy", arriveBy.ToString().ToLower() },
-                { "date", dateStr },
-                { "time", timeStr },
-                { "locale", "es" },
-                { "showIntermediateStops", "true" },
-                { "mode", "TRANSIT,WALK" },
-                { "numItineraries", _config.NumItineraries.ToString() },
-                { "walkSpeed", _config.WalkSpeed.ToString(CultureInfo.InvariantCulture) },
-                { "maxWalkDistance", _config.MaxWalkDistance.ToString() }, // Note: OTP might ignore this if it's too small
-                { "optimize", "QUICK" },
-                { "wheelchair", "false" },
-                { "timeZoneOffset", offsetSeconds.ToString(CultureInfo.InvariantCulture) }
-            };
-
-            // Add slack/comfort parameters
-            queryParams["transferSlack"] = _config.TransferSlackSeconds.ToString();
-            queryParams["minTransferTime"] = _config.MinTransferTimeSeconds.ToString();
-            queryParams["walkReluctance"] = _config.WalkReluctance.ToString(CultureInfo.InvariantCulture);
-
-            var queryString = string.Join("&", queryParams.Select(kvp => $"{kvp.Key}={Uri.EscapeDataString(kvp.Value)}"));
-            var url = $"{_config.OtpPlannerBaseUrl}/plan?{queryString}";
-
-            var response = await _httpClient.GetFromJsonAsync<OtpResponse>(url);
-
-            if (response?.Plan == null)
-            {
-                return new RoutePlan();
-            }
-
-            return MapToRoutePlan(response.Plan);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching route plan");
-            throw;
-        }
-    }
-
-    private RoutePlan MapToRoutePlan(OtpPlan otpPlan)
-    {
-        // OTP times are already correct when requested with explicit offset
-        var timeOffsetSeconds = 0L;
-
-        return new RoutePlan
-        {
-            Itineraries = otpPlan.Itineraries.Select(MapItinerary).OrderBy(i => i.DurationSeconds).ToList(),
-            TimeOffsetSeconds = timeOffsetSeconds
-        };
-    }
-
-    private Itinerary MapItinerary(OtpItinerary otpItinerary)
-    {
-        var legs = otpItinerary.Legs.Select(MapLeg).ToList();
-        var busLegs = legs.Where(leg => leg.Mode != null && leg.Mode.ToUpper() != "WALK");
-
-        var cashFareEuro = busLegs.Count() * _config.FareCashPerBus;
-
-        int cardTicketsRequired = 0;
-        DateTime? lastTicketPurchased = null;
-        int tripsPaidWithTicket = 0;
-
-        foreach (var leg in busLegs)
-        {
-            // If no ticket purchased, ticket expired (no free transfers after 45 mins), or max trips with ticket reached
-            if (
-                lastTicketPurchased == null ||
-                (leg.StartTime - lastTicketPurchased.Value).TotalMinutes > 45 ||
-                tripsPaidWithTicket >= 3
-            )
-            {
-                cardTicketsRequired++;
-                lastTicketPurchased = leg.StartTime;
-                tripsPaidWithTicket = 1;
-            }
-            else
-            {
-                tripsPaidWithTicket++;
-            }
-        }
-
-        return new Itinerary
-        {
-            DurationSeconds = otpItinerary.Duration,
-            StartTime = DateTimeOffset.FromUnixTimeMilliseconds(otpItinerary.StartTime).UtcDateTime,
-            EndTime = DateTimeOffset.FromUnixTimeMilliseconds(otpItinerary.EndTime).UtcDateTime,
-            WalkDistanceMeters = otpItinerary.WalkDistance,
-            WalkTimeSeconds = otpItinerary.WalkTime,
-            TransitTimeSeconds = otpItinerary.TransitTime,
-            WaitingTimeSeconds = otpItinerary.WaitingTime,
-            Legs = legs,
-            CashFareEuro = cashFareEuro,
-            CardFareEuro = cardTicketsRequired * _config.FareCardPerBus
-        };
-    }
-
     private Leg MapLeg(OtpLeg otpLeg)
     {
         return new Leg
@@ -458,7 +334,8 @@ public class OtpService
             Lat = pos.Latitude,
             Lon = pos.Longitude,
             StopId = pos.Stop?.GtfsId,
-            StopCode = _feedService.NormalizeStopCode(feedId, pos.Stop?.Code ?? string.Empty)
+            StopCode = _feedService.NormalizeStopCode(feedId, pos.Stop?.Code ?? string.Empty),
+            ZoneId = pos.Stop?.ZoneId
         };
     }
 

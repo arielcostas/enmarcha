@@ -16,8 +16,8 @@ public class Itinerary
     public double TransitTimeSeconds { get; set; }
     public double WaitingTimeSeconds { get; set; }
     public List<Leg> Legs { get; set; } = [];
-    public double? CashFareEuro { get; set; }
-    public double? CardFareEuro { get; set; }
+    public decimal? CashFareEuro { get; set; }
+    public decimal? CardFareEuro { get; set; }
 }
 
 public class Leg
@@ -54,6 +54,7 @@ public class PlannerPlace
     public double Lon { get; set; }
     public string? StopId { get; set; }
     public string? StopCode { get; set; }
+    public string? ZoneId { get; set; }
 }
 
 public class PlannerGeometry

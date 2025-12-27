@@ -10,6 +10,7 @@ using SysFile = System.IO.File;
 
 namespace Costasdev.Busurbano.Backend.Services.Providers;
 
+[Obsolete]
 public class VitrasaTransitProvider : ITransitProvider
 {
     private readonly VigoTransitApiClient _api;

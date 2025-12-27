@@ -91,6 +91,7 @@ public class PlanConnectionContent : IGraphRequest<PlanConnectionContent.Args>
                             name
                             lat
                             lon
+                            zoneId
                           }
                         }
                         to {
@@ -103,6 +104,7 @@ public class PlanConnectionContent : IGraphRequest<PlanConnectionContent.Args>
                             name
                             lat
                             lon
+                            zoneId
                           }
                         }
                         stopCalls {

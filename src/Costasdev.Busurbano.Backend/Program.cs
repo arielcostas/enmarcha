@@ -19,6 +19,8 @@ builder.Services
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 
+builder.Services.AddSingleton<XuntaFareProvider>();
+
 builder.Services.AddSingleton<ShapeTraversalService>();
 builder.Services.AddSingleton<FeedService>();
 builder.Services.AddSingleton<FareService>();
