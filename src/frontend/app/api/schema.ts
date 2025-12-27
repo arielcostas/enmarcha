@@ -134,6 +134,9 @@ export const PlannerStepSchema = z.object({
 
 export const PlannerLegSchema = z.object({
   mode: z.string().optional().nullable(),
+  feedId: z.string().optional().nullable(),
+  routeId: z.string().optional().nullable(),
+  tripId: z.string().optional().nullable(),
   routeName: z.string().optional().nullable(),
   routeShortName: z.string().optional().nullable(),
   routeLongName: z.string().optional().nullable(),

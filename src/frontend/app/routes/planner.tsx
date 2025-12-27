@@ -587,7 +587,9 @@ const ItineraryDetail = ({
                         minute: "2-digit",
                         timeZone: "Europe/Madrid",
                       })}{" "}
-                      -{" "}
+                    </span>
+                    <span>•</span>
+                    <span>
                       {(
                         (new Date(leg.endTime).getTime() -
                           new Date(leg.startTime).getTime()) /

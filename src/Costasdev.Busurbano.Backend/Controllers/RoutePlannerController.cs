@@ -78,8 +78,6 @@ public partial class RoutePlannerController : ControllerBase
             var response = await _httpClient.SendAsync(request);
             var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<PlanConnectionResponse>>();
 
-            Console.WriteLine(responseBody);
-
             if (responseBody is not { IsSuccess: true } || responseBody.Data?.PlanConnection.Edges.Length == 0)
             {
                 LogErrorFetchingRoutes(response.StatusCode, await response.Content.ReadAsStringAsync());

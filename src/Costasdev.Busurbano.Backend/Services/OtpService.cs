@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text;
 using Costasdev.Busurbano.Backend.Configuration;
 using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Types.Otp;
@@ -430,6 +429,8 @@ public class OtpService
         return new Leg
         {
             Mode = leg.Mode,
+            FeedId = feedId,
+            RouteId = leg.Route?.GtfsId,
             RouteName = leg.Route?.LongName,
             RouteShortName = shortName,
             RouteLongName = leg.Route?.LongName,

@@ -23,6 +23,9 @@ public class Itinerary
 public class Leg
 {
     public string? Mode { get; set; } // WALK, BUS, etc.
+    public string? FeedId { get; set; }
+    public string? RouteId { get; set; }
+    public string? TripId { get; set; }
     public string? RouteName { get; set; }
     public string? RouteShortName { get; set; }
     public string? RouteLongName { get; set; }
