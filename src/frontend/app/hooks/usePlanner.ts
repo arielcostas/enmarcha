@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  type PlannerSearchResult,
-  type RoutePlan,
-  planRoute,
-} from "../data/PlannerApi";
+import { type PlannerSearchResult, type RoutePlan } from "../data/PlannerApi";
+import { usePlanQuery } from "./usePlanQuery";
 
 const STORAGE_KEY = "planner_last_route";
 const EXPIRY_MS = 2 * 60 * 60 * 1000; // 2 hours
@@ -31,6 +28,48 @@ export function usePlanner() {
   const [selectedItineraryIndex, setSelectedItineraryIndex] = useState<
     number | null
   >(null);
+
+  const {
+    data: queryPlan,
+    isLoading: queryLoading,
+    error: queryError,
+    isFetching,
+  } = usePlanQuery(
+    origin?.lat,
+    origin?.lon,
+    destination?.lat,
+    destination?.lon,
+    searchTime ?? undefined,
+    arriveBy,
+    !!(origin && destination)
+  );
+
+  // Sync query result to local state and storage
+  useEffect(() => {
+    if (queryPlan) {
+      setPlan(queryPlan as any); // Cast because of slight type differences if any, but they should match now
+
+      if (origin && destination) {
+        const toStore: StoredRoute = {
+          timestamp: Date.now(),
+          origin,
+          destination,
+          plan: queryPlan as any,
+          searchTime: searchTime ?? new Date(),
+          arriveBy,
+          selectedItineraryIndex: selectedItineraryIndex ?? undefined,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+      }
+    }
+  }, [
+    queryPlan,
+    origin,
+    destination,
+    searchTime,
+    arriveBy,
+    selectedItineraryIndex,
+  ]);
 
   // Load from storage on mount
   useEffect(() => {
@@ -60,41 +99,11 @@ export function usePlanner() {
     time?: Date,
     arriveByParam: boolean = false
   ) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await planRoute(
-        from.lat,
-        from.lon,
-        to.lat,
-        to.lon,
-        time,
-        arriveByParam
-      );
-      setPlan(result);
-      setOrigin(from);
-      setDestination(to);
-      setSearchTime(time ?? new Date());
-      setArriveBy(arriveByParam);
-      setSelectedItineraryIndex(null); // Reset when doing new search
-
-      // Save to storage
-      const toStore: StoredRoute = {
-        timestamp: Date.now(),
-        origin: from,
-        destination: to,
-        plan: result,
-        searchTime: time ?? new Date(),
-        arriveBy: arriveByParam,
-        selectedItineraryIndex: undefined,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
-    } catch (err) {
-      setError("Failed to calculate route. Please try again.");
-      setPlan(null);
-    } finally {
-      setLoading(false);
-    }
+    setOrigin(from);
+    setDestination(to);
+    setSearchTime(time ?? new Date());
+    setArriveBy(arriveByParam);
+    setSelectedItineraryIndex(null);
   };
 
   const clearRoute = () => {
@@ -145,8 +154,8 @@ export function usePlanner() {
     destination,
     setDestination,
     plan,
-    loading,
-    error,
+    loading: queryLoading || (isFetching && !plan),
+    error: queryError ? "Failed to calculate route. Please try again." : null,
     searchTime,
     arriveBy,
     selectedItineraryIndex,

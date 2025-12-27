@@ -127,18 +127,20 @@
 }
 
 .line-icon-rounded {
-  display: block;
-  width: 4.25ch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.25ch;
   height: 4.25ch;
   box-sizing: border-box;
 
   background-color: var(--line-colour);
   color: var(--line-text-colour);
-  padding: 1.4ch 0.8ch;
+  padding: 0 0.8ch;
   text-align: center;
-  border-radius: 50%;
+  border-radius: 2.125ch;
 
   font: 600 13px / 1 monospace;
   letter-spacing: 0.05em;
-  text-wrap: nowrap;
+  white-space: nowrap;
 }

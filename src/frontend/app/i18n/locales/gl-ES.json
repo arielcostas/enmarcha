@@ -134,9 +134,11 @@
     "walk_to": "Camiñar {{distance}} ata {{destination}}",
     "from_to": "De {{from}} a {{to}}",
     "itinerary_details": "Detalles do itinerario",
+    "direction": "Dirección",
+    "operator": "Operador",
     "back": "← Atrás",
-    "cash_fare": "{{amount}} €",
-    "card_fare": "{{amount}} €"
+    "fare": "{{amount}} €",
+    "free": "Gratuíto"
   },
   "common": {
     "loading": "Cargando...",

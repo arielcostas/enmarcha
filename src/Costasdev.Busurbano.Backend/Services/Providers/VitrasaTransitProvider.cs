@@ -15,13 +15,15 @@ public class VitrasaTransitProvider : ITransitProvider
     private readonly VigoTransitApiClient _api;
     private readonly AppConfiguration _configuration;
     private readonly ShapeTraversalService _shapeService;
+    private readonly LineFormatterService _lineFormatter;
     private readonly ILogger<VitrasaTransitProvider> _logger;
 
-    public VitrasaTransitProvider(HttpClient http, IOptions<AppConfiguration> options, ShapeTraversalService shapeService, ILogger<VitrasaTransitProvider> logger)
+    public VitrasaTransitProvider(HttpClient http, IOptions<AppConfiguration> options, ShapeTraversalService shapeService, LineFormatterService lineFormatter, ILogger<VitrasaTransitProvider> logger)
     {
         _api = new VigoTransitApiClient(http);
         _configuration = options.Value;
         _shapeService = shapeService;
+        _lineFormatter = lineFormatter;
         _logger = logger;
     }
 
@@ -261,7 +263,7 @@ public class VitrasaTransitProvider : ITransitProvider
         // Sort by ETA (RealTime minutes if present; otherwise Schedule minutes)
         var sorted = consolidatedCirculations
             .OrderBy(c => c.RealTime?.Minutes ?? c.Schedule!.Minutes)
-            .Select(LineFormatterService.Format)
+            .Select(_lineFormatter.Format)
             .ToList();
 
         return sorted;

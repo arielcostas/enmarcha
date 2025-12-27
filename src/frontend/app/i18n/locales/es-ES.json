@@ -134,6 +134,8 @@
     "walk_to": "Caminar {{distance}} hasta {{destination}}",
     "from_to": "De {{from}} a {{to}}",
     "itinerary_details": "Detalles del itinerario",
+    "direction": "Dirección",
+    "operator": "Operador",
     "back": "← Atrás",
     "fare": "{{amount}} €",
     "free": "Gratuito"

@@ -75,7 +75,14 @@ public partial class ArrivalsController : ControllerBase
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
+            // Discard trip without pickup at stop
             if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None))
+            {
+                continue;
+            }
+
+            // Discard on last stop
+            if (item.Trip.ArrivalStoptime.Stop.GtfsId == id)
             {
                 continue;
             }
@@ -133,6 +140,8 @@ public partial class ArrivalsController : ControllerBase
         // Time after an arrival's time to still include it in the response. This is useful without real-time data, for delayed buses.
         var timeThreshold = GetThresholdForFeed(id);
 
+        var (fallbackColor, fallbackTextColor) = _feedService.GetFallbackColourForFeed(feedId);
+
         return Ok(new StopArrivalsResponse
         {
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
@@ -151,8 +160,10 @@ public partial class ArrivalsController : ControllerBase
                 {
                     GtfsId = r.GtfsId,
                     ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                    Colour = r.Color ?? "FFFFFF",
-                    TextColour = r.TextColor ?? "000000"
+                    Colour = r.Color ?? fallbackColor,
+                    TextColour = r.TextColor is null or "000000" ?
+                        ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
+                        r.TextColor
                 })],
             Arrivals = [.. arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)]
         });
@@ -163,7 +174,7 @@ public partial class ArrivalsController : ControllerBase
     {
         string feedId = id.Split(':', 2)[0];
 
-        if (feedId == "vitrasa" || feedId == "coruna")
+        if (feedId is "vitrasa" or "coruna")
         {
             return 0;
         }

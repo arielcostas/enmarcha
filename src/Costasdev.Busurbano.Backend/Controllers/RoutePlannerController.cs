@@ -1,18 +1,34 @@
+using System.Net;
+using Costasdev.Busurbano.Backend.Configuration;
 using Costasdev.Busurbano.Backend.Services;
 using Costasdev.Busurbano.Backend.Types.Planner;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Costasdev.Busurbano.Backend.Controllers;
 
 [ApiController]
 [Route("api/planner")]
-public class RoutePlannerController : ControllerBase
+public partial class RoutePlannerController : ControllerBase
 {
+    private readonly ILogger<RoutePlannerController> _logger;
     private readonly OtpService _otpService;
+    private readonly AppConfiguration _config;
+    private readonly HttpClient _httpClient;
 
-    public RoutePlannerController(OtpService otpService)
+    public RoutePlannerController(
+        ILogger<RoutePlannerController> logger,
+        OtpService otpService,
+        IOptions<AppConfiguration> config,
+        HttpClient httpClient
+    )
     {
+        _logger = logger;
         _otpService = otpService;
+        _config = config.Value;
+        _httpClient = httpClient;
     }
 
     [HttpGet("autocomplete")]
@@ -44,18 +60,43 @@ public class RoutePlannerController : ControllerBase
         [FromQuery] double fromLon,
         [FromQuery] double toLat,
         [FromQuery] double toLon,
-        [FromQuery] DateTime? time = null,
+        [FromQuery] DateTimeOffset time,
         [FromQuery] bool arriveBy = false)
     {
         try
         {
-            var plan = await _otpService.GetRoutePlanAsync(fromLat, fromLon, toLat, toLon, time, arriveBy);
+            var requestContent = PlanConnectionContent.Query(
+                new PlanConnectionContent.Args(fromLat, fromLon, toLat, toLon, time, arriveBy)
+            );
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
+            request.Content = JsonContent.Create(new GraphClientRequest
+            {
+                Query = requestContent
+            });
+
+            var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<PlanConnectionResponse>>();
+
+            Console.WriteLine(responseBody);
+
+            if (responseBody is not { IsSuccess: true } || responseBody.Data?.PlanConnection.Edges.Length == 0)
+            {
+                LogErrorFetchingRoutes(response.StatusCode, await response.Content.ReadAsStringAsync());
+                return StatusCode(500, "An error occurred while planning the route.");
+            }
+
+            var plan = _otpService.MapPlanResponse(responseBody.Data!);
             return Ok(plan);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // Log error
+            _logger.LogError("Exception planning route: {e}", e);
             return StatusCode(500, "An error occurred while planning the route.");
         }
     }
+
+    [LoggerMessage(LogLevel.Error, "Error fetching route planning, received {statusCode} {responseBody}")]
+    partial void LogErrorFetchingRoutes(HttpStatusCode? statusCode, string responseBody);
+
 }

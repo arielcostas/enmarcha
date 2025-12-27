@@ -62,14 +62,22 @@ public class FeedService
 
     public string NormalizeRouteShortName(string feedId, string shortName)
     {
-        if (feedId == "xunta" && shortName.StartsWith("XG") && shortName.Length >= 8)
+        if (feedId == "xunta" && shortName.StartsWith("XG"))
         {
-            // XG817014 -> 817.14
-            var contract = shortName.Substring(2, 3);
-            var lineStr = shortName.Substring(5);
-            if (int.TryParse(lineStr, out int line))
+            if (shortName.Length >= 8)
             {
-                return $"{contract}.{line:D2}";
+                // XG817014 -> 817.14
+                var contract = shortName.Substring(2, 3);
+                var lineStr = shortName.Substring(5);
+                if (int.TryParse(lineStr, out int line))
+                {
+                    return $"{contract}.{line:D2}";
+                }
+            }
+            else if (shortName.Length > 2)
+            {
+                // XG883 -> 883
+                return shortName.Substring(2);
             }
         }
         return shortName;
@@ -91,6 +99,7 @@ public class FeedService
         if (feedId == "vitrasa")
         {
             return name
+                .Trim()
                 .Replace("\"", "")
                 .Replace("  ", ", ")
                 .Trim();

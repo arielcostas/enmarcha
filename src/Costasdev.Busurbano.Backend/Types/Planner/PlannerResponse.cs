@@ -15,7 +15,7 @@ public class Itinerary
     public double WalkTimeSeconds { get; set; }
     public double TransitTimeSeconds { get; set; }
     public double WaitingTimeSeconds { get; set; }
-    public List<Leg> Legs { get; set; } = new();
+    public List<Leg> Legs { get; set; } = [];
     public double? CashFareEuro { get; set; }
     public double? CardFareEuro { get; set; }
 }

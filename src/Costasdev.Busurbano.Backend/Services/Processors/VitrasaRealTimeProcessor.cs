@@ -111,8 +111,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                 if (bestMatch != null)
                 {
                     var arrival = bestMatch.Arrival;
-                    _logger.LogInformation("Matched Vitrasa real-time for line {Line}: {Scheduled}m -> {RealTime}m (diff: {Diff}m)",
-                        arrival.Route.ShortName, arrival.Estimate.Minutes, estimate.Minutes, bestMatch.TimeDiff);
 
                     var scheduledMinutes = arrival.Estimate.Minutes;
                     arrival.Estimate.Minutes = estimate.Minutes;

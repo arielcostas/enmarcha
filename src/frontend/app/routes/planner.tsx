@@ -1,53 +1,24 @@
 import { Coins, CreditCard, Footprints } from "lucide-react";
-import maplibregl, { type StyleSpecification } from "maplibre-gl";
+import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { useLocation } from "react-router";
 
-import { useApp } from "~/AppContext";
+import { type ConsolidatedCirculation, type Itinerary } from "~/api/schema";
 import LineIcon from "~/components/LineIcon";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
-import { type Itinerary } from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
 import "../tailwind-full.css";
 
-export interface ConsolidatedCirculation {
-  line: string;
-  route: string;
-  schedule?: {
-    running: boolean;
-    minutes: number;
-    serviceId: string;
-    tripId: string;
-    shapeId?: string;
-  };
-  realTime?: {
-    minutes: number;
-    distance: number;
-  };
-  currentPosition?: {
-    latitude: number;
-    longitude: number;
-    orientationDegrees: number;
-    shapeIndex?: number;
-  };
-  isPreviousTrip?: boolean;
-  previousTripShapeId?: string;
-  nextStreets?: string[];
-}
-
-const FARE_CASH_PER_BUS = 1.63;
-const FARE_CARD_PER_BUS = 0.67;
-
 const formatDistance = (meters: number) => {
-  const intMeters = Math.round(meters);
-  if (intMeters >= 1000) return `${(intMeters / 1000).toFixed(1)} km`;
-  return `${intMeters} m`;
+  if (meters >= 1000) return `${(meters / 1000).toFixed(1)} km`;
+  const rounded = Math.round(meters / 100) * 100;
+  return `${rounded} m`;
 };
 
 const haversineMeters = (a: [number, number], b: [number, number]) => {
@@ -116,12 +87,8 @@ const ItinerarySummary = ({
   const busLegsCount = itinerary.legs.filter(
     (leg) => leg.mode !== "WALK"
   ).length;
-  const cashFare = (
-    itinerary.cashFareEuro ?? busLegsCount * FARE_CASH_PER_BUS
-  ).toFixed(2);
-  const cardFare = (
-    itinerary.cardFareEuro ?? busLegsCount * FARE_CARD_PER_BUS
-  ).toFixed(2);
+  const cashFare = (itinerary.cashFareEuro ?? 0).toFixed(2);
+  const cardFare = (itinerary.cardFareEuro ?? 0).toFixed(2);
 
   return (
     <div
@@ -132,9 +99,7 @@ const ItinerarySummary = ({
         <div className="font-bold text-lg text-text">
           {startTime} - {endTime}
         </div>
-        <div className="text-muted">
-          {durationMinutes} min
-        </div>
+        <div className="text-muted">{durationMinutes} min</div>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -168,6 +133,8 @@ const ItinerarySummary = ({
                   <LineIcon
                     line={leg.routeShortName || leg.routeName || leg.mode || ""}
                     mode="pill"
+                    colour={leg.routeColor || undefined}
+                    textColour={leg.routeTextColor || undefined}
                   />
                 </div>
               )}
@@ -180,7 +147,7 @@ const ItinerarySummary = ({
         <span>
           {t("planner.walk")}: {formatDistance(walkTotals.meters)}
           {walkTotals.minutes
-            ? ` • ${walkTotals.minutes} {t("estimates.minutes")}`
+            ? ` • ${walkTotals.minutes} ${t("estimates.minutes")}`
             : ""}
         </span>
         <span className="flex items-center gap-3">
@@ -566,7 +533,7 @@ const ItineraryDetail = ({
       </div>
 
       {/* Details Panel */}
-      <div className="h-1/3 md:h-full md:w-96 lg:w-md overflow-y-auto bg-white dark:bg-slate-900 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700">
+      <div className="h-1/3 md:h-full md:w-96 lg:w-lg overflow-y-auto bg-white dark:bg-slate-900 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700">
         <div className="px-4 py-4">
           <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100">
             {t("planner.itinerary_details")}
@@ -575,7 +542,7 @@ const ItineraryDetail = ({
           <div>
             {itinerary.legs.map((leg, idx) => (
               <div key={idx} className="flex gap-3">
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center w-20 shrink-0">
                   {leg.mode === "WALK" ? (
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm"
@@ -587,6 +554,8 @@ const ItineraryDetail = ({
                     <LineIcon
                       line={leg.routeShortName || leg.routeName || ""}
                       mode="rounded"
+                      colour={leg.routeColor || undefined}
+                      textColour={leg.routeTextColor || undefined}
                     />
                   )}
                   {idx < itinerary.legs.length - 1 && (
@@ -598,29 +567,42 @@ const ItineraryDetail = ({
                     {leg.mode === "WALK" ? (
                       t("planner.walk")
                     ) : (
-                      <>
-                        <span>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] uppercase text-muted font-bold leading-none mb-1">
+                          {t("planner.direction")}
+                        </span>
+                        <span className="leading-tight">
                           {leg.headsign ||
                             leg.routeLongName ||
                             leg.routeName ||
                             ""}
                         </span>
-                      </>
+                      </div>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(leg.startTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone: "Europe/Madrid",
-                    })}{" "}
-                    -{" "}
-                    {(
-                      (new Date(leg.endTime).getTime() -
-                        new Date(leg.startTime).getTime()) /
-                      60000
-                    ).toFixed(0)}{" "}
-                    {t("estimates.minutes")}
+                  <div className="text-sm text-gray-600 dark:text-gray-400 flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                    <span>
+                      {new Date(leg.startTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        timeZone: "Europe/Madrid",
+                      })}{" "}
+                      -{" "}
+                      {(
+                        (new Date(leg.endTime).getTime() -
+                          new Date(leg.startTime).getTime()) /
+                        60000
+                      ).toFixed(0)}{" "}
+                      {t("estimates.minutes")}
+                    </span>
+                    <span>•</span>
+                    <span>{formatDistance(leg.distanceMeters)}</span>
+                    {leg.agencyName && (
+                      <>
+                        <span>•</span>
+                        <span className="italic">{leg.agencyName}</span>
+                      </>
+                    )}
                   </div>
                   {leg.mode !== "WALK" &&
                     leg.from?.stopId &&

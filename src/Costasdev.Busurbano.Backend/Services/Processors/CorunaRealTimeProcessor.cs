@@ -73,8 +73,6 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 }
 
                 var arrival = bestMatch.Arrival;
-                _logger.LogInformation("Matched Coruña real-time for line {Line}: {Scheduled}m -> {RealTime}m (diff: {Diff}m)",
-                    arrival.Route.ShortName, arrival.Estimate.Minutes, estimate.Minutes, bestMatch.TimeDiff);
 
                 var scheduledMinutes = arrival.Estimate.Minutes;
                 arrival.Estimate.Minutes = estimate.Minutes;

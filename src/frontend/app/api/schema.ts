@@ -8,7 +8,7 @@ export const RouteInfoSchema = z.object({
 
 export const HeadsignInfoSchema = z.object({
   badge: z.string().optional().nullable(),
-  destination: z.string(),
+  destination: z.string().nullable(),
   marquee: z.string().optional().nullable(),
 });
 
@@ -108,3 +108,70 @@ export const ConsolidatedCirculationSchema = z.object({
 export type ConsolidatedCirculation = z.infer<
   typeof ConsolidatedCirculationSchema
 >;
+
+// Route Planner
+export const PlannerPlaceSchema = z.object({
+  name: z.string().optional().nullable(),
+  lat: z.number(),
+  lon: z.number(),
+  stopId: z.string().optional().nullable(),
+  stopCode: z.string().optional().nullable(),
+});
+
+export const PlannerGeometrySchema = z.object({
+  type: z.string(),
+  coordinates: z.array(z.array(z.number())),
+});
+
+export const PlannerStepSchema = z.object({
+  distanceMeters: z.number(),
+  relativeDirection: z.string().optional().nullable(),
+  absoluteDirection: z.string().optional().nullable(),
+  streetName: z.string().optional().nullable(),
+  lat: z.number(),
+  lon: z.number(),
+});
+
+export const PlannerLegSchema = z.object({
+  mode: z.string().optional().nullable(),
+  routeName: z.string().optional().nullable(),
+  routeShortName: z.string().optional().nullable(),
+  routeLongName: z.string().optional().nullable(),
+  routeColor: z.string().optional().nullable(),
+  routeTextColor: z.string().optional().nullable(),
+  headsign: z.string().optional().nullable(),
+  agencyName: z.string().optional().nullable(),
+  from: PlannerPlaceSchema.optional().nullable(),
+  to: PlannerPlaceSchema.optional().nullable(),
+  startTime: z.string(),
+  endTime: z.string(),
+  distanceMeters: z.number(),
+  geometry: PlannerGeometrySchema.optional().nullable(),
+  steps: z.array(PlannerStepSchema),
+  intermediateStops: z.array(PlannerPlaceSchema),
+});
+
+export const ItinerarySchema = z.object({
+  durationSeconds: z.number(),
+  startTime: z.string(),
+  endTime: z.string(),
+  walkDistanceMeters: z.number(),
+  walkTimeSeconds: z.number(),
+  transitTimeSeconds: z.number(),
+  waitingTimeSeconds: z.number(),
+  legs: z.array(PlannerLegSchema),
+  cashFareEuro: z.number().optional().nullable(),
+  cardFareEuro: z.number().optional().nullable(),
+});
+
+export const RoutePlanSchema = z.object({
+  itineraries: z.array(ItinerarySchema),
+  timeOffsetSeconds: z.number().optional().nullable(),
+});
+
+export type PlannerPlace = z.infer<typeof PlannerPlaceSchema>;
+export type PlannerGeometry = z.infer<typeof PlannerGeometrySchema>;
+export type PlannerStep = z.infer<typeof PlannerStepSchema>;
+export type PlannerLeg = z.infer<typeof PlannerLegSchema>;
+export type Itinerary = z.infer<typeof ItinerarySchema>;
+export type RoutePlan = z.infer<typeof RoutePlanSchema>;

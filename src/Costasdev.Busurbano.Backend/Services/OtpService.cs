@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Text;
 using Costasdev.Busurbano.Backend.Configuration;
+using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Types.Otp;
 using Costasdev.Busurbano.Backend.Types.Planner;
+using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -14,13 +16,19 @@ public class OtpService
     private readonly AppConfiguration _config;
     private readonly IMemoryCache _cache;
     private readonly ILogger<OtpService> _logger;
+    private readonly FareService _fareService;
+    private readonly LineFormatterService _lineFormatter;
+    private readonly FeedService _feedService;
 
-    public OtpService(HttpClient httpClient, IOptions<AppConfiguration> config, IMemoryCache cache, ILogger<OtpService> logger)
+    public OtpService(HttpClient httpClient, IOptions<AppConfiguration> config, IMemoryCache cache, ILogger<OtpService> logger, FareService fareService, LineFormatterService lineFormatter, FeedService feedService)
     {
         _httpClient = httpClient;
         _config = config.Value;
         _cache = cache;
         _logger = logger;
+        _fareService = fareService;
+        _lineFormatter = lineFormatter;
+        _feedService = feedService;
     }
 
     public async Task<List<PlannerSearchResult>> GetAutocompleteAsync(string query)
@@ -244,37 +252,15 @@ public class OtpService
     private PlannerPlace? MapPlace(OtpPlace? otpPlace)
     {
         if (otpPlace == null) return null;
+        var feedId = otpPlace.StopId?.Split(':')[0] ?? "unknown";
         return new PlannerPlace
         {
-            Name = CorrectStopName(otpPlace.Name),
+            Name = _feedService.NormalizeStopName(feedId, otpPlace.Name),
             Lat = otpPlace.Lat,
             Lon = otpPlace.Lon,
             StopId = otpPlace.StopId, // Use string directly
-            StopCode = CorrectStopCode(otpPlace.StopCode)
+            StopCode = _feedService.NormalizeStopCode(feedId, otpPlace.StopCode ?? string.Empty)
         };
-    }
-
-    private string CorrectStopCode(string? stopId)
-    {
-        if (string.IsNullOrEmpty(stopId)) return stopId ?? string.Empty;
-
-        var sb = new StringBuilder();
-        foreach (var c in stopId)
-        {
-            if (char.IsNumber(c))
-            {
-                sb.Append(c);
-            }
-        }
-
-        return int.Parse(sb.ToString()).ToString();
-    }
-
-    private string CorrectStopName(string? stopName)
-    {
-        if (string.IsNullOrEmpty(stopName)) return stopName ?? string.Empty;
-
-        return stopName!.Replace("  ", ", ").Replace("\"", "");
     }
 
     private Step MapStep(OtpWalkStep otpStep)
@@ -350,5 +336,154 @@ public class OtpService
         }
 
         return poly;
+    }
+
+    public RoutePlan MapPlanResponse(PlanConnectionResponse response)
+    {
+        var itineraries = response.PlanConnection.Edges
+            .Select(e => MapItinerary(e.Node))
+            .ToList();
+
+        return new RoutePlan
+        {
+            Itineraries = itineraries
+        };
+    }
+
+    private Itinerary MapItinerary(PlanConnectionResponse.Node node)
+    {
+        var legs = node.Legs.Select(MapLeg).ToList();
+        var fares = _fareService.CalculateFare(legs);
+
+        return new Itinerary
+        {
+            DurationSeconds = node.DurationSeconds,
+            StartTime = DateTime.Parse(node.Start8601, null, DateTimeStyles.RoundtripKind),
+            EndTime = DateTime.Parse(node.End8601, null, DateTimeStyles.RoundtripKind),
+            WalkDistanceMeters = node.WalkDistance,
+            WalkTimeSeconds = node.WalkSeconds,
+            TransitTimeSeconds = node.DurationSeconds - node.WalkSeconds - node.WaitingSeconds,
+            WaitingTimeSeconds = node.WaitingSeconds,
+            Legs = legs,
+            CashFareEuro = fares.CashFareEuro,
+            CardFareEuro = fares.CardFareEuro
+        };
+    }
+
+    private Leg MapLeg(PlanConnectionResponse.Leg leg)
+    {
+        var feedId = leg.From.Stop?.GtfsId?.Split(':')[0] ?? "unknown";
+        var shortName = _feedService.NormalizeRouteShortName(feedId, leg.Route?.ShortName ?? string.Empty);
+        var headsign = leg.Headsign;
+
+        if (feedId == "vitrasa")
+        {
+            headsign = headsign?.Replace("*", "");
+            if (headsign == "FORA DE SERVIZO.G.B.")
+            {
+                headsign = "García Barbón, 7 (fora de servizo)";
+            }
+
+            switch (shortName)
+            {
+                case "A" when headsign != null && headsign.StartsWith("\"1\""):
+                    shortName = "A1";
+                    headsign = headsign.Replace("\"1\"", "");
+                    break;
+                case "6":
+                    headsign = headsign?.Replace("\"", "");
+                    break;
+                case "FUT":
+                    if (headsign == "CASTELAO-CAMELIAS-G.BARBÓN.M.GARRIDO")
+                    {
+                        shortName = "MAR";
+                        headsign = "MARCADOR ⚽: CASTELAO-CAMELIAS-G.BARBÓN.M.GARRIDO";
+                    }
+                    else if (headsign == "P. ESPAÑA-T.VIGO-S.BADÍA")
+                    {
+                        shortName = "RIO";
+                        headsign = "RÍO ⚽: P. ESPAÑA-T.VIGO-S.BADÍA";
+                    }
+                    else if (headsign == "NAVIA-BOUZAS-URZAIZ-G. ESPINO")
+                    {
+                        shortName = "GOL";
+                        headsign = "GOL ⚽: NAVIA-BOUZAS-URZAIZ-G. ESPINO";
+                    }
+                    break;
+            }
+        }
+
+        var color = leg.Route?.Color;
+        var textColor = leg.Route?.TextColor;
+
+        if (string.IsNullOrEmpty(color) || color == "FFFFFF")
+        {
+            var (fallbackColor, fallbackTextColor) = _feedService.GetFallbackColourForFeed(feedId);
+            color = fallbackColor.Replace("#", "");
+            textColor = fallbackTextColor.Replace("#", "");
+        }
+        else if (string.IsNullOrEmpty(textColor) || textColor == "000000")
+        {
+            textColor = ContrastHelper.GetBestTextColour(color).Replace("#", "");
+        }
+
+        return new Leg
+        {
+            Mode = leg.Mode,
+            RouteName = leg.Route?.LongName,
+            RouteShortName = shortName,
+            RouteLongName = leg.Route?.LongName,
+            Headsign = headsign,
+            AgencyName = leg.Route?.Agency?.Name,
+            RouteColor = color,
+            RouteTextColor = textColor,
+            From = MapPlace(leg.From),
+            To = MapPlace(leg.To),
+            StartTime = DateTime.Parse(leg.Start.ScheduledTime8601, null, DateTimeStyles.RoundtripKind),
+            EndTime = DateTime.Parse(leg.End.ScheduledTime8601, null, DateTimeStyles.RoundtripKind),
+            DistanceMeters = leg.Distance,
+            Geometry = DecodePolyline(leg.LegGeometry?.Points),
+            Steps = leg.Steps.Select(MapStep).ToList(),
+            IntermediateStops = leg.StopCalls.Select(sc => MapPlace(sc.StopLocation)).ToList()
+        };
+    }
+
+    private PlannerPlace MapPlace(PlanConnectionResponse.LegPosition pos)
+    {
+        var feedId = pos.Stop?.GtfsId?.Split(':')[0] ?? "unknown";
+        return new PlannerPlace
+        {
+            Name = _feedService.NormalizeStopName(feedId, pos.Name),
+            Lat = pos.Latitude,
+            Lon = pos.Longitude,
+            StopId = pos.Stop?.GtfsId,
+            StopCode = _feedService.NormalizeStopCode(feedId, pos.Stop?.Code ?? string.Empty)
+        };
+    }
+
+    private PlannerPlace MapPlace(PlanConnectionResponse.StopLocation stop)
+    {
+        var feedId = stop.GtfsId?.Split(':')[0] ?? "unknown";
+        return new PlannerPlace
+        {
+            Name = _feedService.NormalizeStopName(feedId, stop.Name),
+            Lat = stop.Latitude,
+            Lon = stop.Longitude,
+            StopId = stop.GtfsId,
+            StopCode = _feedService.NormalizeStopCode(feedId, stop.Code ?? string.Empty)
+        };
+    }
+
+    private Step MapStep(PlanConnectionResponse.Step step)
+    {
+        return new Step
+        {
+            DistanceMeters = step.Distance,
+            RelativeDirection = step.RelativeDirection,
+            AbsoluteDirection = step.AbsoluteDirection,
+            StreetName = step.StreetName,
+            Lat = step.Latitude,
+            Lon = step.Longitude
+        };
     }
 }

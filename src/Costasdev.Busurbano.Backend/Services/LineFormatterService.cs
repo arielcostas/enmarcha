@@ -4,7 +4,7 @@ namespace Costasdev.Busurbano.Backend.Services;
 
 public class LineFormatterService
 {
-    public static ConsolidatedCirculation Format(ConsolidatedCirculation circulation)
+    public ConsolidatedCirculation Format(ConsolidatedCirculation circulation)
     {
         circulation.Route = circulation.Route.Replace("*", "");
 

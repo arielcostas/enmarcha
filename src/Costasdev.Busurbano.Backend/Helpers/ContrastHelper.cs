@@ -25,7 +25,7 @@ public static class ContrastHelper
         double contrastWithWhite = (1.0 + 0.05) / (luminance + 0.05);
         double contrastWithBlack = (luminance + 0.05) / 0.05;
 
-        if (contrastWithWhite > 3)
+        if (contrastWithWhite >= 2.5)
         {
             return "#FFFFFF";
         }

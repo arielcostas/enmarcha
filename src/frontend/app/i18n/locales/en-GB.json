@@ -134,9 +134,11 @@
     "walk_to": "Walk {{distance}} to {{destination}}",
     "from_to": "From {{from}} to {{to}}",
     "itinerary_details": "Itinerary Details",
+    "direction": "Direction",
+    "operator": "Operator",
     "back": "← Back",
-    "cash_fare": "€{{amount}}",
-    "card_fare": "€{{amount}}"
+    "fare": "€{{amount}}",
+    "free": "Free"
   },
   "common": {
     "loading": "Loading...",
