@@ -21,6 +21,7 @@ maplibregl.addProtocol("pmtiles", pmtiles.tile);
 //#endregion
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PlannerProvider } from "./contexts/PlannerContext";
 import "./i18n";
 
 const queryClient = new QueryClient();
@@ -95,7 +96,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
-        <AppShell />
+        <PlannerProvider>
+          <AppShell />
+        </PlannerProvider>
       </AppProvider>
     </QueryClientProvider>
   );

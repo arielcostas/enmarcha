@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { ChevronUp, Map, MapPin } from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import PlaceListItem from "~/components/PlaceListItem";
 import {
   reverseGeocode,
@@ -45,9 +46,21 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
   autoLoad = true,
 }) => {
   const { t } = useTranslation();
-  const { origin, setOrigin, destination, setDestination, loading, error } =
-    usePlanner({ autoLoad });
-  const [isExpanded, setIsExpanded] = useState(false);
+  const navigate = useNavigate();
+  const {
+    origin,
+    setOrigin,
+    destination,
+    setDestination,
+    loading,
+    error,
+    setPickingMode,
+    isExpanded,
+    setIsExpanded,
+    recentPlaces,
+    addRecentPlace,
+    clearRecentPlaces,
+  } = usePlanner({ autoLoad });
   const [originQuery, setOriginQuery] = useState(origin?.name || "");
   const [destQuery, setDestQuery] = useState("");
 
@@ -61,14 +74,6 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
   const [favouriteStops, setFavouriteStops] = useState<PlannerSearchResult[]>(
     []
   );
-  const [recentPlaces, setRecentPlaces] = useState<PlannerSearchResult[]>([]);
-  const RECENT_KEY = `recentPlaces`;
-  const clearRecentPlaces = useCallback(() => {
-    setRecentPlaces([]);
-    try {
-      localStorage.removeItem(RECENT_KEY);
-    } catch {}
-  }, []);
 
   const pickerInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -129,43 +134,6 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
       .then((mapped) => setFavouriteStops(mapped))
       .catch(() => setFavouriteStops([]));
   }, []);
-
-  // Load recent places from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(RECENT_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as PlannerSearchResult[];
-        setRecentPlaces(parsed.slice(0, 20));
-      }
-    } catch {
-      setRecentPlaces([]);
-    }
-  }, []);
-
-  const addRecentPlace = useCallback(
-    (p: PlannerSearchResult) => {
-      const key = `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
-      const existing = recentPlaces.filter(
-        (rp) => `${rp.lat.toFixed(5)},${rp.lon.toFixed(5)}` !== key
-      );
-      const updated = [
-        {
-          name: p.name,
-          label: p.label,
-          lat: p.lat,
-          lon: p.lon,
-          layer: p.layer,
-        },
-        ...existing,
-      ].slice(0, 20);
-      setRecentPlaces(updated);
-      try {
-        localStorage.setItem(RECENT_KEY, JSON.stringify(updated));
-      } catch {}
-    },
-    [recentPlaces]
-  );
 
   const filteredFavouriteStops = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase();
@@ -350,7 +318,6 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
             className="block w-full px-2 py-1 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-200"
             onClick={() => {
               setIsExpanded(true);
-              openPicker("destination");
             }}
           >
             <div className="text-small font-semibold text-slate-900 dark:text-slate-100">
@@ -364,7 +331,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="w-full rounded-lg bg-surface border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-left text-sm text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:border-primary-500 shadow-sm"
+                className="grow rounded-lg bg-surface border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-left text-sm text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:border-primary-500 shadow-sm"
                 onClick={() => openPicker("origin")}
               >
                 <span
@@ -375,6 +342,16 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   {originQuery || t("planner.origin")}
                 </span>
               </button>
+              {!forceExpanded && (
+                <button
+                  type="button"
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  onClick={() => setIsExpanded(false)}
+                  aria-label={t("planner.collapse", "Collapse")}
+                >
+                  <ChevronUp className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
             <div>
@@ -609,6 +586,35 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   </button>
                 </li>
               )}
+
+              <li className="border-t border-slate-100 dark:border-slate-700">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-200"
+                  onClick={() => {
+                    setPickingMode(pickerField);
+                    setPickerOpen(false);
+                    navigate("/map");
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-4 h-4">
+                      <Map className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                    </span>
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {t("planner.pick_on_map", "Pick on map")}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {t(
+                          "planner.pick_on_map_desc",
+                          "Select a point visually"
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </li>
 
               {(remoteLoading || sortedRemoteResults.length > 0) && (
                 <li className="border-t border-slate-100 dark:border-slate-700 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/70">
