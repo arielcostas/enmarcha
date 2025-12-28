@@ -224,3 +224,7 @@ textarea {
 .maplibregl-ctrl-attrib-inner {
   line-height: 1rem !important;
 }
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib {
+  min-height: unset !important;
+}

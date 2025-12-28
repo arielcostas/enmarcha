@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
+import {
+  AttributionControl,
+  Layer,
+  Source,
+  type MapRef,
+} from "react-map-gl/maplibre";
 import { useParams } from "react-router";
 import { fetchRouteDetails } from "~/api/transit";
 import { AppMap } from "~/components/shared/AppMap";
@@ -137,7 +142,9 @@ export default function RouteDetailsPage() {
             >
               {patterns.map((pattern) => (
                 <option key={pattern.id} value={pattern.id}>
-                  {pattern.code ? `${pattern.code.slice(-2)}: ` : ""}
+                  {pattern.code
+                    ? `${parseInt(pattern.code.slice(-2)).toString()}: `
+                    : ""}
                   {pattern.headsign || pattern.name}{" "}
                   {t("routes.trip_count_short", { count: pattern.tripCount })}
                 </option>
@@ -169,7 +176,14 @@ export default function RouteDetailsPage() {
                   handleStopClick(id, lat, lon, true);
                 }
               }}
+              showTraffic={false}
+              attributionControl={false}
             >
+              <AttributionControl
+                position="bottom-right"
+                compact={false}
+                customAttribution={route.agencyName || undefined}
+              />
               {selectedPattern?.geometry && (
                 <Source type="geojson" data={geojson}>
                   <Layer

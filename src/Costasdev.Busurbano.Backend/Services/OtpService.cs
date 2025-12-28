@@ -56,13 +56,13 @@ public class OtpService
             LongName = route.LongName,
             Color = route.Color,
             TextColor = route.TextColor,
-            Patterns = route.Patterns.Select(MapPattern).ToList()
+            AgencyName = route.Agency?.Name,
+            Patterns = route.Patterns.Select(p => MapPattern(p, feedId)).ToList()
         };
     }
 
-    private PatternDto MapPattern(RouteDetailsResponse.PatternItem pattern)
+    private PatternDto MapPattern(RouteDetailsResponse.PatternItem pattern, string feedId)
     {
-        var feedId = pattern.Id.Split(':')[0];
         return new PatternDto
         {
             Id = pattern.Id,

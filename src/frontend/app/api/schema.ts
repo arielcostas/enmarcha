@@ -108,6 +108,7 @@ export const RouteDetailsSchema = z.object({
   longName: z.string().nullable(),
   color: z.string().nullable(),
   textColor: z.string().nullable(),
+  agencyName: z.string().nullable().optional(),
   patterns: z.array(PatternSchema),
 });
 

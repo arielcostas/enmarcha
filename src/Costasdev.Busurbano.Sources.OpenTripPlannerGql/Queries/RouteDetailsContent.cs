@@ -17,6 +17,9 @@ public class RouteDetailsContent : IGraphRequest<RouteDetailsContent.Args>
             longName
             color
             textColor
+            agency {
+              name
+            }
 
             patterns {
               id
@@ -61,7 +64,13 @@ public class RouteDetailsResponse : AbstractGraphResponse
         [JsonPropertyName("longName")] public string? LongName { get; set; }
         [JsonPropertyName("color")] public string? Color { get; set; }
         [JsonPropertyName("textColor")] public string? TextColor { get; set; }
+        [JsonPropertyName("agency")] public AgencyItem? Agency { get; set; }
         [JsonPropertyName("patterns")] public List<PatternItem> Patterns { get; set; } = [];
+    }
+
+    public class AgencyItem
+    {
+        [JsonPropertyName("name")] public string? Name { get; set; }
     }
 
     public class PatternItem

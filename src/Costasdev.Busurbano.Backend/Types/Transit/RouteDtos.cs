@@ -18,6 +18,7 @@ public class RouteDetailsDto
     public string? LongName { get; set; }
     public string? Color { get; set; }
     public string? TextColor { get; set; }
+    public string? AgencyName { get; set; }
     public List<PatternDto> Patterns { get; set; } = [];
 }
 
