@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>0eff397c-f98e-4c3a-95ec-9d900f1b938c</UserSecretsId>
+
+    <NeutralLanguage>es</NeutralLanguage>
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildProjectDirectory)=.</PathMap>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Costasdev.VigoTransitApi" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="ProjNet" />
+
+    <PackageReference Include="NetTopologySuite" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" />
+    <PackageReference Include="NetTopologySuite.IO.VectorTiles.Mapbox" />
+      
+    <PackageReference Include="CsvHelper" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Enmarcha.Sources.OpenTripPlannerGql\Enmarcha.Sources.OpenTripPlannerGql.csproj" />
+    <ProjectReference Include="..\Enmarcha.Sources.TranviasCoruna\Enmarcha.Sources.TranviasCoruna.csproj" />
+    <ProjectReference Include="..\Enmarcha.Sources.Tussa\Enmarcha.Sources.Tussa.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Data\xunta_fares.csv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

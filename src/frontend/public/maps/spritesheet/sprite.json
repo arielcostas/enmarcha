@@ -7,16 +7,16 @@
     "height": 32,
     "pixelRatio": 1
   },
-  "stop-santiago": {
-    "id": "stop-santiago",
+  "stop-tussa": {
+    "id": "stop-tussa",
     "x": 32,
     "y": 0,
     "width": 32,
     "height": 32,
     "pixelRatio": 1
   },
-  "stop-coruna": {
-    "id": "stop-coruna",
+  "stop-tranvias": {
+    "id": "stop-tranvias",
     "x": 64,
     "y": 0,
     "width": 32,

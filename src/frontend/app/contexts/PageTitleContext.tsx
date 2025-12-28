@@ -12,7 +12,7 @@ const PageTitleContext = createContext<PageTitleContextProps | undefined>(
 export const PageTitleProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [title, setTitle] = useState("Busurbano");
+  const [title, setTitle] = useState("EnMarcha");
 
   return (
     <PageTitleContext.Provider value={{ title, setTitle }}>
@@ -36,13 +36,9 @@ export const usePageTitle = (title: string) => {
 
   useEffect(() => {
     setTitle(title);
-    document.title = `${title} - Busurbano`;
+    document.title = `${title} - EnMarcha`;
 
     return () => {
-      // Optional: Reset title on unmount?
-      // Usually not needed as the next page will set its own title.
-      // But if we navigate to a page without usePageTitle, it might be stale.
-      // Let's leave it for now.
     };
   }, [title, setTitle]);
 };

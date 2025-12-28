@@ -28,7 +28,7 @@ jobs:
             frontend:
               - 'src/frontend/**'
             backend:
-              - 'src/Costasdev.Busurbano.Backend/**'
+              - 'src/Enmarcha.Backend/**'
               - 'src/common/**'
             stops-script:
               - 'src/gtfs_perstop_report/**'
@@ -84,7 +84,7 @@ jobs:
         with:
           dotnet-version: '9.0.x'
       - name: Build backend
-        run: dotnet publish -c Release -r linux-arm64 --self-contained false src/Costasdev.Busurbano.Backend/Costasdev.Busurbano.Backend.csproj -o dist/backend
+        run: dotnet publish -c Release -r linux-arm64 --self-contained false src/Enmarcha.Backend/Enmarcha.Backend.csproj -o dist/backend
       - name: Archive Backend Artifact
         uses: actions/upload-artifact@v5
         with:
@@ -167,19 +167,19 @@ jobs:
 
       - name: Stop service
         if: needs.detect-changes.outputs.backend == 'true'
-        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "echo ${{ secrets.TARGET_PASSWORD }} | sudo -S /usr/bin/systemctl stop busurbano"
+        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "echo ${{ secrets.TARGET_PASSWORD }} | sudo -S /usr/bin/systemctl stop enmarcha"
 
       - name: Upload backend
         if: needs.detect-changes.outputs.backend == 'true'
-        run: scp -r dist/backend/* app@${{ secrets.TARGET_HOST }}:/opt/busurbano/
+        run: scp -r dist/backend/* app@${{ secrets.TARGET_HOST }}:/opt/enmarcha/
 
       - name: Allow execution
         if: needs.detect-changes.outputs.backend == 'true'
-        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "chmod +x /opt/busurbano/Costasdev.Busurbano.Backend"
+        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "chmod +x /opt/enmarcha/Enmarcha.Backend"
 
       - name: Start service
         if: needs.detect-changes.outputs.backend == 'true'
-        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "echo ${{ secrets.TARGET_PASSWORD }} | sudo -S /usr/bin/systemctl start busurbano"
+        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "echo ${{ secrets.TARGET_PASSWORD }} | sudo -S /usr/bin/systemctl start enmarcha"
 
       - name: Deploy stop report script
         if: needs.detect-changes.outputs.stops-script == 'true'

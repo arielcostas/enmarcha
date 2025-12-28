@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  title = "Busurbano",
+  title = "Enmarcha",
   onMenuClick,
   className = "",
 }) => {

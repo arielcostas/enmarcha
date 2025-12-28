@@ -1,7 +1,7 @@
 {
   "about": {
-    "title": "Sobre BusUrbano",
-    "description": "Aplicación web para atopar paradas e tempos de chegada dos autobuses urbanos.",
+    "title": "Sobre EnMarcha",
+    "description": "Aplicación Web Progresiva para obter información sobre o transporte público en Galiza.",
     "data_sources_title": "Fontes de datos",
     "data_sources_intro": "Esta aplicación utiliza datos de múltiples fontes:",
     "data_gtfs": "Horarios programados",

@@ -4,7 +4,7 @@ tasks:
   dev-backend:
     desc: Run backend in watch mode.
     cmds:
-      - dotnet watch --project src/Costasdev.Busurbano.Backend/Costasdev.Busurbano.Backend.csproj
+      - dotnet watch --project src/Enmarcha.Backend/Enmarcha.Backend.csproj
 
   dev-frontend:
     desc: Run frontend development server.
@@ -15,24 +15,29 @@ tasks:
     desc: Generates the protobuf bindings for C# and Python
     cmds:
       - protoc --python_out=./src/gtfs_perstop_report/src/proto --pyi_out=./src/gtfs_perstop_report/src/proto --proto_path=./src/common ./src/common/stop_schedule.proto
-      - protoc --csharp_out=./src/Costasdev.Busurbano.Backend/Types/ --proto_path=./src/common ./src/common/stop_schedule.proto
+      - protoc --csharp_out=./src/Enmarcha.Backend/Types/ --proto_path=./src/common ./src/common/stop_schedule.proto
 
   build-backend:
     desc: Publish backend in Release mode.
     cmds:
-      - dotnet publish -c Release -o ./dist/backend src/Costasdev.Busurbano.Backend/Costasdev.Busurbano.Backend.csproj
+      - dotnet publish -c Release -o ./dist/backend src/Enmarcha.Backend/Enmarcha.Backend.csproj
+
+  build-backend-prod:
+    desc: Publish backend for Prod server
+    cmds:
+      - dotnet publish -c Release -r linux-arm64 --self-contained false src/Enmarcha.Backend/Enmarcha.Backend.csproj -o dist/backend
 
   build-frontend:
     desc: Build frontend bundle.
     cmds:
       - npm run build --prefix src/frontend
       - mkdir dist/frontend
-      - mv src/frontend/build/client/ dist/frontend/
+      - cp -r src/frontend/build/client/* dist/frontend
 
   format:
     desc: Format backend solution.
     cmds:
-      - dotnet format --verbosity diagnostic src/Costasdev.Busurbano.Backend/Costasdev.Busurbano.Backend.csproj
+      - dotnet format --verbosity diagnostic src/Enmarcha.Backend/Enmarcha.Backend.csproj
       - npx prettier --write "src/frontend/**/*.{ts,tsx,css}"
       - uvx ruff format ./src/gtfs_perstop_report ./src/stop_downloader
 

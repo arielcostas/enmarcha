@@ -1,0 +1,63 @@
+﻿@using Enmarcha.Experimental.ServiceViewer.Data.Gtfs
+@using Humanizer
+@using Humanizer.Localisation
+@model Enmarcha.Experimental.ServiceViewer.Views.Services.ServiceDetailsModel
+@{
+    ViewData["Title"] = Model.ServiceName;
+}
+
+@section Head
+{
+    <link rel="stylesheet" href="~/styles/service_details.css" />
+    <link rel="stylesheet" href="/stylesheets/routecolours.css" />
+    <style>
+
+    </style>
+}
+
+<header>
+    <h1>@ViewData["Title"]</h1>
+</header>
+
+<nav class="navigation-bar">
+    <a asp-action="DaysInFeed">Feed Vitrasa</a>
+    &gt;
+    <a asp-action="ServicesInDay" asp-route-day="@Model.Date.ToString("yyyy-MM-dd")">
+        @Model.Date.ToString("dd 'de' MMMM 'de' yyyy")
+    </a>
+    &gt;
+    <span>@Model.ServiceName</span>
+</nav>
+
+<section id="service-cards">
+    @foreach (ServiceDetailsItem item in Model.Items)
+    {
+        <article class="trip-container route-@item.SafeRouteId">
+            <div class="trip-header">
+                <div class="route">@item.ShortName</div>
+                <div class="headsign">@item.LongName</div>
+                <div class="distance">
+                    @item.TotalDistance
+                </div>
+            </div>
+            <div class="trip-details">
+                <div class="trip-leg">
+                    <div class="trip-time">@item.FirstStopTime</div>
+                    <div class="trip-stop">@item.FirstStopName</div>
+                </div>
+                <div class="trip-leg">
+                    <div class="trip-time">@item.LastStopTime</div>
+                    <div class="trip-stop">@item.LastStopName</div>
+                </div>
+            </div>
+            <div class="trip-footer" >
+                <a class="trip-details-link">Ver detalle del viaje →</a>
+            </div>
+        </article>
+    }
+</section>
+
+<footer>
+    Tiempo de conducción: @Model.TotalDrivingTime.Hours horas y @Model.TotalDrivingTime.Minutes minutos.<br />
+    Distancia total: @Model.TotalDistanceKm
+</footer>

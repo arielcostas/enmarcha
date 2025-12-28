@@ -1,7 +1,7 @@
 {
   "about": {
-    "title": "About BusUrbano",
-    "description": "Web app to find stops and arrival times for urban buses.",
+    "title": "About EnMarcha",
+    "description": "Progressive Web App to find transit information in Galicia.",
     "data_sources_title": "Data sources",
     "data_sources_intro": "This application uses data from multiple sources:",
     "data_gtfs": "Scheduled timetables",

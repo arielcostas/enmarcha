@@ -12,7 +12,7 @@ export default function RoutesPage() {
 
   const { data: routes, isLoading } = useQuery({
     queryKey: ["routes"],
-    queryFn: () => fetchRoutes(["santiago", "vitrasa", "coruna", "feve"]),
+    queryFn: () => fetchRoutes(["tussa", "vitrasa", "tranvias", "feve"]),
   });
 
   const routesByAgency = routes?.reduce(

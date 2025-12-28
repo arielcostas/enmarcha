@@ -71,7 +71,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="robots" content="noindex, nofollow" />
         <meta name="googlebot" content="noindex, nofollow" />
 
-        <title>Busurbano</title>
+        <title>Enmarcha</title>
         <Meta />
         <Links />
       </head>
