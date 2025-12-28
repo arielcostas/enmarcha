@@ -70,6 +70,52 @@ export type Position = z.infer<typeof PositionSchema>;
 export type Arrival = z.infer<typeof ArrivalSchema>;
 export type StopArrivalsResponse = z.infer<typeof StopArrivalsResponseSchema>;
 
+// Transit Routes
+export const RouteSchema = z.object({
+  id: z.string(),
+  shortName: z.string().nullable(),
+  longName: z.string().nullable(),
+  color: z.string().nullable(),
+  textColor: z.string().nullable(),
+  sortOrder: z.number().nullable(),
+  agencyName: z.string().nullable().optional(),
+  tripCount: z.number(),
+});
+
+export const PatternStopSchema = z.object({
+  id: z.string(),
+  code: z.string().nullable(),
+  name: z.string(),
+  lat: z.number(),
+  lon: z.number(),
+  scheduledDepartures: z.array(z.number()),
+});
+
+export const PatternSchema = z.object({
+  id: z.string(),
+  name: z.string().nullable(),
+  headsign: z.string().nullable(),
+  directionId: z.number(),
+  code: z.string().nullable(),
+  semanticHash: z.string().nullable(),
+  tripCount: z.number(),
+  geometry: z.array(z.array(z.number())).nullable(),
+  stops: z.array(PatternStopSchema),
+});
+
+export const RouteDetailsSchema = z.object({
+  shortName: z.string().nullable(),
+  longName: z.string().nullable(),
+  color: z.string().nullable(),
+  textColor: z.string().nullable(),
+  patterns: z.array(PatternSchema),
+});
+
+export type Route = z.infer<typeof RouteSchema>;
+export type PatternStop = z.infer<typeof PatternStopSchema>;
+export type Pattern = z.infer<typeof PatternSchema>;
+export type RouteDetails = z.infer<typeof RouteDetailsSchema>;
+
 // Consolidated Circulation (Legacy/Alternative API)
 export const ConsolidatedCirculationSchema = z.object({
   line: z.string(),

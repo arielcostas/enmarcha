@@ -3,6 +3,7 @@ using Costasdev.Busurbano.Backend.Configuration;
 using Costasdev.Busurbano.Backend.Helpers;
 using Costasdev.Busurbano.Backend.Types.Otp;
 using Costasdev.Busurbano.Backend.Types.Planner;
+using Costasdev.Busurbano.Backend.Types.Transit;
 using Costasdev.Busurbano.Sources.OpenTripPlannerGql.Queries;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -28,6 +29,64 @@ public class OtpService
         _fareService = fareService;
         _lineFormatter = lineFormatter;
         _feedService = feedService;
+    }
+
+    public RouteDto MapRoute(RoutesListResponse.RouteItem route)
+    {
+        var feedId = route.GtfsId.Split(':')[0];
+        return new RouteDto
+        {
+            Id = route.GtfsId,
+            ShortName = _feedService.NormalizeRouteShortName(feedId, route.ShortName ?? string.Empty),
+            LongName = route.LongName,
+            Color = route.Color,
+            TextColor = route.TextColor,
+            SortOrder = route.SortOrder,
+            AgencyName = route.Agency?.Name,
+            TripCount = route.Patterns.Sum(p => p.TripsForDate.Count)
+        };
+    }
+
+    public RouteDetailsDto MapRouteDetails(RouteDetailsResponse.RouteItem route)
+    {
+        var feedId = route.GtfsId?.Split(':')[0] ?? "unknown";
+        return new RouteDetailsDto
+        {
+            ShortName = _feedService.NormalizeRouteShortName(feedId, route.ShortName ?? string.Empty),
+            LongName = route.LongName,
+            Color = route.Color,
+            TextColor = route.TextColor,
+            Patterns = route.Patterns.Select(MapPattern).ToList()
+        };
+    }
+
+    private PatternDto MapPattern(RouteDetailsResponse.PatternItem pattern)
+    {
+        var feedId = pattern.Id.Split(':')[0];
+        return new PatternDto
+        {
+            Id = pattern.Id,
+            Name = pattern.Name,
+            Headsign = pattern.Headsign,
+            DirectionId = pattern.DirectionId,
+            Code = pattern.Code,
+            SemanticHash = pattern.SemanticHash,
+            TripCount = pattern.TripsForDate.Count,
+            Geometry = DecodePolyline(pattern.PatternGeometry?.Points)?.Coordinates,
+            Stops = pattern.Stops.Select((s, i) => new PatternStopDto
+            {
+                Id = s.GtfsId,
+                Code = _feedService.NormalizeStopCode(feedId, s.Code ?? string.Empty),
+                Name = _feedService.NormalizeStopName(feedId, s.Name),
+                Lat = s.Lat,
+                Lon = s.Lon,
+                ScheduledDepartures = pattern.TripsForDate
+                    .Select(t => t.Stoptimes.ElementAtOrDefault(i)?.ScheduledDeparture ?? -1)
+                    .Where(d => d != -1)
+                    .OrderBy(d => d)
+                    .ToList()
+            }).ToList()
+        };
     }
 
     private Leg MapLeg(OtpLeg otpLeg)

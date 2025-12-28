@@ -150,8 +150,21 @@
     "home": "Home",
     "map": "Map",
     "planner": "Planner",
-    "lines": "Lines",
+    "routes": "Routes",
     "favourites": "Favourites"
+  },
+  "routes": {
+    "description": "Below is a list of urban bus routes with their respective paths.",
+    "details": "Route details",
+    "not_found": "Route not found",
+    "direction_outbound": "Outbound",
+    "direction_inbound": "Inbound",
+    "stops": "Stops",
+    "unknown_agency": "Others",
+    "trip_count": "{{count}} trips today",
+    "trip_count_one": "1 trip today",
+    "trip_count_short": "({{count}} trips)",
+    "trip_count_short_one": "(1 trip)"
   },
   "favourites": {
     "title": "Favourites",

@@ -70,9 +70,9 @@ export default function NavBar({ orientation = "horizontal" }: NavBarProps) {
       },
     },
     {
-      name: t("navbar.lines", "Líneas"),
+      name: t("navbar.routes", "Rutas"),
       icon: Route,
-      path: "/lines",
+      path: "/routes",
     },
   ];
 

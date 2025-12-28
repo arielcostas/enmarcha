@@ -150,8 +150,21 @@
     "home": "Inicio",
     "map": "Mapa",
     "planner": "Planificador",
-    "lines": "Líneas",
+    "routes": "Rutas",
     "favourites": "Favoritos"
+  },
+  "routes": {
+    "description": "A continuación se muestra una lista de las rutas de autobús urbano con sus respectivos trayectos.",
+    "details": "Detalles de ruta",
+    "not_found": "Ruta no encontrada",
+    "direction_outbound": "Ida",
+    "direction_inbound": "Vuelta",
+    "stops": "Paradas",
+    "unknown_agency": "Otros",
+    "trip_count": "{{count}} viajes hoy",
+    "trip_count_one": "1 viaje hoy",
+    "trip_count_short": "({{count}} viajes)",
+    "trip_count_short_one": "(1 viaje)"
   },
   "favourites": {
     "title": "Favoritos",

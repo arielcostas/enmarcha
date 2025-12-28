@@ -150,8 +150,21 @@
     "home": "Inicio",
     "map": "Mapa",
     "planner": "Planificador",
-    "lines": "Liñas",
+    "routes": "Rutas",
     "favourites": "Favoritos"
+  },
+  "routes": {
+    "description": "A continuación móstrase unha lista das rutas de autobús urbano cos seus respectivos traxectos.",
+    "details": "Detalles de ruta",
+    "not_found": "Ruta non atopada",
+    "direction_outbound": "Ida",
+    "direction_inbound": "Volta",
+    "stops": "Paradas",
+    "unknown_agency": "Outros",
+    "trip_count": "{{count}} viaxes hoxe",
+    "trip_count_one": "1 viaxe hoxe",
+    "trip_count_short": "({{count}} viaxes)",
+    "trip_count_short_one": "(1 viaxe)"
   },
   "favourites": {
     "title": "Favoritos",
