@@ -1,4 +1,4 @@
-import { Home, Map, Navigation2, Route } from "lucide-react";
+import { Home, Map, Route } from "lucide-react";
 import type { LngLatLike } from "maplibre-gl";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -30,7 +30,7 @@ export default function NavBar({ orientation = "horizontal" }: NavBarProps) {
   const { mapState, updateMapState, mapPositionMode } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
-  const { deselectItinerary } = usePlanner();
+  const { deselectItinerary } = usePlanner({ autoLoad: false });
 
   const navItems = [
     {
@@ -68,11 +68,6 @@ export default function NavBar({ orientation = "horizontal" }: NavBarProps) {
           }
         );
       },
-    },
-    {
-      name: t("navbar.planner", "Planificador"),
-      icon: Navigation2,
-      path: "/planner",
     },
     {
       name: t("navbar.lines", "Líneas"),

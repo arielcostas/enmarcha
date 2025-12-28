@@ -29,6 +29,8 @@ interface PlannerOverlayProps {
   clearPickerOnOpen?: boolean;
   showLastDestinationWhenCollapsed?: boolean;
   cardBackground?: string;
+  userLocation?: { latitude: number; longitude: number } | null;
+  autoLoad?: boolean;
 }
 
 export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
@@ -39,10 +41,12 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
   clearPickerOnOpen = false,
   showLastDestinationWhenCollapsed = true,
   cardBackground,
+  userLocation,
+  autoLoad = true,
 }) => {
   const { t } = useTranslation();
   const { origin, setOrigin, destination, setDestination, loading, error } =
-    usePlanner();
+    usePlanner({ autoLoad });
   const [isExpanded, setIsExpanded] = useState(false);
   const [originQuery, setOriginQuery] = useState(origin?.name || "");
   const [destQuery, setDestQuery] = useState("");
@@ -85,6 +89,21 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
         : origin?.name || ""
     );
   }, [origin, t]);
+
+  useEffect(() => {
+    if (userLocation && !origin) {
+      const initial: PlannerSearchResult = {
+        name: t("planner.current_location"),
+        label: "GPS",
+        lat: userLocation.latitude,
+        lon: userLocation.longitude,
+        layer: "current-location",
+      };
+      setOrigin(initial);
+      setOriginQuery(initial.name || "");
+    }
+  }, [userLocation, origin, t, setOrigin]);
+
   useEffect(() => {
     setDestQuery(destination?.name || "");
   }, [destination]);
@@ -185,14 +204,6 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
       clearPickerOnOpen ? "" : field === "origin" ? originQuery : destQuery
     );
     setPickerOpen(true);
-
-    // When opening destination picker, auto-fill origin from current location if not set
-    if (field === "destination" && !origin) {
-      console.log(
-        "[PlannerOverlay] Destination picker opened with no origin, requesting geolocation"
-      );
-      setOriginFromCurrentLocation(false);
-    }
   };
 
   const applyPickedResult = (result: PlannerSearchResult) => {
@@ -323,11 +334,11 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
 
   const wrapperClass = inline
     ? "w-full"
-    : "pointer-events-none absolute left-0 right-0 top-0 z-20 flex justify-center";
+    : "pointer-events-none absolute left-0 right-0 top-0 z-20 flex justify-center mb-3";
 
   const cardClass = inline
-    ? `pointer-events-auto w-full overflow-hidden rounded-xl px-2 flex flex-col gap-3 ${cardBackground || "bg-white dark:bg-slate-900"}`
-    : `pointer-events-auto w-[min(640px,calc(100%-16px))] px-2 py-1 flex flex-col gap-3 m-4 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/70 shadow-2xl backdrop-blur ${cardBackground || "bg-white/95 dark:bg-slate-900/90"}`;
+    ? `pointer-events-auto w-full overflow-hidden rounded-xl px-2 flex flex-col gap-4 ${cardBackground || "bg-white dark:bg-slate-900"} mb-3`
+    : `pointer-events-auto w-[min(640px,calc(100%-16px))] px-2 py-1 flex flex-col gap-4 m-4 overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-700/70 shadow-2xl backdrop-blur ${cardBackground || "bg-white/95 dark:bg-slate-900/90"} mb-3`;
 
   return (
     <div className={wrapperClass}>
@@ -349,10 +360,10 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
           </button>
         ) : (
           <>
-            <div className="flex items-center gap-">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-2.5 text-left text-sm text-slate-900 dark:text-slate-100 hover:bg-slate-200/80 dark:hover:bg-slate-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg bg-surface border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-left text-sm text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:border-primary-500 shadow-sm"
                 onClick={() => openPicker("origin")}
               >
                 <span
@@ -368,7 +379,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
             <div>
               <button
                 type="button"
-                className="w-full rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-2.5 text-left text-sm text-slate-900 dark:text-slate-100 hover:bg-slate-200/80 dark:hover:bg-slate-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg bg-surface border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-left text-sm text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-150 focus:outline-none focus:border-primary-500 shadow-sm"
                 onClick={() => openPicker("destination")}
               >
                 <span
@@ -383,13 +394,13 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
 
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
               <span className="font-semibold">{t("planner.when")}</span>
-              <div className="flex gap-1 rounded-2xl bg-slate-100 dark:bg-slate-800 p-1">
+              <div className="flex gap-1 rounded-2xl bg-surface border border-slate-200 dark:border-slate-700 p-1 shadow-sm">
                 <button
                   type="button"
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 ${
                     timeMode === "now"
-                      ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                      ? "bg-primary-500 text-white shadow-sm"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                   onClick={() => setTimeMode("now")}
                 >
@@ -399,8 +410,8 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   type="button"
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 ${
                     timeMode === "depart"
-                      ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                      ? "bg-primary-500 text-white shadow-sm"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                   onClick={() => setTimeMode("depart")}
                 >
@@ -410,8 +421,8 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   type="button"
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors duration-150 ${
                     timeMode === "arrive"
-                      ? "bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 shadow"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                      ? "bg-primary-500 text-white shadow-sm"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                   onClick={() => setTimeMode("arrive")}
                 >
@@ -421,7 +432,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
               {timeMode !== "now" && (
                 <div className="flex gap-2 w-full">
                   <select
-                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 grow"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-surface px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-primary-500 grow shadow-sm"
                     value={dateOffset}
                     onChange={(e) => setDateOffset(Number(e.target.value))}
                   >
@@ -447,7 +458,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   </select>
                   <input
                     type="time"
-                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 grow"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-surface px-3 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-primary-500 grow shadow-sm"
                     value={timeValue}
                     onChange={(e) => setTimeValue(e.target.value)}
                   />
@@ -457,7 +468,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
 
             <div>
               <button
-                className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-800 px-2 py-2 text-sm font-semibold text-white disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none"
+                className="w-full rounded-xl bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-800 px-2 py-2.5 text-sm font-semibold text-white disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none"
                 disabled={!canSubmit}
                 onClick={async () => {
                   if (origin && destination) {
@@ -543,7 +554,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
               <div className="relative">
                 <input
                   ref={pickerInputRef}
-                  className="w-full pr-12 px-4 py-3 text-base border border-slate-300 dark:border-slate-600 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pr-12 px-4 py-3 text-base border border-slate-200 dark:border-slate-700 rounded-2xl bg-surface text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:border-primary-500 shadow-sm transition-all duration-200"
                   placeholder={
                     pickerField === "origin"
                       ? t("planner.search_origin")

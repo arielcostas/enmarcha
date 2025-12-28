@@ -6,12 +6,13 @@ import { useTranslation } from "react-i18next";
 import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { useLocation } from "react-router";
 
-import { type ConsolidatedCirculation, type Itinerary } from "~/api/schema";
+import { type ConsolidatedCirculation } from "~/api/schema";
 import LineIcon from "~/components/LineIcon";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
 import { usePageTitle } from "~/contexts/PageTitleContext";
+import { type Itinerary } from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
 import "../tailwind-full.css";
 
@@ -19,6 +20,14 @@ const formatDistance = (meters: number) => {
   if (meters >= 1000) return `${(meters / 1000).toFixed(1)} km`;
   const rounded = Math.round(meters / 100) * 100;
   return `${rounded} m`;
+};
+
+const formatDuration = (minutes: number, t: any) => {
+  if (minutes < 60) return `${minutes} ${t("estimates.minutes")}`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
 };
 
 const haversineMeters = (a: [number, number], b: [number, number]) => {
@@ -84,11 +93,8 @@ const ItinerarySummary = ({
   });
 
   const walkTotals = sumWalkMetrics(itinerary.legs);
-  const busLegsCount = itinerary.legs.filter(
-    (leg) => leg.mode !== "WALK"
-  ).length;
-  const cashFare = (itinerary.cashFareEuro ?? 0).toFixed(2);
-  const cardFare = (itinerary.cardFareEuro ?? 0).toFixed(2);
+  const cashFare = (itinerary.cashFare ?? 0).toFixed(2);
+  const cardFare = (itinerary.cardFare ?? 0).toFixed(2);
 
   return (
     <div
@@ -99,7 +105,7 @@ const ItinerarySummary = ({
         <div className="font-bold text-lg text-text">
           {startTime} - {endTime}
         </div>
-        <div className="text-muted">{durationMinutes} min</div>
+        <div className="text-muted">{formatDuration(durationMinutes, t)}</div>
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
@@ -125,7 +131,7 @@ const ItinerarySummary = ({
                 <div className="flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-sm text-text whitespace-nowrap border border-border">
                   <Footprints className="w-4 h-4 text-muted" />
                   <span className="font-semibold">
-                    {legDurationMinutes} {t("estimates.minutes")}
+                    {formatDuration(legDurationMinutes, t)}
                   </span>
                 </div>
               ) : (
@@ -147,7 +153,7 @@ const ItinerarySummary = ({
         <span>
           {t("planner.walk")}: {formatDistance(walkTotals.meters)}
           {walkTotals.minutes
-            ? ` • ${walkTotals.minutes} ${t("estimates.minutes")}`
+            ? ` • ${formatDuration(walkTotals.minutes, t)}`
             : ""}
         </span>
         <span className="flex items-center gap-3">
@@ -156,12 +162,14 @@ const ItinerarySummary = ({
             {cashFare === "0.00"
               ? t("planner.free")
               : t("planner.fare", { amount: cashFare })}
+            {itinerary.cashFareIsTotal ? "" : "++"}
           </span>
           <span className="flex items-center gap-1 text-muted">
             <CreditCard className="w-4 h-4" />
             {cardFare === "0.00"
               ? t("planner.free")
               : t("planner.fare", { amount: cardFare })}
+            {itinerary.cashFareIsTotal ? "" : "++"}
           </span>
         </span>
       </div>
@@ -206,83 +214,39 @@ const ItineraryDetail = ({
   // Create GeoJSON for all markers
   const markersGeoJson = useMemo(() => {
     const features: any[] = [];
-    const origin = itinerary.legs[0]?.from;
-    const destination = itinerary.legs[itinerary.legs.length - 1]?.to;
 
-    // Origin marker (red)
-    if (origin?.lat && origin?.lon) {
-      features.push({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [origin.lon, origin.lat] },
-        properties: { type: "origin", name: origin.name || "Origin" },
-      });
-    }
-
-    // Destination marker (green)
-    if (destination?.lat && destination?.lon) {
-      features.push({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [destination.lon, destination.lat],
-        },
-        properties: {
-          type: "destination",
-          name: destination.name || "Destination",
-        },
-      });
-    }
-
-    // Collect unique stops with their roles (board, alight, transfer)
-    const stopsMap: Record<
-      string,
-      { lat: number; lon: number; name: string; type: string }
-    > = {};
+    // Add points for each leg transition
     itinerary.legs.forEach((leg, idx) => {
-      if (leg.mode !== "WALK") {
-        // Boarding stop
-        if (leg.from?.lat && leg.from?.lon) {
-          const key = `${leg.from.lat},${leg.from.lon}`;
-          if (!stopsMap[key]) {
-            const isTransfer =
-              idx > 0 && itinerary.legs[idx - 1].mode !== "WALK";
-            stopsMap[key] = {
-              lat: leg.from.lat,
-              lon: leg.from.lon,
-              name: leg.from.name || "",
-              type: isTransfer ? "transfer" : "board",
-            };
-          }
-        }
-        // Alighting stop
-        if (leg.to?.lat && leg.to?.lon) {
-          const key = `${leg.to.lat},${leg.to.lon}`;
-          if (!stopsMap[key]) {
-            const isTransfer =
-              idx < itinerary.legs.length - 1 &&
-              itinerary.legs[idx + 1].mode !== "WALK";
-            stopsMap[key] = {
-              lat: leg.to.lat,
-              lon: leg.to.lon,
-              name: leg.to.name || "",
-              type: isTransfer ? "transfer" : "alight",
-            };
-          }
-        }
+      // Add "from" point of the leg
+      if (leg.from?.lat && leg.from?.lon) {
+        features.push({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [leg.from.lon, leg.from.lat],
+          },
+          properties: {
+            type: idx === 0 ? "origin" : "transfer",
+            name: leg.from.name || "",
+            index: idx.toString(),
+          },
+        });
       }
-    });
 
-    // Add stop markers
-    Object.values(stopsMap).forEach((stop) => {
-      features.push({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [stop.lon, stop.lat] },
-        properties: { type: stop.type, name: stop.name },
-      });
-    });
+      // If it's the last leg, also add the "to" point
+      if (idx === itinerary.legs.length - 1 && leg.to?.lat && leg.to?.lon) {
+        features.push({
+          type: "Feature",
+          geometry: { type: "Point", coordinates: [leg.to.lon, leg.to.lat] },
+          properties: {
+            type: "destination",
+            name: leg.to.name || "",
+            index: (idx + 1).toString(),
+          },
+        });
+      }
 
-    // Add intermediate stops
-    itinerary.legs.forEach((leg) => {
+      // Add intermediate stops
       leg.intermediateStops?.forEach((stop) => {
         features.push({
           type: "Feature",
@@ -389,7 +353,9 @@ const ItineraryDetail = ({
             zoom: 13,
           }}
           showTraffic={false}
-          attributionControl={false}
+          showGeolocate={true}
+          showNavigation={true}
+          attributionControl={true}
         >
           <Source id="route" type="geojson" data={routeGeoJson as any}>
             <Layer
@@ -411,95 +377,7 @@ const ItineraryDetail = ({
 
           {/* All markers as GeoJSON layers */}
           <Source id="markers" type="geojson" data={markersGeoJson as any}>
-            {/* Outer circle for origin/destination markers */}
-            <Layer
-              id="markers-outer"
-              type="circle"
-              filter={[
-                "in",
-                ["get", "type"],
-                ["literal", ["origin", "destination"]],
-              ]}
-              paint={{
-                "circle-radius": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  10,
-                  6,
-                  16,
-                  8,
-                  20,
-                  10,
-                ],
-                "circle-color": [
-                  "case",
-                  ["==", ["get", "type"], "origin"],
-                  "#dc2626",
-                  "#16a34a",
-                ],
-                "circle-stroke-width": 2,
-                "circle-stroke-color": "#ffffff",
-              }}
-            />
-            {/* Inner circle for origin/destination markers */}
-            <Layer
-              id="markers-inner"
-              type="circle"
-              filter={[
-                "in",
-                ["get", "type"],
-                ["literal", ["origin", "destination"]],
-              ]}
-              paint={{
-                "circle-radius": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  10,
-                  2,
-                  16,
-                  3,
-                  20,
-                  4,
-                ],
-                "circle-color": "#ffffff",
-              }}
-            />
-            {/* Stop markers (board, alight, transfer) */}
-            <Layer
-              id="markers-stops"
-              type="circle"
-              filter={[
-                "in",
-                ["get", "type"],
-                ["literal", ["board", "alight", "transfer"]],
-              ]}
-              paint={{
-                "circle-radius": [
-                  "interpolate",
-                  ["linear"],
-                  ["zoom"],
-                  10,
-                  4,
-                  16,
-                  6,
-                  20,
-                  7,
-                ],
-                "circle-color": [
-                  "case",
-                  ["==", ["get", "type"], "board"],
-                  "#3b82f6",
-                  ["==", ["get", "type"], "alight"],
-                  "#a855f7",
-                  "#f97316",
-                ],
-                "circle-stroke-width": 2,
-                "circle-stroke-color": "#ffffff",
-              }}
-            />
-            {/* Intermediate stops (smaller white dots) */}
+            {/* Intermediate stops (smaller white dots) - rendered first to be at the bottom */}
             <Layer
               id="markers-intermediate"
               type="circle"
@@ -510,15 +388,77 @@ const ItineraryDetail = ({
                   ["linear"],
                   ["zoom"],
                   10,
-                  2,
-                  16,
                   3,
+                  16,
+                  5,
                   20,
-                  4,
+                  7,
                 ],
                 "circle-color": "#ffffff",
-                "circle-stroke-width": 1,
-                "circle-stroke-color": "#9ca3af",
+                "circle-stroke-width": 1.5,
+                "circle-stroke-color": "#6b7280",
+              }}
+            />
+            {/* Outer circle for all numbered markers */}
+            <Layer
+              id="markers-outer"
+              type="circle"
+              filter={[
+                "in",
+                ["get", "type"],
+                ["literal", ["origin", "destination", "transfer"]],
+              ]}
+              paint={{
+                "circle-radius": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  10,
+                  8,
+                  16,
+                  10,
+                  20,
+                  12,
+                ],
+                "circle-color": [
+                  "case",
+                  ["==", ["get", "type"], "origin"],
+                  "#dc2626",
+                  ["==", ["get", "type"], "destination"],
+                  "#16a34a",
+                  "#3b82f6",
+                ],
+                "circle-stroke-width": 2,
+                "circle-stroke-color": "#ffffff",
+              }}
+            />
+            {/* Numbers for markers */}
+            <Layer
+              id="markers-labels"
+              type="symbol"
+              filter={[
+                "in",
+                ["get", "type"],
+                ["literal", ["origin", "destination", "transfer"]],
+              ]}
+              layout={{
+                "text-field": ["get", "index"],
+                "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                "text-size": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  10,
+                  8,
+                  16,
+                  10,
+                  20,
+                  12,
+                ],
+                "text-allow-overlap": true,
+              }}
+              paint={{
+                "text-color": "#ffffff",
               }}
             />
           </Source>
@@ -590,12 +530,14 @@ const ItineraryDetail = ({
                     </span>
                     <span>•</span>
                     <span>
-                      {(
-                        (new Date(leg.endTime).getTime() -
-                          new Date(leg.startTime).getTime()) /
-                        60000
-                      ).toFixed(0)}{" "}
-                      {t("estimates.minutes")}
+                      {formatDuration(
+                        Math.round(
+                          (new Date(leg.endTime).getTime() -
+                            new Date(leg.startTime).getTime()) /
+                            60000
+                        ),
+                        t
+                      )}
                     </span>
                     <span>•</span>
                     <span>{formatDistance(leg.distanceMeters)}</span>
@@ -654,8 +596,8 @@ const ItineraryDetail = ({
                                   <span className="flex-1 truncate">
                                     {circ.route}
                                   </span>
-                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {minutes} {t("estimates.minutes")}
+                                  <span className="font-semibold text-primary-600 dark:text-primary-400">
+                                    {formatDuration(minutes, t)}
                                     {circ.realTime && " 🟢"}
                                   </span>
                                 </div>
@@ -735,6 +677,7 @@ export default function PlannerPage() {
   const location = useLocation();
   const {
     plan,
+    loading,
     searchRoute,
     clearRoute,
     searchTime,
@@ -814,6 +757,13 @@ export default function PlannerPage() {
         }
         cardBackground="bg-transparent"
       />
+
+      {loading && !plan && (
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-muted">{t("planner.searching")}</p>
+        </div>
+      )}
 
       {plan && (
         <div>

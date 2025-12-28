@@ -1,7 +1,11 @@
 import Fuse from "fuse.js";
+import { History } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
+import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { usePageTitle } from "~/contexts/PageTitleContext";
+import { usePlanner } from "~/hooks/usePlanner";
 import StopGallery from "../components/StopGallery";
 import StopItem from "../components/StopItem";
 import StopItemSkeleton from "../components/StopItemSkeleton";
@@ -11,6 +15,8 @@ import "../tailwind-full.css";
 export default function StopList() {
   const { t } = useTranslation();
   usePageTitle(t("navbar.stops", "Paradas"));
+  const navigate = useNavigate();
+  const { history, searchRoute, loadRoute } = usePlanner({ autoLoad: false });
   const [data, setData] = useState<Stop[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchResults, setSearchResults] = useState<Stop[] | null>(null);
@@ -239,9 +245,73 @@ export default function StopList() {
 
   return (
     <div className="flex flex-col gap-4 py-4 pb-8">
+      {/* Planner Section */}
+      <div className="w-full px-4">
+        <details className="group bg-surface border border-slate-200 dark:border-slate-700 shadow-sm">
+          <summary className="list-none cursor-pointer focus:outline-none">
+            <div className="flex items-center justify-between p-3 rounded-xl group-open:mb-3 transition-all">
+              <div className="flex items-center gap-3">
+                <History className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <span className="font-semibold text-text">
+                  {t("planner.where_to", "¿A dónde quieres ir?")}
+                </span>
+              </div>
+              <div className="text-muted group-open:rotate-180 transition-transform">
+                ↓
+              </div>
+            </div>
+          </summary>
+
+          <PlannerOverlay
+            inline
+            forceExpanded
+            cardBackground="bg-transparent"
+            userLocation={userLocation}
+            autoLoad={false}
+            onSearch={(origin, destination, time, arriveBy) => {
+              searchRoute(origin, destination, time, arriveBy);
+            }}
+            onNavigateToPlanner={() => navigate("/planner")}
+          />
+        </details>
+
+        {history.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted px-1">
+              {t("planner.recent_routes", "Rutas recientes")}
+            </h4>
+            <div className="flex flex-col gap-1">
+              {history.map((route, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    loadRoute(route);
+                    navigate("/planner");
+                  }}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-border hover:bg-surface/80 transition-colors text-left"
+                >
+                  <History className="w-4 h-4 text-muted shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-text truncate">
+                      {route.destination.name}
+                    </span>
+                    <span className="text-xs text-muted truncate">
+                      {t("planner.from_to", {
+                        from: route.origin.name,
+                        to: route.destination.name,
+                      })}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Search Section */}
       <div className="w-full px-4">
-        <h3 className="text-lg font-semibold mb-2 text-text">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-2 px-1">
           {t("stoplist.search_label", "Buscar paradas")}
         </h3>
         <input
@@ -249,7 +319,7 @@ export default function StopList() {
           placeholder={randomPlaceholder}
           onChange={handleStopSearch}
           className="
-            w-full px-4 py-3 text-base
+            w-full px-4 py-2 text-sm
             border border-border rounded-xl
             bg-surface
             text-text

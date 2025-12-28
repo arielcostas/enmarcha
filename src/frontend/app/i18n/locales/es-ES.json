@@ -128,6 +128,7 @@
     "close": "Cerrar",
     "results_title": "Resultados",
     "clear": "Borrar",
+    "recent_routes": "Rutas recientes",
     "no_routes_found": "No se encontraron rutas",
     "no_routes_message": "No pudimos encontrar una ruta para tu viaje. Intenta cambiar la hora o las ubicaciones.",
     "walk": "Caminar",

@@ -15,18 +15,21 @@ public partial class RoutePlannerController : ControllerBase
 {
     private readonly ILogger<RoutePlannerController> _logger;
     private readonly OtpService _otpService;
+    private readonly IGeocodingService _geocodingService;
     private readonly AppConfiguration _config;
     private readonly HttpClient _httpClient;
 
     public RoutePlannerController(
         ILogger<RoutePlannerController> logger,
         OtpService otpService,
+        IGeocodingService geocodingService,
         IOptions<AppConfiguration> config,
         HttpClient httpClient
     )
     {
         _logger = logger;
         _otpService = otpService;
+        _geocodingService = geocodingService;
         _config = config.Value;
         _httpClient = httpClient;
     }
@@ -39,14 +42,14 @@ public partial class RoutePlannerController : ControllerBase
             return BadRequest("Query cannot be empty");
         }
 
-        var results = await _otpService.GetAutocompleteAsync(query);
+        var results = await _geocodingService.GetAutocompleteAsync(query);
         return Ok(results);
     }
 
     [HttpGet("reverse")]
     public async Task<ActionResult<PlannerSearchResult>> Reverse([FromQuery] double lat, [FromQuery] double lon)
     {
-        var result = await _otpService.GetReverseGeocodeAsync(lat, lon);
+        var result = await _geocodingService.GetReverseGeocodeAsync(lat, lon);
         if (result == null)
         {
             return NotFound();
@@ -60,13 +63,13 @@ public partial class RoutePlannerController : ControllerBase
         [FromQuery] double fromLon,
         [FromQuery] double toLat,
         [FromQuery] double toLon,
-        [FromQuery] DateTimeOffset time,
+        [FromQuery] DateTimeOffset? time,
         [FromQuery] bool arriveBy = false)
     {
         try
         {
             var requestContent = PlanConnectionContent.Query(
-                new PlanConnectionContent.Args(fromLat, fromLon, toLat, toLon, time, arriveBy)
+                new PlanConnectionContent.Args(fromLat, fromLon, toLat, toLon, time ?? DateTimeOffset.Now, arriveBy)
             );
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
@@ -78,7 +81,7 @@ public partial class RoutePlannerController : ControllerBase
             var response = await _httpClient.SendAsync(request);
             var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<PlanConnectionResponse>>();
 
-            if (responseBody is not { IsSuccess: true } || responseBody.Data?.PlanConnection.Edges.Length == 0)
+            if (responseBody is not { IsSuccess: true })
             {
                 LogErrorFetchingRoutes(response.StatusCode, await response.Content.ReadAsStringAsync());
                 return StatusCode(500, "An error occurred while planning the route.");
@@ -96,5 +99,4 @@ public partial class RoutePlannerController : ControllerBase
 
     [LoggerMessage(LogLevel.Error, "Error fetching route planning, received {statusCode} {responseBody}")]
     partial void LogErrorFetchingRoutes(HttpStatusCode? statusCode, string responseBody);
-
 }

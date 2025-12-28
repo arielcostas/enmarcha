@@ -16,8 +16,10 @@ public class Itinerary
     public double TransitTimeSeconds { get; set; }
     public double WaitingTimeSeconds { get; set; }
     public List<Leg> Legs { get; set; } = [];
-    public decimal? CashFareEuro { get; set; }
-    public decimal? CardFareEuro { get; set; }
+    public decimal? CashFare { get; set; }
+    public bool? CashFareIsTotal { get; set; }
+    public decimal? CardFare { get; set; }
+    public bool? CardFareIsTotal { get; set; }
 }
 
 public class Leg

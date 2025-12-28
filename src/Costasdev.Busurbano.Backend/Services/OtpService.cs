@@ -30,77 +30,6 @@ public class OtpService
         _feedService = feedService;
     }
 
-    public async Task<List<PlannerSearchResult>> GetAutocompleteAsync(string query)
-    {
-        if (string.IsNullOrWhiteSpace(query)) return new List<PlannerSearchResult>();
-
-        var cacheKey = $"otp_autocomplete_{query.ToLowerInvariant()}";
-        if (_cache.TryGetValue(cacheKey, out List<PlannerSearchResult>? cachedResults) && cachedResults != null)
-        {
-            return cachedResults;
-        }
-
-        try
-        {
-            // https://planificador-rutas-api.vigo.org/v1/autocomplete?text=XXXX&layers=venue,street,address&lang=es
-            var url = $"{_config.OtpGeocodingBaseUrl}/autocomplete?text={Uri.EscapeDataString(query)}&layers=venue,address&lang=es";
-            var response = await _httpClient.GetFromJsonAsync<OtpGeocodeResponse>(url);
-
-            var results = response?.Features.Select(f => new PlannerSearchResult
-            {
-                Name = f.Properties?.Name,
-                Label = $"{f.Properties?.PostalCode} {f.Properties?.LocalAdmin}, {f.Properties?.Region}",
-                Layer = f.Properties?.Layer,
-                Lat = f.Geometry?.Coordinates.Count > 1 ? f.Geometry.Coordinates[1] : 0,
-                Lon = f.Geometry?.Coordinates.Count > 0 ? f.Geometry.Coordinates[0] : 0
-            }).ToList() ?? new List<PlannerSearchResult>();
-
-            _cache.Set(cacheKey, results, TimeSpan.FromMinutes(30)); // Cache for 30 mins
-            return results;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching autocomplete results");
-            return new List<PlannerSearchResult>();
-        }
-    }
-
-    public async Task<PlannerSearchResult?> GetReverseGeocodeAsync(double lat, double lon)
-    {
-        var cacheKey = $"otp_reverse_{lat:F5}_{lon:F5}";
-        if (_cache.TryGetValue(cacheKey, out PlannerSearchResult? cachedResult) && cachedResult != null)
-        {
-            return cachedResult;
-        }
-
-        try
-        {
-            // https://planificador-rutas-api.vigo.org/v1/reverse?point.lat=LAT&point.lon=LON&lang=es
-            var url = $"{_config.OtpGeocodingBaseUrl}/reverse?point.lat={lat.ToString(CultureInfo.InvariantCulture)}&point.lon={lon.ToString(CultureInfo.InvariantCulture)}&lang=es";
-            var response = await _httpClient.GetFromJsonAsync<OtpGeocodeResponse>(url);
-
-            var feature = response?.Features.FirstOrDefault();
-            if (feature == null) return null;
-
-            var result = new PlannerSearchResult
-            {
-                Name = feature.Properties?.Name,
-                Label = $"{feature.Properties?.PostalCode} {feature.Properties?.LocalAdmin}, {feature.Properties?.Region}",
-                Layer = feature.Properties?.Layer,
-                Lat = feature.Geometry?.Coordinates.Count > 1 ? feature.Geometry.Coordinates[1] : 0,
-                Lon = feature.Geometry?.Coordinates.Count > 0 ? feature.Geometry.Coordinates[0] : 0
-            };
-
-            _cache.Set(cacheKey, result, TimeSpan.FromMinutes(60)); // Cache for 1 hour
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching reverse geocode results");
-            return null;
-        }
-    }
-
     private Leg MapLeg(OtpLeg otpLeg)
     {
         return new Leg
@@ -240,8 +169,10 @@ public class OtpService
             TransitTimeSeconds = node.DurationSeconds - node.WalkSeconds - node.WaitingSeconds,
             WaitingTimeSeconds = node.WaitingSeconds,
             Legs = legs,
-            CashFareEuro = fares.CashFareEuro,
-            CardFareEuro = fares.CardFareEuro
+            CashFare = fares.CashFareEuro,
+            CashFareIsTotal = fares.CashFareIsTotal,
+            CardFare = fares.CardFareEuro,
+            CardFareIsTotal = fares.CardFareIsTotal
         };
     }
 

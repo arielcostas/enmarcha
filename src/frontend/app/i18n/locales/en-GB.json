@@ -128,6 +128,7 @@
     "close": "Close",
     "results_title": "Results",
     "clear": "Clear",
+    "recent_routes": "Recent routes",
     "no_routes_found": "No routes found",
     "no_routes_message": "We couldn't find a route for your trip. Try changing the time or locations.",
     "walk": "Walk",

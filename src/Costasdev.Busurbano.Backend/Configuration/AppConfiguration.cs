@@ -10,6 +10,7 @@ public class AppConfiguration
     [Obsolete]
     public required string OtpPlannerBaseUrl { get; set; } = "https://planificador-rutas.vigo.org/otp/routers/default";
     public required string OpenTripPlannerBaseUrl { get; set; }
+    public string NominatimBaseUrl { get; set; } = "https://nominatim.openstreetmap.org";
 
     // Default Routing Parameters
     public double WalkSpeed { get; set; } = 1.4;

@@ -38,7 +38,7 @@ export default function StopMap() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
 
-  const { searchRoute } = usePlanner();
+  const { searchRoute } = usePlanner({ autoLoad: false });
 
   // Handle click events on clusters and individual stops
   const onMapClick = (e: MapLayerMouseEvent) => {
@@ -58,7 +58,7 @@ export default function StopMap() {
   };
 
   const stopLayerFilter = useMemo(() => {
-    const filter: FilterSpecification = ["any"];
+    const filter: any[] = ["any"];
     if (showCitybusStops) {
       filter.push(["==", ["get", "transitKind"], "bus"]);
     }
@@ -68,7 +68,7 @@ export default function StopMap() {
     if (showTrainStops) {
       filter.push(["==", ["get", "transitKind"], "train"]);
     }
-    return filter;
+    return filter as FilterSpecification;
   }, [showCitybusStops, showIntercityBusStops, showTrainStops]);
 
   const getLatitude = (center: any) =>
@@ -119,6 +119,7 @@ export default function StopMap() {
         clearPickerOnOpen={true}
         showLastDestinationWhenCollapsed={false}
         cardBackground="bg-white/95 dark:bg-slate-900/90"
+        autoLoad={false}
       />
 
       <AppMap

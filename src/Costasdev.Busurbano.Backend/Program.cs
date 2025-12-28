@@ -36,6 +36,7 @@ builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, FeedConfigProcessor>();
 builder.Services.AddScoped<ArrivalsPipeline>();
 
+builder.Services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();
 builder.Services.AddHttpClient<OtpService>();
 builder.Services.AddScoped<VitrasaTransitProvider>();
 builder.Services.AddScoped<RenfeTransitProvider>();

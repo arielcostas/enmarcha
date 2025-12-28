@@ -20,8 +20,10 @@ export interface Itinerary {
   transitTimeSeconds: number;
   waitingTimeSeconds: number;
   legs: Leg[];
-  cashFareEuro?: number;
-  cardFareEuro?: number;
+  cashFare?: number;
+  cashFareIsTotal?: boolean;
+  cardFare?: number;
+  cardFareIsTotal?: boolean;
 }
 
 export interface Leg {
@@ -30,6 +32,7 @@ export interface Leg {
   routeShortName?: string;
   routeLongName?: string;
   routeColor?: string;
+  routeTextColor?: string;
   headsign?: string;
   agencyName?: string;
   from?: PlannerPlace;

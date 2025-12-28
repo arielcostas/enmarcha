@@ -216,6 +216,11 @@ textarea {
   color: var(--ml-c-link-2);
 }
 
-.maplibregl-ctrl button .maplibregl-ctrl-icon:before {
+.maplibregl-ctrl button .maplibregl-ctrl-icon:before,
+.maplibregl-ctrl-attrib-button::before {
   display: none !important;
+}
+
+.maplibregl-ctrl-attrib-inner {
+  line-height: 1rem !important;
 }

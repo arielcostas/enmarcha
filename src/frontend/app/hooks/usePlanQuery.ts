@@ -8,7 +8,8 @@ export const usePlanQuery = (
   toLon: number | undefined,
   time?: Date,
   arriveBy: boolean = false,
-  enabled: boolean = true
+  enabled: boolean = true,
+  initialData?: any
 ) => {
   return useQuery({
     queryKey: [
@@ -25,5 +26,6 @@ export const usePlanQuery = (
     enabled: !!(fromLat && fromLon && toLat && toLon) && enabled,
     staleTime: 60000, // 1 minute
     retry: false,
+    initialData,
   });
 };

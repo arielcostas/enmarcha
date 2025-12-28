@@ -54,6 +54,7 @@ public class PlanConnectionContent : IGraphRequest<PlanConnectionContent.Args>
                   dateTime:{
                     {{dateTimeParameter}}
                   }
+                  searchWindow:"PT5H"
                 ) {
                   edges {
                     node {

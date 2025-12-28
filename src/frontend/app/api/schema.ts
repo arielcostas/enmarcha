@@ -163,8 +163,10 @@ export const ItinerarySchema = z.object({
   transitTimeSeconds: z.number(),
   waitingTimeSeconds: z.number(),
   legs: z.array(PlannerLegSchema),
-  cashFareEuro: z.number().optional().nullable(),
-  cardFareEuro: z.number().optional().nullable(),
+  cashFare: z.number().optional().nullable(),
+  cashFareIsTotal: z.boolean().optional().nullable(),
+  cardFare: z.number().optional().nullable(),
+  cardFareIsTotal: z.boolean().optional().nullable(),
 });
 
 export const RoutePlanSchema = z.object({

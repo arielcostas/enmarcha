@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Costasdev.Busurbano.Backend.Services;
 
-public record FareResult(decimal CashFareEuro, decimal CardFareEuro);
+public record FareResult(decimal CashFareEuro, bool CashFareIsTotal, decimal CardFareEuro, bool CardFareIsTotal);
 
 public class FareService
 {
@@ -41,18 +41,23 @@ public class FareService
 
         if (!transitLegs.Any())
         {
-            return new FareResult(0, 0);
+            return new FareResult(0, true, 0, true);
         }
 
+        var cashResult = CalculateCashTotal(transitLegs);
+        var cardResult = CalculateCardTotal(transitLegs);
+
         return new FareResult(
-            CalculateCashTotal(transitLegs),
-            CalculateCardTotal(transitLegs)
+            cashResult.Item1, cashResult.Item2,
+            cardResult.Item1, cardResult.Item2
         );
     }
 
-    private decimal CalculateCashTotal(IEnumerable<Leg> legs)
+    private (decimal, bool) CalculateCashTotal(IEnumerable<Leg> legs)
     {
         decimal total = 0L;
+        bool allLegsProcessed = true;
+
         foreach (var leg in legs)
         {
             switch (leg.FeedId)
@@ -80,21 +85,25 @@ public class FareService
 
                     total += _xuntaFareProvider.GetPrice(leg.From!.ZoneId!, leg.To!.ZoneId!)!.PriceCash;
                     break;
+                default:
+                    allLegsProcessed = false;
+                    _logger.LogWarning("Unknown FeedId: {FeedId}", leg.FeedId);
+                    break;
             }
         }
 
-        return total;
+        return (total, allLegsProcessed);
     }
 
-    private decimal CalculateCardTotal(IEnumerable<Leg> legs)
+    private (decimal, bool) CalculateCardTotal(IEnumerable<Leg> legs)
     {
         List<TicketPurchased> wallet = [];
         decimal totalCost = 0;
 
+        bool allLegsProcessed = true;
+
         foreach (var leg in legs)
         {
-            _logger.LogDebug("Processing leg {leg}", leg);
-
             int maxMinutes;
             int maxUsages;
             string? metroArea = null;
@@ -138,6 +147,7 @@ public class FareService
                     break;
                 default:
                     _logger.LogWarning("Unknown FeedId: {FeedId}", leg.FeedId);
+                    allLegsProcessed = false;
                     continue;
             }
 
@@ -193,17 +203,17 @@ public class FareService
             }
         }
 
-        return totalCost;
+        return (totalCost, allLegsProcessed);
     }
 }
 
 public class TicketPurchased
 {
-    public string FeedId { get; set; }
+    public required string FeedId { get; set; }
 
     public DateTime PurchasedAt { get; set; }
     public string? MetroArea { get; set; }
-    public string StartZone { get; set; }
+    public required string StartZone { get; set; }
 
     public int UsedTimes = 1;
     public decimal TotalPaid { get; set; }

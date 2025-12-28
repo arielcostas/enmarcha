@@ -73,7 +73,7 @@ async function initStops() {
 async function getStops(): Promise<Stop[]> {
   await initStops();
   // update favourites
-  const rawFav = localStorage.getItem("favouriteStops_vigo");
+  const rawFav = localStorage.getItem("favouriteStops");
   const favouriteStops = rawFav
     ? (JSON.parse(rawFav) as (number | string)[]).map(normalizeId)
     : [];
@@ -136,7 +136,7 @@ function getCustomName(stopId: string | number): string | undefined {
 
 function addFavourite(stopId: string | number) {
   const id = normalizeId(stopId);
-  const rawFavouriteStops = localStorage.getItem(`favouriteStops_vigo`);
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   let favouriteStops: string[] = [];
   if (rawFavouriteStops) {
     favouriteStops = (JSON.parse(rawFavouriteStops) as (number | string)[]).map(
@@ -146,13 +146,13 @@ function addFavourite(stopId: string | number) {
 
   if (!favouriteStops.includes(id)) {
     favouriteStops.push(id);
-    localStorage.setItem(`favouriteStops_vigo`, JSON.stringify(favouriteStops));
+    localStorage.setItem(`favouriteStops`, JSON.stringify(favouriteStops));
   }
 }
 
 function removeFavourite(stopId: string | number) {
   const id = normalizeId(stopId);
-  const rawFavouriteStops = localStorage.getItem(`favouriteStops_vigo`);
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   let favouriteStops: string[] = [];
   if (rawFavouriteStops) {
     favouriteStops = (JSON.parse(rawFavouriteStops) as (number | string)[]).map(
@@ -161,15 +161,12 @@ function removeFavourite(stopId: string | number) {
   }
 
   const newFavouriteStops = favouriteStops.filter((sid) => sid !== id);
-  localStorage.setItem(
-    `favouriteStops_vigo`,
-    JSON.stringify(newFavouriteStops)
-  );
+  localStorage.setItem(`favouriteStops`, JSON.stringify(newFavouriteStops));
 }
 
 function isFavourite(stopId: string | number): boolean {
   const id = normalizeId(stopId);
-  const rawFavouriteStops = localStorage.getItem(`favouriteStops_vigo`);
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   if (rawFavouriteStops) {
     const favouriteStops = (
       JSON.parse(rawFavouriteStops) as (number | string)[]
@@ -213,7 +210,7 @@ function getRecent(): string[] {
 }
 
 function getFavouriteIds(): string[] {
-  const rawFavouriteStops = localStorage.getItem(`favouriteStops_vigo`);
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   if (rawFavouriteStops) {
     return (JSON.parse(rawFavouriteStops) as (number | string)[]).map(
       normalizeId
