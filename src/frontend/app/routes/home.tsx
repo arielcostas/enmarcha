@@ -1,4 +1,3 @@
-import Fuse from "fuse.js";
 import { History } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,7 +7,6 @@ import { usePageTitle } from "~/contexts/PageTitleContext";
 import { usePlanner } from "~/hooks/usePlanner";
 import StopGallery from "../components/StopGallery";
 import StopItem from "../components/StopItem";
-import StopItemSkeleton from "../components/StopItemSkeleton";
 import StopDataProvider, { type Stop } from "../data/StopDataProvider";
 import "../tailwind-full.css";
 
@@ -31,15 +29,6 @@ export default function StopList() {
   const randomPlaceholder = useMemo(
     () => t("stoplist.search_placeholder"),
     [t]
-  );
-
-  const fuse = useMemo(
-    () =>
-      new Fuse(data || [], {
-        threshold: 0.3,
-        keys: ["name", "stopId"],
-      }),
-    [data]
   );
 
   const requestUserLocation = useCallback(() => {
@@ -103,90 +92,33 @@ export default function StopList() {
     };
   }, [requestUserLocation]);
 
-  // Sort stops by proximity when we know where the user is located.
-  const sortedAllStops = useMemo(() => {
-    if (!data) {
-      return [] as Stop[];
-    }
-
-    if (!userLocation) {
-      return [...data].sort((a, b) => a.stopId.localeCompare(b.stopId));
-    }
-
-    const toRadians = (value: number) => (value * Math.PI) / 180;
-    const getDistance = (
-      lat1: number,
-      lon1: number,
-      lat2: number,
-      lon2: number
-    ) => {
-      const R = 6371000; // meters
-      const dLat = toRadians(lat2 - lat1);
-      const dLon = toRadians(lon2 - lon1);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRadians(lat1)) *
-          Math.cos(toRadians(lat2)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    };
-
-    return data
-      .map((stop) => {
-        if (
-          typeof stop.latitude !== "number" ||
-          typeof stop.longitude !== "number"
-        ) {
-          return { stop, distance: Number.POSITIVE_INFINITY };
-        }
-
-        const distance = getDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          stop.latitude,
-          stop.longitude
-        );
-
-        return { stop, distance };
-      })
-      .sort((a, b) => {
-        if (a.distance === b.distance) {
-          return a.stop.stopId.localeCompare(b.stop.stopId);
-        }
-        return a.distance - b.distance;
-      })
-      .map(({ stop }) => stop);
-  }, [data, userLocation]);
-
   // Load stops from network
   const loadStops = useCallback(async () => {
     try {
       setLoading(true);
 
-      const stops = await StopDataProvider.loadStopsFromNetwork();
+      const favouriteIds = StopDataProvider.getFavouriteIds();
+      const recentIds = StopDataProvider.getRecent();
+      const allIds = Array.from(new Set([...favouriteIds, ...recentIds]));
 
-      // Add favourite flags to stops
-      const favouriteStopsIds = StopDataProvider.getFavouriteIds();
-      const stopsWithFavourites = stops.map((stop) => ({
-        ...stop,
-        favourite: favouriteStopsIds.includes(stop.stopId),
-      }));
+      const stopsMap = await StopDataProvider.fetchStopsByIds(allIds);
 
-      setData(stopsWithFavourites);
-
-      // Update favourite and recent stops with full data
-      const favStops = stopsWithFavourites.filter((stop) =>
-        favouriteStopsIds.includes(stop.stopId)
-      );
+      const favStops = favouriteIds
+        .map((id) => stopsMap[id])
+        .filter(Boolean)
+        .map((stop) => ({ ...stop, favourite: true }));
       setFavouriteStops(favStops);
 
-      const recIds = StopDataProvider.getRecent();
-      const recStops = recIds
-        .map((id) => stopsWithFavourites.find((stop) => stop.stopId === id))
-        .filter(Boolean) as Stop[];
-      setRecentStops(recStops.reverse());
+      const recStops = recentIds
+        .map((id) => stopsMap[id])
+        .filter(Boolean)
+        .map((stop) => ({
+          ...stop,
+          favourite: favouriteIds.includes(stop.stopId),
+        }));
+      setRecentStops(recStops);
+
+      setData(Object.values(stopsMap));
     } catch (error) {
       console.error("Failed to load stops:", error);
     } finally {
@@ -205,41 +137,14 @@ export default function StopList() {
       clearTimeout(searchTimeout.current);
     }
 
-    searchTimeout.current = setTimeout(() => {
+    searchTimeout.current = setTimeout(async () => {
       if (searchQuery.length === 0) {
         setSearchResults(null);
         return;
       }
 
-      if (!data) {
-        console.error("No data available for search");
-        return;
-      }
-
-      // Check if search query is a number (stop code search)
-      const isNumericSearch = /^\d+$/.test(searchQuery.trim());
-
-      let items: Stop[];
-      if (isNumericSearch) {
-        // Direct match for stop codes
-        const stopId = searchQuery.trim();
-        const exactMatch = data.filter(
-          (stop) => stop.stopId === stopId || stop.stopId.endsWith(`:${stopId}`)
-        );
-        if (exactMatch.length > 0) {
-          items = exactMatch;
-        } else {
-          // Fuzzy search if no exact match
-          const results = fuse.search(searchQuery);
-          items = results.map((result) => result.item);
-        }
-      } else {
-        // Text search using Fuse.js
-        const results = fuse.search(searchQuery);
-        items = results.map((result) => result.item);
-      }
-
-      setSearchResults(items);
+      // Placeholder for future backend search
+      setSearchResults([]);
     }, 300);
   };
 
@@ -370,54 +275,6 @@ export default function StopList() {
           )}
 
           {/*<ServiceAlerts />*/}
-
-          {/* All Stops / Nearby Stops */}
-          <div className="w-full px-4 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              {userLocation && (
-                <svg
-                  className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              )}
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                {userLocation
-                  ? t("stoplist.nearby_stops", "Nearby stops")
-                  : t("stoplist.all_stops", "Paradas")}
-              </h2>
-            </div>
-
-            <ul className="list-none p-0 m-0 flex flex-col gap-2 md:grid md:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
-              {loading && (
-                <>
-                  {Array.from({ length: 6 }, (_, index) => (
-                    <StopItemSkeleton key={`skeleton-${index}`} />
-                  ))}
-                </>
-              )}
-              {!loading && data
-                ? (userLocation
-                    ? sortedAllStops.slice(0, 6)
-                    : sortedAllStops
-                  ).map((stop) => <StopItem key={stop.stopId} stop={stop} />)
-                : null}
-            </ul>
-          </div>
         </>
       )}
     </div>

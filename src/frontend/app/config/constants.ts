@@ -5,7 +5,6 @@ export type RegionId = "vigo";
 export const APP_CONSTANTS = {
   id: "vigo",
 
-  stopsEndpoint: "/stops/vigo.json",
   consolidatedCirculationsEndpoint: "/api/vigo/GetConsolidatedCirculations",
   shapeEndpoint: "/api/vigo/GetShape",
   defaultCenter: {

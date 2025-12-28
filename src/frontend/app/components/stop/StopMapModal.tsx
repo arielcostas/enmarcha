@@ -1,3 +1,4 @@
+import maplibregl from "maplibre-gl";
 import React, {
   useCallback,
   useEffect,

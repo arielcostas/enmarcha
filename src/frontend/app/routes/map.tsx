@@ -40,6 +40,13 @@ export default function StopMap() {
 
   const { searchRoute } = usePlanner({ autoLoad: false });
 
+  const favouriteIds = useMemo(() => StopDataProvider.getFavouriteIds(), []);
+
+  const favouriteFilter = useMemo(() => {
+    if (favouriteIds.length === 0) return ["boolean", false];
+    return ["match", ["get", "id"], favouriteIds, true, false];
+  }, [favouriteIds]);
+
   // Handle click events on clusters and individual stops
   const onMapClick = (e: MapLayerMouseEvent) => {
     const features = e.features;
@@ -140,6 +147,32 @@ export default function StopMap() {
         />
 
         <Layer
+          id="stops-favourite-highlight"
+          type="circle"
+          minzoom={11}
+          source="stops-source"
+          source-layer="stops"
+          filter={["all", stopLayerFilter, favouriteFilter]}
+          paint={{
+            "circle-color": "#FFD700",
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["zoom"],
+              13,
+              10,
+              16,
+              12,
+              18,
+              16,
+            ],
+            "circle-opacity": 0.4,
+            "circle-stroke-color": "#FFD700",
+            "circle-stroke-width": 2,
+          }}
+        />
+
+        <Layer
           id="stops"
           type="symbol"
           minzoom={11}
@@ -161,6 +194,17 @@ export default function StopMap() {
             ],
             "icon-allow-overlap": true,
             "icon-ignore-placement": true,
+            "symbol-sort-key": [
+              "match",
+              ["get", "transitKind"],
+              "bus",
+              3,
+              "coach",
+              2,
+              "train",
+              1,
+              0,
+            ],
           }}
         />
 

@@ -20,12 +20,17 @@ const StopItem: React.FC<StopItemProps> = ({ stop }) => {
             {StopDataProvider.getDisplayName(stop)}
           </span>
           <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-            ({stop.stopId})
+            ({stop.stopCode || stop.stopId})
           </span>
         </div>
         <div className="flex flex-wrap gap-1 mt-1">
-          {stop.lines?.map((line) => (
-            <LineIcon key={line} line={line} />
+          {stop.lines?.map((lineObj) => (
+            <LineIcon
+              key={lineObj.line}
+              line={lineObj.line}
+              colour={lineObj.colour}
+              textColour={lineObj.textColour}
+            />
           ))}
         </div>
       </Link>

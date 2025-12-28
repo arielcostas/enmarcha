@@ -110,10 +110,11 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
 
   useEffect(() => {
     // Load favourites once; used as local suggestions in the picker.
-    StopDataProvider.getStops()
-      .then((stops) =>
-        stops
-          .filter((s) => s.favourite && s.latitude && s.longitude)
+    const favouriteIds = StopDataProvider.getFavouriteIds();
+    StopDataProvider.fetchStopsByIds(favouriteIds)
+      .then((stopsMap) =>
+        Object.values(stopsMap)
+          .filter((s) => s.latitude && s.longitude)
           .map(
             (s) =>
               ({

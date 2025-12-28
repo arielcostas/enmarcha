@@ -182,6 +182,68 @@ public partial class ArrivalsController : ControllerBase
         return -30;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetStops([FromQuery] string ids)
+    {
+        if (string.IsNullOrWhiteSpace(ids))
+        {
+            return BadRequest("Ids parameter is required");
+        }
+
+        var stopIds = ids.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var requestContent = StopsInfoContent.Query(new StopsInfoContent.Args(stopIds));
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
+        request.Content = JsonContent.Create(new GraphClientRequest
+        {
+            Query = requestContent
+        });
+
+        var response = await _httpClient.SendAsync(request);
+        var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<StopsInfoResponse>>();
+
+        if (responseBody is not { IsSuccess: true } || responseBody.Data?.Stops == null)
+        {
+            return StatusCode(500, "Error fetching stops data");
+        }
+
+        var result = responseBody.Data.Stops.ToDictionary(
+            s => s.GtfsId,
+            s =>
+            {
+                var feedId = s.GtfsId.Split(':', 2)[0];
+                var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
+
+                return new
+                {
+                    id = s.GtfsId,
+                    code = _feedService.NormalizeStopCode(feedId, s.Code ?? ""),
+                    name = s.Name,
+                    routes = s.Routes
+                        .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                        .Select(r => new
+                        {
+                            shortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                            colour = r.Color ?? fallbackColor,
+                            textColour = r.TextColor is null or "000000" ?
+                                ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
+                                r.TextColor
+                        })
+                        .ToList()
+                };
+            }
+        );
+
+        return Ok(result);
+    }
+
+    [HttpGet("search")]
+    public IActionResult SearchStops([FromQuery] string q)
+    {
+        // Placeholder for future implementation with Postgres and fuzzy searching
+        return Ok(new List<object>());
+    }
+
     [LoggerMessage(LogLevel.Error, "Error fetching stop data, received {statusCode} {responseBody}")]
     partial void LogErrorFetchingStopData(HttpStatusCode statusCode, string responseBody);
 }

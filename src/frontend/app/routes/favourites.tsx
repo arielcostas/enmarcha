@@ -27,10 +27,11 @@ export default function Favourites() {
 
       // Load favourite stops
       const favouriteIds = StopDataProvider.getFavouriteIds();
-      const allStops = await StopDataProvider.getStops();
-      const favStops = allStops.filter((stop) =>
-        favouriteIds.includes(stop.stopId)
-      );
+      const stopsMap = await StopDataProvider.fetchStopsByIds(favouriteIds);
+      const favStops = favouriteIds
+        .map((id) => stopsMap[id])
+        .filter(Boolean)
+        .map((stop) => ({ ...stop, favourite: true }));
       setFavouriteStops(favStops);
     } catch (error) {
       console.error("Error loading favourites:", error);
@@ -190,14 +191,10 @@ function SpecialPlaceCard({
             {icon}
           </span>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-text mb-1">
-              {label}
-            </h3>
+            <h3 className="font-semibold text-text mb-1">{label}</h3>
             {place ? (
               <div className="text-sm text-muted">
-                <p className="font-medium text-text">
-                  {place.name}
-                </p>
+                <p className="font-medium text-text">{place.name}</p>
                 {place.type === "stop" && place.stopId && (
                   <p className="text-xs mt-1">({place.stopId})</p>
                 )}
@@ -283,15 +280,20 @@ function FavouriteStopItem({
               ★
             </span>
             <span className="text-xs text-muted font-medium">
-              ({stop.stopId})
+              ({stop.stopCode || stop.stopId})
             </span>
           </div>
           <div className="font-semibold text-text mb-2">
             {StopDataProvider.getDisplayName(stop)}
           </div>
           <div className="flex flex-wrap gap-1 items-center">
-            {stop.lines?.slice(0, 6).map((line) => (
-              <LineIcon key={line} line={line} />
+            {stop.lines?.slice(0, 6).map((lineObj) => (
+              <LineIcon
+                key={lineObj.line}
+                line={lineObj.line}
+                colour={lineObj.colour}
+                textColour={lineObj.textColour}
+              />
             ))}
             {stop.lines && stop.lines.length > 6 && (
               <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">

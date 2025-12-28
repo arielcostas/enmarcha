@@ -26,7 +26,7 @@ const StopGalleryItem: React.FC<StopGalleryItemProps> = ({ stop }) => {
             <span className="text-yellow-500 text-base">★</span>
           )}
           <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
-            ({stop.stopId})
+            ({stop.stopCode || stop.stopId})
           </span>
         </div>
         <div
@@ -41,8 +41,13 @@ const StopGalleryItem: React.FC<StopGalleryItemProps> = ({ stop }) => {
           {StopDataProvider.getDisplayName(stop)}
         </div>
         <div className="flex flex-wrap gap-1 items-center">
-          {stop.lines?.slice(0, 5).map((line) => (
-            <LineIcon key={line} line={line} />
+          {stop.lines?.slice(0, 5).map((lineObj) => (
+            <LineIcon
+              key={lineObj.line}
+              line={lineObj.line}
+              colour={lineObj.colour}
+              textColour={lineObj.textColour}
+            />
           ))}
           {stop.lines && stop.lines.length > 5 && (
             <span className="text-xs text-gray-600 dark:text-gray-400 font-medium px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
