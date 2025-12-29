@@ -4,7 +4,7 @@ namespace Enmarcha.Sources.Tussa;
 
 public class MaisbusResponse
 {
-    [JsonPropertyName("id")] public string Id { get; set; }
+    [JsonPropertyName("id")] public int Id { get; set; }
     [JsonPropertyName("codigo")] public string Code { get; set; }
     [JsonPropertyName("nombre")] public string Name { get; set; }
     [JsonPropertyName("coordenadas")] public Coordinates Coordinates { get; set; }
@@ -21,7 +21,7 @@ public class Coordinates
 
 public class Route
 {
-    [JsonPropertyName("id")] public string Id { get; set; }
+    [JsonPropertyName("id")] public int Id { get; set; }
     [JsonPropertyName("sinoptico")] public string Sinoptico { get; set; }
     [JsonPropertyName("nombre")] public string Name { get; set; }
     [JsonPropertyName("estilo")] public string Colour { get; set; }

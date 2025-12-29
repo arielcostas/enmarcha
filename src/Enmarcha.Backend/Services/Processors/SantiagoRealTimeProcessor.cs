@@ -1,3 +1,4 @@
+using Enmarcha.Backend.Helpers;
 using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Sources.TranviasCoruna;
 using Enmarcha.Backend.Types;
@@ -41,15 +42,12 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
             {
                 var bestMatch = context.Arrivals
                     .Where(a => !usedTripIds.Contains(a.TripId))
-                    .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
-                    .Select(a =>
+                    .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.Id.ToString())
+                    .Select(a => new
                     {
-                        return new
-                        {
-                            Arrival = a,
-                            TimeDiff = estimate.Minutes - a.Estimate.Minutes, // RealTime - Schedule
-                            RouteMatch = true
-                        };
+                        Arrival = a,
+                        TimeDiff = estimate.MinutesToArrive - a.Estimate.Minutes, // RealTime - Schedule
+                        RouteMatch = true
                     })
                     .Where(x => x.RouteMatch) // Strict route matching
                     .Where(x => x.TimeDiff >= -7 && x.TimeDiff <= 75) // Allow 7m early (RealTime < Schedule) or 75m late (RealTime > Schedule)
@@ -58,17 +56,38 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
 
                 if (bestMatch == null)
                 {
-                    continue;
+                    context.Arrivals.Add(new Arrival
+                    {
+                        TripId = $"tussa:rt:{estimate.Id}:{estimate.MinutesToArrive}",
+                        Route = new RouteInfo
+                        {
+                            GtfsId = $"tussa:{estimate.Id}",
+                            ShortName = estimate.Sinoptico,
+                            Colour = estimate.Colour,
+                            TextColour = ContrastHelper.GetBestTextColour(estimate.Colour)
+                        },
+                        Headsign = new HeadsignInfo
+                        {
+                            Badge = "T.REAL",
+                            Destination = estimate.Name
+                        },
+                        Estimate = new ArrivalDetails
+                        {
+                            Minutes = estimate.MinutesToArrive,
+                            Precision = ArrivalPrecision.Confident
+                        }
+
+                    });
                 }
 
                 var arrival = bestMatch.Arrival;
 
                 var scheduledMinutes = arrival.Estimate.Minutes;
-                arrival.Estimate.Minutes = estimate.Minutes;
+                arrival.Estimate.Minutes = estimate.MinutesToArrive;
                 arrival.Estimate.Precision = ArrivalPrecision.Confident;
 
                 // Calculate delay badge
-                var delayMinutes = estimate.Minutes - scheduledMinutes;
+                var delayMinutes = estimate.MinutesToArrive - scheduledMinutes;
                 if (delayMinutes != 0)
                 {
                     arrival.Delay = new DelayBadge { Minutes = delayMinutes };

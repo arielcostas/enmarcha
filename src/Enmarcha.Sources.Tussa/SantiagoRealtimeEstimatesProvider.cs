@@ -11,9 +11,13 @@ public class SantiagoRealtimeEstimatesProvider
         _http = http;
     }
 
-    public async Task<List<SantiagoEstimate>> GetEstimatesForStop(int stopId)
+    public async Task<List<Route>> GetEstimatesForStop(int stopId)
     {
         var url = GetRequestUrl(stopId.ToString());
+
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Add("Accept", "application/json");
+        request.Headers.Add("User-Agent", "Mozilla/5.0 (compatible; EnMarcha/0.1; https://enmarcha.app)");
 
         var response = await _http.GetAsync(url);
         var maisbusResponse = await response.Content.ReadFromJsonAsync<MaisbusResponse>();
@@ -24,17 +28,11 @@ public class SantiagoRealtimeEstimatesProvider
             throw new Exception("Error parsing maisbus response: " + responseString);
         }
 
-        return maisbusResponse.Routes.Select(r => new SantiagoEstimate
-        (
-            r.Id.ToString(),
-            r.MinutesToArrive
-        )).OrderBy(a => a.Minutes).ToList();
+        return maisbusResponse.Routes.ToList();
     }
 
     private static string GetRequestUrl(string stopId)
     {
-        return $"https://tussa.gal/maisbus/api/stop/{stopId}";
+        return $"https://app.tussa.org/tussa/api/paradas/{stopId}";
     }
 }
-
-public record SantiagoEstimate(string RouteId, int Minutes);
