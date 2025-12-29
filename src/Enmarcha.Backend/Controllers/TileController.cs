@@ -186,7 +186,7 @@ public class TileController : ControllerBase
             "vitrasa" or "tussa" or "tranvias" => "bus",
             "xunta" => "coach",
             "renfe" or "feve" => "train",
-            _ => "unknown",
+            _ => throw new ArgumentException("Feed ID not a known type", feedId)
         };
     }
 

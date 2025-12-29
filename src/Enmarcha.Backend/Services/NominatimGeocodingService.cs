@@ -26,7 +26,7 @@ public class NominatimGeocodingService : IGeocodingService
         // Nominatim requires a User-Agent
         if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
         {
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Enmarcha/0.1 testing only, will replace soon. Written 2025-12-28 (https://enmarcha.app)");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Compatible; Enmarcha/0.1; https://enmarcha.app)");
         }
     }
 

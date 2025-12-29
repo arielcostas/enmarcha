@@ -63,13 +63,14 @@ const PlannerContext = createContext<PlannerContextType | undefined>(undefined);
 export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [origin, setOrigin] = useState<PlannerSearchResult | null>(null);
-  const [destination, setDestination] = useState<PlannerSearchResult | null>(
+  const [origin, setOriginInternal] = useState<PlannerSearchResult | null>(
     null
   );
+  const [destination, setDestinationInternal] =
+    useState<PlannerSearchResult | null>(null);
   const [plan, setPlan] = useState<RoutePlan | null>(null);
-  const [searchTime, setSearchTime] = useState<Date | null>(null);
-  const [arriveBy, setArriveBy] = useState(false);
+  const [searchTime, setSearchTimeInternal] = useState<Date | null>(null);
+  const [arriveBy, setArriveByInternal] = useState(false);
   const [selectedItineraryIndex, setSelectedItineraryIndex] = useState<
     number | null
   >(null);
@@ -77,6 +78,27 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [recentPlaces, setRecentPlaces] = useState<PlannerSearchResult[]>([]);
   const [pickingMode, setPickingMode] = useState<PickingMode>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [searchTriggered, setSearchTriggered] = useState(false);
+
+  const setOrigin = useCallback((p: PlannerSearchResult | null) => {
+    setOriginInternal(p);
+    setSearchTriggered(false);
+  }, []);
+
+  const setDestination = useCallback((p: PlannerSearchResult | null) => {
+    setDestinationInternal(p);
+    setSearchTriggered(false);
+  }, []);
+
+  const setSearchTime = useCallback((t: Date | null) => {
+    setSearchTimeInternal(t);
+    setSearchTriggered(false);
+  }, []);
+
+  const setArriveBy = useCallback((a: boolean) => {
+    setArriveByInternal(a);
+    setSearchTriggered(false);
+  }, []);
 
   const queryClient = useQueryClient();
 
@@ -135,7 +157,7 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
     destination?.lon,
     searchTime ?? undefined,
     arriveBy,
-    !!(origin && destination && searchTime)
+    searchTriggered && !!(origin && destination && searchTime)
   );
 
   // Sync query result to local state and storage
@@ -207,11 +229,14 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
             );
             setPlan(last.plan);
           }
-          setOrigin(last.origin);
-          setDestination(last.destination);
-          setSearchTime(last.searchTime ? new Date(last.searchTime) : null);
-          setArriveBy(last.arriveBy ?? false);
+          setOriginInternal(last.origin);
+          setDestinationInternal(last.destination);
+          setSearchTimeInternal(
+            last.searchTime ? new Date(last.searchTime) : null
+          );
+          setArriveByInternal(last.arriveBy ?? false);
           setSelectedItineraryIndex(last.selectedItineraryIndex ?? null);
+          setSearchTriggered(true);
         }
       } catch (e) {
         localStorage.removeItem(STORAGE_KEY);
@@ -225,12 +250,13 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
     time?: Date,
     arriveByParam: boolean = false
   ) => {
-    setOrigin(from);
-    setDestination(to);
+    setOriginInternal(from);
+    setDestinationInternal(to);
     const finalTime = time ?? new Date();
-    setSearchTime(finalTime);
-    setArriveBy(arriveByParam);
+    setSearchTimeInternal(finalTime);
+    setArriveByInternal(arriveByParam);
     setSelectedItineraryIndex(null);
+    setSearchTriggered(true);
 
     const toStore: StoredRoute = {
       timestamp: Date.now(),
@@ -275,11 +301,14 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
         );
         setPlan(route.plan);
       }
-      setOrigin(route.origin);
-      setDestination(route.destination);
-      setSearchTime(route.searchTime ? new Date(route.searchTime) : null);
-      setArriveBy(route.arriveBy ?? false);
+      setOriginInternal(route.origin);
+      setDestinationInternal(route.destination);
+      setSearchTimeInternal(
+        route.searchTime ? new Date(route.searchTime) : null
+      );
+      setArriveByInternal(route.arriveBy ?? false);
       setSelectedItineraryIndex(route.selectedItineraryIndex ?? null);
+      setSearchTriggered(true);
 
       setHistory((prev) => {
         const filtered = prev.filter(
@@ -304,11 +333,12 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const clearRoute = useCallback(() => {
     setPlan(null);
-    setOrigin(null);
-    setDestination(null);
-    setSearchTime(null);
-    setArriveBy(false);
+    setOriginInternal(null);
+    setDestinationInternal(null);
+    setSearchTimeInternal(null);
+    setArriveByInternal(false);
     setSelectedItineraryIndex(null);
+    setSearchTriggered(false);
     setHistory([]);
     localStorage.removeItem(STORAGE_KEY);
   }, []);
