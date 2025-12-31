@@ -1,4 +1,4 @@
-import { AlertTriangle, LocateIcon } from "lucide-react";
+import { AlertTriangle, BusFront, LocateIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import LineIcon from "~/components/LineIcon";
@@ -15,7 +15,8 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
   onClick,
 }) => {
   const { t } = useTranslation();
-  const { route, headsign, estimate, delay, shift } = arrival;
+  const { route, headsign, estimate, delay, shift, vehicleInformation } =
+    arrival;
 
   const etaValue = estimate.minutes.toString();
   const etaUnit = t("estimates.minutes", "min");
@@ -37,7 +38,7 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
     const chips: Array<{
       label: string;
       tone?: string;
-      kind?: "regular" | "gps" | "delay" | "warning";
+      kind?: "regular" | "gps" | "delay" | "warning" | "vehicle";
     }> = [];
 
     // Badge/Shift info as a chip
@@ -96,15 +97,40 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
         tone: "warning",
         kind: "warning",
       });
-    } else if (estimate.precision === "confident") {
+    } else if (
+      estimate.precision === "confident" &&
+      arrival.currentPosition !== null
+    ) {
       chips.push({
         label: "", // Just the icon for reduced
         kind: "gps",
       });
     }
 
+    // Vehicle information if available
+    if (vehicleInformation) {
+      let label = vehicleInformation.identifier;
+      if (vehicleInformation.make) {
+        label += ` (${vehicleInformation.make}`;
+        if (vehicleInformation.kind) {
+          const kindLabel =
+            vehicleInformation.kind.charAt(0).toUpperCase() +
+            vehicleInformation.kind.slice(1).toLowerCase();
+          label += ` ${kindLabel}.`;
+        }
+        if (vehicleInformation.year) {
+          label += ` ${vehicleInformation.year}`;
+        }
+        label += `)`;
+      }
+      chips.push({
+        label,
+        kind: "vehicle",
+      });
+    }
+
     return chips;
-  }, [delay, shift, estimate.precision, headsign.badge]);
+  }, [delay, shift, estimate.precision, headsign.badge, vehicleInformation]);
 
   const isClickable = !!onClick && estimate.precision !== "past";
   const Tag = isClickable ? "button" : "div";
@@ -172,6 +198,9 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
                   )}
                   {chip.kind === "warning" && (
                     <AlertTriangle className="w-3 h-3 my-0.5 inline-block" />
+                  )}
+                  {chip.kind === "vehicle" && (
+                    <BusFront className="w-3 h-3 my-0.5 inline-block" />
                   )}
                   {chip.label}
                 </span>

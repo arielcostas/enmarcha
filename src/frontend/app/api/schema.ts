@@ -40,6 +40,14 @@ export const PositionSchema = z.object({
   shapeIndex: z.number(),
 });
 
+export const VehicleInformationSchema = z.object({
+  identifier: z.string(),
+  make: z.string().optional().nullable(),
+  model: z.string().optional().nullable(),
+  kind: z.string().optional().nullable(),
+  year: z.string().optional().nullable(),
+});
+
 export const ArrivalSchema = z.object({
   tripId: z.string(),
   route: RouteInfoSchema,
@@ -50,6 +58,7 @@ export const ArrivalSchema = z.object({
   shape: z.any().optional().nullable(),
   currentPosition: PositionSchema.optional().nullable(),
   stopShapeIndex: z.number().optional().nullable(),
+  vehicleInformation: VehicleInformationSchema.optional().nullable(),
 });
 
 export const StopArrivalsResponseSchema = z.object({

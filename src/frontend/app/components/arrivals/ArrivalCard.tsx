@@ -1,4 +1,4 @@
-import { AlertTriangle, LocateIcon } from "lucide-react";
+import { AlertTriangle, BusFront, LocateIcon } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { useTranslation } from "react-i18next";
@@ -59,7 +59,8 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
   onClick,
 }) => {
   const { t } = useTranslation();
-  const { route, headsign, estimate, delay, shift } = arrival;
+  const { route, headsign, estimate, delay, shift, vehicleInformation } =
+    arrival;
 
   const etaValue = estimate.minutes.toString();
   const etaUnit = t("estimates.minutes", "min");
@@ -81,7 +82,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     const chips: Array<{
       label: string;
       tone?: string;
-      kind?: "regular" | "gps" | "delay" | "warning";
+      kind?: "regular" | "gps" | "delay" | "warning" | "vehicle";
     }> = [];
 
     // Badge/Shift info as a chip
@@ -140,7 +141,10 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
         tone: "warning",
         kind: "warning",
       });
-    } else if (estimate.precision === "confident") {
+    } else if (
+      estimate.precision === "confident" &&
+      arrival.currentPosition !== null
+    ) {
       chips.push({
         label: t("estimates.bus_gps_position"),
         kind: "gps",
@@ -155,8 +159,27 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
       });
     }
 
+    // Vehicle information if available
+    if (vehicleInformation) {
+      let label = vehicleInformation.identifier;
+      if (vehicleInformation.make) {
+        label += ` (${vehicleInformation.make}`;
+        if (vehicleInformation.model) {
+          label += ` ${vehicleInformation.model}`;
+        }
+        if (vehicleInformation.year) {
+          label += ` - ${vehicleInformation.year}`;
+        }
+        label += `)`;
+      }
+      chips.push({
+        label,
+        kind: "vehicle",
+      });
+    }
+
     return chips;
-  }, [delay, shift, estimate.precision, t, headsign.badge]);
+  }, [delay, shift, estimate.precision, t, headsign.badge, vehicleInformation]);
 
   const isClickable = !!onClick && estimate.precision !== "past";
   const Tag = isClickable ? "button" : "div";
@@ -208,7 +231,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {metaChips.map((chip, idx) => {
             let chipColourClasses = "";
             switch (chip.tone) {
@@ -243,10 +266,13 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
                 className={`text-xs px-2.5 py-0.5 rounded-full flex items-center justify-center gap-1 shrink-0 font-medium tracking-wide ${chipColourClasses}`}
               >
                 {chip.kind === "gps" && (
-                  <LocateIcon className="w-2.5 h-2.5 inline-block" />
+                  <LocateIcon className="w-3 h-3 inline-block" />
                 )}
                 {chip.kind === "warning" && (
-                  <AlertTriangle className="w-2.5 h-2.5 inline-block" />
+                  <AlertTriangle className="w-3 h-3 inline-block" />
+                )}
+                {chip.kind === "vehicle" && (
+                  <BusFront className="w-3 h-3 inline-block" />
                 )}
                 {chip.label}
               </span>

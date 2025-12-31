@@ -36,7 +36,6 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
             var realtime = await _realtime.GetEstimatesForStop(numericStopId);
 
             var usedTripIds = new HashSet<string>();
-            var newArrivals = new List<Arrival>();
 
             foreach (var estimate in realtime)
             {
@@ -50,11 +49,11 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
                         RouteMatch = true
                     })
                     .Where(x => x.RouteMatch) // Strict route matching
-                    .Where(x => x.TimeDiff >= -7 && x.TimeDiff <= 75) // Allow 7m early (RealTime < Schedule) or 75m late (RealTime > Schedule)
+                    .Where(x => x.TimeDiff is >= -5 and <= 25) // Allow 2m early (RealTime < Schedule) or 25m late (RealTime > Schedule)
                     .OrderBy(x => Math.Abs(x.TimeDiff)) // Best time fit
                     .FirstOrDefault();
 
-                if (bestMatch == null)
+                if (bestMatch is null)
                 {
                     context.Arrivals.Add(new Arrival
                     {
@@ -76,31 +75,21 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
                             Minutes = estimate.MinutesToArrive,
                             Precision = ArrivalPrecision.Confident
                         }
-
                     });
+                    continue;
                 }
 
                 var arrival = bestMatch.Arrival;
 
-                var scheduledMinutes = arrival.Estimate.Minutes;
                 arrival.Estimate.Minutes = estimate.MinutesToArrive;
                 arrival.Estimate.Precision = ArrivalPrecision.Confident;
 
-                // Calculate delay badge
-                var delayMinutes = estimate.MinutesToArrive - scheduledMinutes;
-                if (delayMinutes != 0)
-                {
-                    arrival.Delay = new DelayBadge { Minutes = delayMinutes };
-                }
-
                 usedTripIds.Add(arrival.TripId);
             }
-
-            context.Arrivals.AddRange(newArrivals);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching Vitrasa real-time data for stop {StopId}", context.StopId);
+            _logger.LogError(ex, "Error fetching Santiago real-time data for stop {StopId}", context.StopId);
         }
     }
 

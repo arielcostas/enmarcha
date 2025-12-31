@@ -29,12 +29,13 @@ public class CorunaRealtimeEstimatesProvider
             return r.Arrivals.Select(arrival =>
             {
                 var minutes = arrival.Minutes == "<1" ? 0 : int.Parse(arrival.Minutes);
+                var metres = arrival.Metres == "--" ? 0 : int.Parse(arrival.Metres);
 
                 return new CorunaEstimate
                 (
                     r.RouteId.ToString(),
                     minutes,
-                    int.Parse(arrival.Metres),
+                    metres,
                     arrival.VehicleNumber.ToString()
                 );
             }).ToList();

@@ -37,31 +37,29 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
             Epsg25829? stopLocation = null;
             if (context.StopLocation != null)
             {
-                stopLocation = _shapeService.TransformToEpsg25829(context.StopLocation.Latitude, context.StopLocation.Longitude);
+                stopLocation =
+                    _shapeService.TransformToEpsg25829(context.StopLocation.Latitude, context.StopLocation.Longitude);
             }
 
             var realtime = await _realtime.GetEstimatesForStop(numericStopId);
 
             var usedTripIds = new HashSet<string>();
-            var newArrivals = new List<Arrival>();
 
             foreach (var estimate in realtime)
             {
                 var bestMatch = context.Arrivals
                     .Where(a => !usedTripIds.Contains(a.TripId))
                     .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
-                    .Select(a =>
+                    .Select(a => new
                     {
-                        return new
-                        {
-                            Arrival = a,
-                            TimeDiff = estimate.Minutes - a.Estimate.Minutes, // RealTime - Schedule
-                            RouteMatch = true
-                        };
+                        Arrival = a,
+                        TimeDiff = estimate.Minutes - a.Estimate.Minutes, // RealTime - Schedule
+                        RouteMatch = true
                     })
                     .Where(x => x.RouteMatch) // Strict route matching
-                    .Where(x => x.TimeDiff >= -7 && x.TimeDiff <= 75) // Allow 7m early (RealTime < Schedule) or 75m late (RealTime > Schedule)
-                    .OrderBy(x => Math.Abs(x.TimeDiff)) // Best time fit
+                    .Where(x => x.TimeDiff is >= -5
+                        and <= 15) // Allow 5m early (RealTime < Schedule) or 15m late (RealTime > Schedule)
+                    .OrderBy(x => x.TimeDiff < 0 ? Math.Abs(x.TimeDiff) * 2 : x.TimeDiff) // Best time fit
                     .FirstOrDefault();
 
                 if (bestMatch == null)
@@ -81,6 +79,17 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     arrival.Delay = new DelayBadge { Minutes = delayMinutes };
                 }
+
+                // Populate vehicle information
+                var busInfo = GetBusInfoByNumber(estimate.VehicleNumber);
+                arrival.VehicleInformation = new VehicleBadge
+                {
+                    Identifier = estimate.VehicleNumber,
+                    Make = busInfo?.Make,
+                    Model = busInfo?.Model,
+                    Kind = busInfo?.Kind,
+                    Year = busInfo?.Year
+                };
 
                 // Calculate position
                 if (stopLocation != null)
@@ -106,7 +115,9 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                         if (currentPosition != null)
                         {
-                            _logger.LogInformation("Calculated position from OTP geometry for trip {TripId}: {Lat}, {Lon}", arrival.TripId, currentPosition.Latitude, currentPosition.Longitude);
+                            _logger.LogInformation(
+                                "Calculated position from OTP geometry for trip {TripId}: {Lat}, {Lon}", arrival.TripId,
+                                currentPosition.Latitude, currentPosition.Longitude);
                         }
 
                         // Populate Shape GeoJSON
@@ -149,7 +160,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                             arrival.Shape = new
                             {
                                 type = "FeatureCollection",
-                                features = features
+                                features
                             };
                         }
                     }
@@ -162,14 +173,11 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 }
 
                 usedTripIds.Add(arrival.TripId);
-
             }
-
-            context.Arrivals.AddRange(newArrivals);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching Vitrasa real-time data for stop {StopId}", context.StopId);
+            _logger.LogError(ex, "Error fetching Tranvías real-time data for stop {StopId}", context.StopId);
         }
     }
 
@@ -178,4 +186,49 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
         return a == b || a.Contains(b) || b.Contains(a);
     }
 
+    private (string Make, string Model, string Kind, string Year)? GetBusInfoByNumber(string identifier)
+    {
+        int number = int.Parse(identifier);
+
+        return number switch
+        {
+            // 2000
+            >= 326 and <= 336 => ("MB", "O405N2 Venus", "RIG", "2000"),
+            337 => ("MB", "O405G Alce", "ART", "2000"),
+            // 2002-2003
+            >= 340 and <= 344 => ("MAN", "NG313F Delfos Venus", "ART", "2002"),
+            >= 345 and <= 347 => ("MAN", "NG313F Delfos Venus", "ART", "2003"),
+            // 2004
+            >= 348 and <= 349 => ("MAN", "NG313F Delfos Venus", "ART", "2004"),
+            >= 350 and <= 355 => ("MAN", "NL263F Luxor II", "RIG", "2004"),
+            // 2005
+            >= 356 and <= 359 => ("MAN", "NL263F Luxor II", "RIG", "2005"),
+            >= 360 and <= 362 => ("MAN", "NG313F Delfos", "ART", "2005"),
+            // 2007
+            >= 363 and <= 370 => ("MAN", "NL273F Luxor II", "RIG", "2007"),
+            // 2008
+            >= 371 and <= 377 => ("MAN", "NL273F Luxor II", "RIG", "2008"),
+            // 2009
+            >= 378 and <= 387 => ("MAN", "NL273F Luxor II", "RIG", "2009"),
+            // 2012
+            >= 388 and <= 392 => ("MAN", "NL283F Ceres", "RIG", "2012"),
+            >= 393 and <= 395 => ("MAN", "NG323F Ceres", "ART", "2012"),
+            // 2013
+            >= 396 and <= 403 => ("MAN", "NL283F Ceres", "RIG", "2013"),
+            // 2014
+            >= 404 and <= 407 => ("MB", "Citaro C2", "RIG", "2014"),
+            >= 408 and <= 411 => ("MAN", "NL283F Ceres", "RIG", "2014"),
+            // 2015
+            >= 412 and <= 414 => ("MB", "Citaro C2 G", "ART", "2015"),
+            >= 415 and <= 419 => ("MB", "Citaro C2", "RIG", "2015"),
+            // 2016
+            >= 420 and <= 427 => ("MB", "Citaro C2", "RIG", "2016"),
+            // 2024
+            428 => ("MAN", "Lion's City 12 E", "RIG", "2024"),
+            // 2025
+            429 => ("MAN", "Lion's City 18", "RIG", "2025"),
+            >= 430 and <= 432 => ("MAN", "Lion's City 12", "RIG", "2025"),
+            _ => null
+        };
+    }
 }
