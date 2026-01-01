@@ -11,7 +11,7 @@
       <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="10.0.0" />
 
       <PackageVersion Include="Costasdev.VigoTransitApi" Version="0.1.0" />
-      <PackageVersion Include="Google.Protobuf" Version="3.33.1" />
+      <PackageVersion Include="Google.Protobuf" Version="3.33.2" />
       <PackageVersion Include="ProjNet" Version="2.1.0" />
 
       <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
