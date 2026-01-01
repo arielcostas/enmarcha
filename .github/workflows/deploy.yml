@@ -3,7 +3,7 @@ name: Deploy to production
 on:
   push:
     branches:
-      - main
+      - old-main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,7 +38,7 @@ jobs:
     name: Build frontend artifact
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend == 'true'
-    environment: Production
+    environment: BusUrbano Prod
     steps:
       - uses: actions/checkout@v6
         with:
@@ -72,7 +72,7 @@ jobs:
     name: Build backend artifact
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'true'
-    environment: Production
+    environment: BusUrbano Prod
     permissions:
       contents: read
     steps:
@@ -82,7 +82,7 @@ jobs:
           lfs: false
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
       - name: Build backend
         run: dotnet publish -c Release -r linux-arm64 --self-contained false src/Costasdev.Busurbano.Backend/Costasdev.Busurbano.Backend.csproj -o dist/backend
       - name: Archive Backend Artifact
@@ -97,7 +97,7 @@ jobs:
     name: Build stop report script
     needs: detect-changes
     if: needs.detect-changes.outputs.stops-script == 'true'
-    environment: Production
+    environment: BusUrbano Prod
     permissions:
       contents: read
     steps:
@@ -121,7 +121,7 @@ jobs:
        needs.build-backend.result == 'success' ||
        needs.build-stops-script.result == 'success')
     name: Deploy to production server
-    environment: Production
+    environment: BusUrbano Prod
     steps:
       - name: Download Frontend Artifact
         if: needs.detect-changes.outputs.frontend == 'true'
