@@ -166,6 +166,23 @@
   "lines": {
     "description": "Below is a list of Vigo urban bus lines with their respective routes and links to official timetables."
   },
+  "enmarcha_announcement": {
+    "title": "Busurbano is now EnMarcha",
+    "description": "Busurbano is evolving into EnMarcha. An updated version with new features, UI improvements, and designed to guide you across Galicia.",
+    "discontinuation_notice": "Notice: Busurbano will be discontinued on January 31, 2026.",
+    "features_title": "What's new?",
+    "feature_planner": "Plan your journeys across Galicia: city buses (Vigo, Coruña, and soon Santiago), rail services, and Xunta interurban buses.",
+    "feature_realtime": "Real-time arrival estimates for Vigo, A Coruña, and Santiago (currently in development).",
+    "feature_operators": "Comprehensive transit data from multiple operators in a single app.",
+    "feature_ui": "A modern, fast, and polished interface built for your daily commute.",
+    "feature_more": "Exciting new features are already on the way.",
+    "link_text": "Try EnMarcha now",
+    "install_title": "How to install the app",
+    "android_chrome": "In Chrome (Android): Tap ⋮ and select \"Install app\".",
+    "android_firefox": "In Firefox (Android): Tap ⋮ and select \"Install\".",
+    "ios_safari": "In Safari (iOS): Tap the share button ⎋ and select \"Add to Home Screen\".",
+    "close": "Stay on Busurbano"
+  },
   "stop_help": {
     "title": "Estimates guide",
     "realtime_ok": "Reliable real-time",

@@ -166,6 +166,23 @@
   "lines": {
     "description": "A continuación se muestra una lista de las líneas de autobús urbano de Vigo con sus respectivas rutas y enlaces a los horarios oficiales."
   },
+  "enmarcha_announcement": {
+    "title": "Busurbano ahora es EnMarcha",
+    "description": "Busurbano evoluciona para convertirse en EnMarcha. Una versión actualizada con nuevas funciones, mejoras en la interfaz y diseñada para acompañarte en tus viajes por Galicia.",
+    "discontinuation_notice": "Aviso: Busurbano dejará de estar disponible el 31 de enero de 2026.",
+    "features_title": "¿Qué hay de nuevo?",
+    "feature_planner": "Planifica tus rutas por toda Galicia: buses urbanos (Vigo, Coruña y pronto Santiago), trenes y buses interurbanos de la Xunta.",
+    "feature_realtime": "Tiempos de llegada en tiempo real para Vigo, A Coruña y Santiago (en fase beta).",
+    "feature_operators": "Toda la información de transporte de múltiples operadores en un solo lugar.",
+    "feature_ui": "Una interfaz moderna, rápida y optimizada para tu día a día.",
+    "feature_more": "Nuevas funcionalidades en camino para mejorar tu movilidad.",
+    "link_text": "Probar EnMarcha ahora",
+    "install_title": "Cómo instalar la aplicación",
+    "android_chrome": "En Chrome (Android): Pulsa ⋮ y selecciona \"Instalar aplicación\".",
+    "android_firefox": "En Firefox (Android): Pulsa ⋮ y selecciona \"Instalar\".",
+    "ios_safari": "En Safari (iOS): Pulsa el botón compartir ⎋ y selecciona \"Añadir a la pantalla de inicio\".",
+    "close": "Seguir en Busurbano"
+  },
   "stop_help": {
     "title": "Guía de estimaciones",
     "realtime_ok": "Tiempo real fiable",

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router";
+import { useEnMarchaAnnouncement } from "~/hooks/useEnMarchaAnnouncement";
 import {
   PageTitleProvider,
   usePageTitleContext,
 } from "~/contexts/PageTitleContext";
+import { EnMarchaAnnouncement } from "../EnMarchaAnnouncement";
 import { ThemeColorManager } from "../ThemeColorManager";
 import "./AppShell.css";
 import { Drawer } from "./Drawer";
@@ -13,6 +15,7 @@ import NavBar from "./NavBar";
 const AppShellContent: React.FC = () => {
   const { title } = usePageTitleContext();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { isOpen, closeAnnouncement } = useEnMarchaAnnouncement();
 
   return (
     <div className="app-shell">
@@ -31,6 +34,8 @@ const AppShellContent: React.FC = () => {
       <footer className="app-shell__bottom-nav">
         <NavBar />
       </footer>
+
+      <EnMarchaAnnouncement isOpen={isOpen} onClose={closeAnnouncement} />
     </div>
   );
 };
