@@ -92,34 +92,14 @@ jobs:
           path: dist/backend
           retention-days: 7
 
-  build-stops-script:
-    runs-on: ubuntu-latest
-    name: Build stop report script
-    needs: detect-changes
-    if: needs.detect-changes.outputs.stops-script == 'true'
-    environment: EnMarcha Prod
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-          lfs: false
-      - name: Archive Stop Report Script Artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: stop_report
-          path: src/gtfs_perstop_report/
-
   deploy:
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-frontend, build-backend, build-stops-script]
+    needs: [detect-changes, build-frontend, build-backend]
     if: |
       always() &&
       needs.detect-changes.result == 'success' &&
       (needs.build-frontend.result == 'success' ||
-       needs.build-backend.result == 'success' ||
-       needs.build-stops-script.result == 'success')
+       needs.build-backend.result == 'success')
     name: Deploy to production server
     environment: EnMarcha Prod
     steps:
@@ -135,12 +115,6 @@ jobs:
         with:
           name: backend
           path: dist/backend
-      - name: Download Stop Report Script Artifact
-        if: needs.detect-changes.outputs.stops-script == 'true'
-        uses: actions/download-artifact@v6
-        with:
-          name: stop_report
-          path: dist/gtfs_perstop_report
       - name: Connect to tailnet
         uses: tailscale/github-action@v4
         with:
@@ -163,7 +137,7 @@ jobs:
       - name: Deploy frontend
         if: needs.detect-changes.outputs.frontend == 'true'
         run: |
-          scp -r dist/frontend/* ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:${{ secrets.TARGET_PATH }}/
+          scp -r dist/frontend/* ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/var/www/enmarcha/
 
       - name: Stop service
         if: needs.detect-changes.outputs.backend == 'true'
@@ -180,9 +154,3 @@ jobs:
       - name: Start service
         if: needs.detect-changes.outputs.backend == 'true'
         run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "echo ${{ secrets.TARGET_PASSWORD }} | sudo -S /usr/bin/systemctl start enmarcha"
-
-      - name: Deploy stop report script
-        if: needs.detect-changes.outputs.stops-script == 'true'
-        run: |
-          scp -r dist/gtfs_perstop_report/* ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/opt/gtfs_vigo_stops/
-          ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "/opt/gtfs_vigo_stops/force-update.sh"

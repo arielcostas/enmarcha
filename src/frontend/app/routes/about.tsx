@@ -114,7 +114,7 @@ export default function About() {
           <p className="flex flex-wrap items-center gap-1">
             <span className="opacity-80">{t("about.open_source")}</span>
             <a
-              href="https://github.com/arielcostas/busurbano"
+              href="https://github.com/arielcostas/enmarcha"
               className="text-blue-600 dark:text-blue-400 hover:underline hover:brightness-110 transition-all font-medium inline-flex items-center gap-1"
               rel="nofollow noreferrer noopener"
               target="_blank"

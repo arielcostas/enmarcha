@@ -1,9 +1,8 @@
-const CACHE_VERSION = "20251122a";
+const CACHE_VERSION = "20260101a";
 const STATIC_CACHE_NAME = `static-cache-${CACHE_VERSION}`;
 const STATIC_CACHE_ASSETS = ["/favicon.ico", "/logo-256.png", "/logo-512.jpg"];
 
-const EXPR_CACHE_AFTER_FIRST_VIEW =
-  /(\/assets\/.*)|(\/api\/(vigo)\/GetStopTimetable.*)/;
+const EXPR_CACHE_AFTER_FIRST_VIEW = /(\/assets\/.*)/;
 
 const ESTIMATES_MIN_AGE = 15 * 1000;
 const ESTIMATES_MAX_AGE = 30 * 1000;
