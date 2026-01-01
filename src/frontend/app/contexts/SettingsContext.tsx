@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { APP_CONFIG } from "../config/appConfig";
+import { APP_CONFIG } from "../config/AppConfig";
 
 export type Theme = "light" | "dark" | "system";
 export type MapPositionMode = "gps" | "last";
