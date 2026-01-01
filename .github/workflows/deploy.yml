@@ -61,7 +61,7 @@ jobs:
           mkdir -p dist/frontend
           cp -R src/frontend/build/client/. dist/frontend/
       - name: Archive Production Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: production
           path: dist
@@ -86,7 +86,7 @@ jobs:
       - name: Build backend
         run: dotnet publish -c Release -r linux-arm64 --self-contained false src/Costasdev.Busurbano.Backend/Costasdev.Busurbano.Backend.csproj -o dist/backend
       - name: Archive Backend Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: backend
           path: dist/backend
@@ -106,7 +106,7 @@ jobs:
           submodules: true
           lfs: false
       - name: Archive Stop Report Script Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: stop_report
           path: src/gtfs_perstop_report/
@@ -125,19 +125,19 @@ jobs:
     steps:
       - name: Download Frontend Artifact
         if: needs.detect-changes.outputs.frontend == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: production
           path: dist
       - name: Download Backend Artifact
         if: needs.detect-changes.outputs.backend == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: backend
           path: dist/backend
       - name: Download Stop Report Script Artifact
         if: needs.detect-changes.outputs.stops-script == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: stop_report
           path: dist/gtfs_perstop_report
