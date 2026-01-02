@@ -1,5 +1,4 @@
 using Enmarcha.Backend.Types;
-using static Enmarcha.Backend.Types.StopArrivals.Types;
 
 namespace Enmarcha.Backend.Extensions;
 

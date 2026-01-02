@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Enmarcha.Sources.OpenTripPlannerGql;
 using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Backend.Configuration;
@@ -85,11 +85,6 @@ public partial class ArrivalsController : ControllerBase
             if (item.Trip.ArrivalStoptime.Stop.GtfsId == id)
             {
                 continue;
-            }
-
-            if (item.Trip.Geometry?.Points != null)
-            {
-                _logger.LogDebug("Trip {TripId} has geometry", item.Trip.GtfsId);
             }
 
             // Calculate departure time using the service day in the feed's timezone (Europe/Madrid)

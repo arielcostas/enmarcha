@@ -38,7 +38,6 @@ export const usePageTitle = (title: string) => {
     setTitle(title);
     document.title = `${title} - EnMarcha`;
 
-    return () => {
-    };
+    return () => {};
   }, [title, setTitle]);
 };

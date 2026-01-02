@@ -1,6 +1,6 @@
 using Enmarcha.Backend.Types.Planner;
 
-namespace Enmarcha.Backend.Services;
+namespace Enmarcha.Backend.Services.Geocoding;
 
 public interface IGeocodingService
 {

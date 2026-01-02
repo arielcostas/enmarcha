@@ -62,7 +62,6 @@ public class TransitController : ControllerBase
 
             var routes = response.Data.Routes
                 .Select(_otpService.MapRoute)
-                .Where(r => r.TripCount > 0)
                 .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
                 .ToList();
 

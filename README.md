@@ -1,28 +1,30 @@
-# Busurbano
+# EnMarcha
 
-Busurbano is a web application designed to help users find bus stops and arrival times for urban buses in Vigo, Spain.
+EnMarcha (formerly known as Busurbano) is a progressive web application designed to help users find public transit information in Galicia, Spain.
 
 ## Features
 
-- **Bus Stop List**: View a list of all bus stops, search for specific stops, and mark your favourite stops.
-- **Real-time Bus Arrival Estimates**: Get real-time estimates for bus arrivals at various stops.
-- **Interactive Map**: View bus stops on an interactive map.
-- **Settings**: Customize the theme (light/dark mode) and table style (regular/grouped).
+- **Multi-Modal Support**: Currently supports bus transit in Vigo, A Coruña and (WIP) Santiago de Compostela, with plans to map all of Galicia's public transit systems. Also includes support for Xunta de Galicia's intercity bus services and Renfe's trains.
+- **Real-time data**: Integrates and consolidates real-time data from agencies that provide it: Vitrasa (Vigo), Tranvías de A Coruña (A Coruña) and TUSSA (Santiago de Compostela).
+- **Route planning**: Plan routes between two locations using public transit, walking, and cycling.
+- **Interactive Map**: View bus stops on an interactive map with real-time arrival information.
+- **No ads, no politics, no tracking**: A clean, user-focused experience with all the public information available. No ads (unlike certain foreign third-party app), no tracking, and no political agendas.
+- **Open Source**: The entire codebase is open source and available on GitHub.
 
-## Technologies Used
+## Technology stack
 
-- **Frontend**: React 19, react-router, TypeScript, Vite
-- **Backend**:
-  - ASP.NET Core 9 Web API
-  - [Costasdev.VigoTransitApi](https://github.com/arielcostas/VigoTransitApi)
+- **Frontend**: React, TypeScript, Vite
+- **Styling**: Tailwind CSS
+- **Backend**: ASP.NET Core 9 Web API
+- **Routing and Transit Data API**: [OpenTripPlanner](https://opentripplanner.org)
 - **Mapping**:
   - [MapLibre GL JS](https://maplibre.org)
-  - OpenStreetMap
-  - [OpenFreeMap tiles](https://openfreemap.org)
-- **Styling**: Good old CSS
-- **Fonts**: [Roboto Variable](https://fonts.google.com/specimen/Roboto) via [@fontsource](https://fontsource.org/fonts/roboto)
+  - OpenStreetMap via [OpenFreeMap tiles](https://openfreemap.org)
+  - Custom tile layers with the app's information (generated on the fly as MVTs)
 
 ## Getting Started
+
+TODO: Update instructions
 
 ### Prerequisites
 
@@ -31,13 +33,11 @@ Busurbano is a web application designed to help users find bus stops and arrival
 
 ### Installation
 
-TODO: Update instructions
-
 1. Clone the repository:
 
    ```sh
-   git clone https://github.com/arielcostas/busurbano.git
-   cd busurbano
+   git clone https://github.com/arielcostas/enmarcha.git
+   cd enmarcha
    ```
 
 2. Install dependencies:
@@ -56,50 +56,6 @@ TODO: Update instructions
     ```
 
 2. Open your browser and navigate to `http://localhost:5173`.
-
-## Code Formatting and Linting
-
-This project uses automated formatting and linting tools to ensure code consistency.
-
-### Frontend (TypeScript/JavaScript)
-
-- **Prettier**: Code formatting
-- **ESLint**: Code linting
-
-```sh
-cd src/frontend
-npm run format        # Auto-format all files
-npm run checkformat   # Check formatting without making changes
-npm run lint          # Run ESLint
-npm run lint:fix      # Auto-fix ESLint issues
-```
-
-### Python
-
-- **Ruff**: Formatting and linting (configured in `pyproject.toml`)
-
-```sh
-cd src/gtfs_perstop_report
-ruff format .         # Format Python files
-ruff check .          # Check for linting issues
-```
-
-### C #
-
-- **EditorConfig**: Formatting rules (configured in `.editorconfig`)
-- Format on save is enabled in VSCode
-
-### VSCode Setup
-
-When you open this project in VSCode, you'll be prompted to install recommended extensions. These include:
-
-- Prettier
-- ESLint
-- Ruff
-- C# Dev Kit
-- EditorConfig
-
-The project is configured to auto-format on save.
 
 ## Contributing
 

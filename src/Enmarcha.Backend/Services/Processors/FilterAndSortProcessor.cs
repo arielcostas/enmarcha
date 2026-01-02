@@ -1,5 +1,3 @@
-using Enmarcha.Backend.Types.Arrivals;
-
 namespace Enmarcha.Backend.Services.Processors;
 
 /// <summary>

@@ -3,6 +3,7 @@ using Enmarcha.Sources.OpenTripPlannerGql;
 using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Backend.Configuration;
 using Enmarcha.Backend.Services;
+using Enmarcha.Backend.Services.Geocoding;
 using Enmarcha.Backend.Types.Planner;
 using FuzzySharp;
 using Microsoft.AspNetCore.Mvc;
@@ -57,7 +58,7 @@ public partial class RoutePlannerController : ControllerBase
 
         await Task.WhenAll(nominatimTask, stopsTask);
 
-        var nominatimResults = await nominatimTask;
+        var geocodingResults = await nominatimTask;
         var allStops = await stopsTask;
 
         // Fuzzy search stops
@@ -65,14 +66,14 @@ public partial class RoutePlannerController : ControllerBase
             query,
             allStops.Select(s => s.Name ?? string.Empty),
             cutoff: 60
-        ).Take(5).Select(r => allStops[r.Index]).ToList();
+        ).Take(4).Select(r => allStops[r.Index]).ToList();
 
-        // Merge results: stops first, then nominatim, deduplicating by coordinates (approx)
-        var finalResults = new List<PlannerSearchResult>(fuzzyResults);
+        // Merge results: geocoding first, then stops, deduplicating by coordinates (approx)
+        var finalResults = new List<PlannerSearchResult>(geocodingResults);
 
-        foreach (var res in nominatimResults)
+        foreach (var res in fuzzyResults)
         {
-            if (!finalResults.Any(f => Math.Abs(f.Lat - res.Lat) < 0.0001 && Math.Abs(f.Lon - res.Lon) < 0.0001))
+            if (!finalResults.Any(f => Math.Abs(f.Lat - res.Lat) < 0.00001 && Math.Abs(f.Lon - res.Lon) < 0.00001))
             {
                 finalResults.Add(res);
             }

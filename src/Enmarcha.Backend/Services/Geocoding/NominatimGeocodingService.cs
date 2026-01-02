@@ -5,7 +5,7 @@ using Enmarcha.Backend.Types.Planner;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
-namespace Enmarcha.Backend.Services;
+namespace Enmarcha.Backend.Services.Geocoding;
 
 public class NominatimGeocodingService : IGeocodingService
 {
@@ -26,7 +26,7 @@ public class NominatimGeocodingService : IGeocodingService
         // Nominatim requires a User-Agent
         if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
         {
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Compatible; Enmarcha/0.1; https://enmarcha.app)");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Compatible; Enmarcha/0.1; https://enmarcha.app; ariel@costas.dev)");
         }
     }
 

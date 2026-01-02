@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Enmarcha.Backend.Types;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Enmarcha.Backend.Types.Arrivals;
 

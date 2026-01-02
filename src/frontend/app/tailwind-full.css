@@ -16,16 +16,52 @@
   --color-accent: var(--button-background-color);
 
   /* Generated-like palette using color-mix for flexibility */
-  --color-primary-50: color-mix(in oklab, var(--button-background-color) 5%, white);
-  --color-primary-100: color-mix(in oklab, var(--button-background-color) 10%, white);
-  --color-primary-200: color-mix(in oklab, var(--button-background-color) 20%, white);
-  --color-primary-300: color-mix(in oklab, var(--button-background-color) 40%, white);
-  --color-primary-400: color-mix(in oklab, var(--button-background-color) 60%, white);
+  --color-primary-50: color-mix(
+    in oklab,
+    var(--button-background-color) 5%,
+    white
+  );
+  --color-primary-100: color-mix(
+    in oklab,
+    var(--button-background-color) 10%,
+    white
+  );
+  --color-primary-200: color-mix(
+    in oklab,
+    var(--button-background-color) 20%,
+    white
+  );
+  --color-primary-300: color-mix(
+    in oklab,
+    var(--button-background-color) 40%,
+    white
+  );
+  --color-primary-400: color-mix(
+    in oklab,
+    var(--button-background-color) 60%,
+    white
+  );
   --color-primary-500: var(--button-background-color);
-  --color-primary-600: color-mix(in oklab, var(--button-background-color) 80%, black);
-  --color-primary-700: color-mix(in oklab, var(--button-background-color) 60%, black);
-  --color-primary-800: color-mix(in oklab, var(--button-background-color) 40%, black);
-  --color-primary-900: color-mix(in oklab, var(--button-background-color) 20%, black);
+  --color-primary-600: color-mix(
+    in oklab,
+    var(--button-background-color) 80%,
+    black
+  );
+  --color-primary-700: color-mix(
+    in oklab,
+    var(--button-background-color) 60%,
+    black
+  );
+  --color-primary-800: color-mix(
+    in oklab,
+    var(--button-background-color) 40%,
+    black
+  );
+  --color-primary-900: color-mix(
+    in oklab,
+    var(--button-background-color) 20%,
+    black
+  );
 }
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));

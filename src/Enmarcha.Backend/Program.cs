@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 using Enmarcha.Backend.Configuration;
 using Enmarcha.Backend.Services;
+using Enmarcha.Backend.Services.Geocoding;
 using Enmarcha.Backend.Services.Processors;
 using Enmarcha.Backend.Services.Providers;
-using Enmarcha.Sources.TranviasCoruna;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,10 +37,9 @@ builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, FeedConfigProcessor>();
 builder.Services.AddScoped<ArrivalsPipeline>();
 
-builder.Services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();
+// builder.Services.AddKeyedScoped<IGeocodingService, NominatimGeocodingService>("Nominatim");
+builder.Services.AddHttpClient<IGeocodingService, GeoapifyGeocodingService>();
 builder.Services.AddHttpClient<OtpService>();
-builder.Services.AddScoped<VitrasaTransitProvider>();
-builder.Services.AddScoped<RenfeTransitProvider>();
 
 var app = builder.Build();
 

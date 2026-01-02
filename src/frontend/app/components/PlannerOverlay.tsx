@@ -147,24 +147,8 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
 
   const sortedRemoteResults = useMemo(() => {
     const order: Record<string, number> = { venue: 0, address: 1, street: 2 };
-    const q = pickerQuery.trim().toLowerCase();
-    const base = q
-      ? remoteResults.filter(
-          (s) =>
-            (s.name || "").toLowerCase().includes(q) ||
-            (s.label || "").toLowerCase().includes(q)
-        )
-      : remoteResults;
-    return [...base].sort((a, b) => {
-      const oa = order[a.layer || ""] ?? 99;
-      const ob = order[b.layer || ""] ?? 99;
-      if (oa !== ob) return oa - ob;
-      // Secondary: shorter label first, then name alpha
-      const la = (a.label || "").length;
-      const lb = (b.label || "").length;
-      if (la !== lb) return la - lb;
-      return (a.name || "").localeCompare(b.name || "");
-    });
+
+    return remoteResults;
   }, [remoteResults, pickerQuery]);
 
   const openPicker = (field: PickerField) => {
@@ -251,7 +235,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
           console.error("[PlannerOverlay] Geolocation error:", err);
           setLocationLoading(false);
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
       );
     },
     [setOrigin, t]
@@ -282,7 +266,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
       } finally {
         if (!cancelled) setRemoteLoading(false);
       }
-    }, 250);
+    }, 400);
 
     return () => {
       cancelled = true;
@@ -564,7 +548,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   <button
                     type="button"
                     className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors duration-200"
-                    onClick={setOriginFromCurrentLocation}
+                    onClick={() => setOriginFromCurrentLocation}
                     disabled={locationLoading}
                   >
                     <div className="flex items-center gap-2">

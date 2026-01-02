@@ -1,12 +1,7 @@
 import type { LngLatLike } from "maplibre-gl";
 
-export type RegionId = "vigo";
-
 export const APP_CONSTANTS = {
   id: "vigo",
-
-  consolidatedCirculationsEndpoint: "/api/vigo/GetConsolidatedCirculations",
-  shapeEndpoint: "/api/vigo/GetShape",
   defaultCenter: {
     lat: 42.229188855975046,
     lng: -8.72246955783102,

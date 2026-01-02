@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   dev-backend:
@@ -10,12 +10,6 @@ tasks:
     desc: Run frontend development server.
     cmds:
       - npm run dev --prefix src/frontend
-
-  build-proto:
-    desc: Generates the protobuf bindings for C# and Python
-    cmds:
-      - protoc --python_out=./src/gtfs_perstop_report/src/proto --pyi_out=./src/gtfs_perstop_report/src/proto --proto_path=./src/common ./src/common/stop_schedule.proto
-      - protoc --csharp_out=./src/Enmarcha.Backend/Types/ --proto_path=./src/common ./src/common/stop_schedule.proto
 
   build-backend:
     desc: Publish backend in Release mode.
@@ -39,15 +33,3 @@ tasks:
     cmds:
       - dotnet format --verbosity diagnostic src/Enmarcha.Backend/Enmarcha.Backend.csproj
       - npx prettier --write "src/frontend/**/*.{ts,tsx,css}"
-      - uvx ruff format ./src/gtfs_perstop_report ./src/stop_downloader
-
-  gen-stop-report:
-    desc: Generate stop-based JSON reports for specified dates or date ranges.
-    cmds:
-      - uv --directory ./src/gtfs_perstop_report run ./stop_report.py --output-dir ./output/vitrasa --feed-url https://datos.vigo.org/data/transporte/gtfs_vigo.zip --force --provider vitrasa
-      - uv --directory ./src/gtfs_perstop_report run ./stop_report.py --output-dir ./output/renfe --feed-url https://ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip --force --provider renfe
-
-  gen-stop-json:
-    desc: Generate stop-based JSON files for specified dates or date ranges.
-    cmds:
-      - uv --directory ./src/stop_downloader/vigo run ./download-stops.py

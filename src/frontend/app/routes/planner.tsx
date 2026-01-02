@@ -312,14 +312,14 @@ const ItineraryDetail = ({
           const stopKey = leg.from.name || leg.from.stopId;
           if (!arrivalsByStop[stopKey]) {
             try {
+              //TODO: Allow multiple stops one request
               const resp = await fetch(
-                `${APP_CONSTANTS.consolidatedCirculationsEndpoint}?stopId=${encodeURIComponent(leg.from.stopCode || leg.from.stopId)}`,
+                `/api/stops/arrivals?id=${encodeURIComponent(leg.from.stopId)}`,
                 { headers: { Accept: "application/json" } }
               );
 
               if (resp.ok) {
-                const data: ConsolidatedCirculation[] = await resp.json();
-                arrivalsByStop[stopKey] = data;
+                arrivalsByStop[stopKey] = await resp.json() satisfies ConsolidatedCirculation[];
               }
             } catch (err) {
               console.warn(
@@ -574,8 +574,8 @@ const ItineraryDetail = ({
                             linesToShow.push(previousLine);
                           }
 
-                          return nextArrivals[leg.from.name || leg.from.stopId]
-                            .filter((circ) => linesToShow.includes(circ.line))
+                          return nextArrivals[leg.from.stopId]
+                            ?.filter((circ) => linesToShow.includes(circ.line))
                             .slice(0, 3)
                             .map((circ, idx) => {
                               const minutes =
