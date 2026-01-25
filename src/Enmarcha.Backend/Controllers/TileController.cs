@@ -43,12 +43,19 @@ public class TileController : ControllerBase
     [HttpGet("stops/{z:int}/{x:int}/{y:int}")]
     public async Task<IActionResult> Stops(int z, int x, int y)
     {
+        using var activity = Telemetry.Source.StartActivity("GenerateStopsTile");
+        activity?.SetTag("tile.z", z);
+        activity?.SetTag("tile.x", x);
+        activity?.SetTag("tile.y", y);
+
         if (z is < 9 or > 20)
         {
             return BadRequest("Zoom level out of range (9-20)");
         }
 
         var cacheHit = _cache.TryGetValue($"stops-tile-{z}-{x}-{y}", out byte[]? cachedTile);
+        activity?.SetTag("cache.hit", cacheHit);
+
         if (cacheHit && cachedTile != null)
         {
             Response.Headers.Append("X-Cache-Hit", "true");
@@ -78,6 +85,7 @@ public class TileController : ControllerBase
 
         if (responseBody is not { IsSuccess: true })
         {
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, "Error fetching stop data from OTP");
             _logger.LogError(
                 "Error fetching stop data, received {StatusCode} {ResponseBody}",
                 response.StatusCode,

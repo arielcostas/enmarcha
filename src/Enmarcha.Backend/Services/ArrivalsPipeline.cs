@@ -53,8 +53,10 @@ public class ArrivalsPipeline
     /// </summary>
     public async Task ExecuteAsync(ArrivalsContext context)
     {
+        using var activity = Telemetry.Source.StartActivity("ArrivalsPipeline");
         foreach (var processor in _processors)
         {
+            using var processorActivity = Telemetry.Source.StartActivity($"Processor:{processor.GetType().Name}");
             await processor.ProcessAsync(context);
         }
     }

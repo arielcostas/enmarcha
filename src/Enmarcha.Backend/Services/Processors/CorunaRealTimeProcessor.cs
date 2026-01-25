@@ -13,12 +13,12 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
     private readonly ShapeTraversalService _shapeService;
 
     public CorunaRealTimeProcessor(
-        HttpClient http,
+        CorunaRealtimeEstimatesProvider realtime,
         FeedService feedService,
         ILogger<CorunaRealTimeProcessor> logger,
         ShapeTraversalService shapeService)
     {
-        _realtime = new CorunaRealtimeEstimatesProvider(http);
+        _realtime = realtime;
         _feedService = feedService;
         _logger = logger;
         _shapeService = shapeService;
@@ -41,6 +41,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
             }
 
             var realtime = await _realtime.GetEstimatesForStop(numericStopId);
+            System.Diagnostics.Activity.Current?.SetTag("realtime.count", realtime.Count);
 
             var usedTripIds = new HashSet<string>();
 

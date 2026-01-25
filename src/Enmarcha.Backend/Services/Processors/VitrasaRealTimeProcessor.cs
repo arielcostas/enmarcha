@@ -16,13 +16,13 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
     private readonly AppConfiguration _configuration;
 
     public VitrasaRealTimeProcessor(
-        HttpClient http,
+        VigoTransitApiClient api,
         FeedService feedService,
         ILogger<VitrasaRealTimeProcessor> logger,
         ShapeTraversalService shapeService,
         IOptions<AppConfiguration> options)
     {
-        _api = new VigoTransitApiClient(http);
+        _api = api;
         _feedService = feedService;
         _logger = logger;
         _shapeService = shapeService;
@@ -51,6 +51,8 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
             var estimates = realtime.Estimates
                 .Where(e => !string.IsNullOrWhiteSpace(e.Route) && !e.Route.Trim().EndsWith('*'))
                 .ToList();
+
+            System.Diagnostics.Activity.Current?.SetTag("realtime.count", estimates.Count);
 
             var usedTripIds = new HashSet<string>();
             var newArrivals = new List<Arrival>();

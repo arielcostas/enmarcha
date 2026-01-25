@@ -32,13 +32,19 @@ public class GeoapifyGeocodingService : IGeocodingService
 
     public async Task<List<PlannerSearchResult>> GetAutocompleteAsync(string query)
     {
+        using var activity = Telemetry.Source.StartActivity("GeoapifyAutocomplete");
+        activity?.SetTag("query", query);
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return [];
         }
 
         var cacheKey = $"nominatim_autocomplete_{query.ToLowerInvariant()}";
-        if (_cache.TryGetValue(cacheKey, out List<PlannerSearchResult>? cachedResults) && cachedResults != null)
+        var cacheHit = _cache.TryGetValue(cacheKey, out List<PlannerSearchResult>? cachedResults);
+        activity?.SetTag("cache.hit", cacheHit);
+
+        if (cacheHit && cachedResults != null)
         {
             return cachedResults;
         }
@@ -55,11 +61,13 @@ public class GeoapifyGeocodingService : IGeocodingService
                 .Select(MapToPlannerSearchResult)
                 .ToList() ?? [];
 
+            activity?.SetTag("results.count", results.Count);
             _cache.Set(cacheKey, results, TimeSpan.FromMinutes(60));
             return results;
         }
         catch (Exception ex)
         {
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, ex.Message);
             _logger.LogError(ex, "Error fetching Geoapify autocomplete results from {Url}", url);
             return new List<PlannerSearchResult>();
         }
@@ -67,8 +75,15 @@ public class GeoapifyGeocodingService : IGeocodingService
 
     public async Task<PlannerSearchResult?> GetReverseGeocodeAsync(double lat, double lon)
     {
+        using var activity = Telemetry.Source.StartActivity("GeoapifyReverseGeocode");
+        activity?.SetTag("lat", lat);
+        activity?.SetTag("lon", lon);
+
         var cacheKey = $"nominatim_reverse_{lat:F5}_{lon:F5}";
-        if (_cache.TryGetValue(cacheKey, out PlannerSearchResult? cachedResult) && cachedResult != null)
+        var cacheHit = _cache.TryGetValue(cacheKey, out PlannerSearchResult? cachedResult);
+        activity?.SetTag("cache.hit", cacheHit);
+
+        if (cacheHit && cachedResult != null)
         {
             return cachedResult;
         }
@@ -88,6 +103,7 @@ public class GeoapifyGeocodingService : IGeocodingService
         }
         catch (Exception ex)
         {
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, ex.Message);
             _logger.LogError(ex, "Error fetching Geoapify reverse geocode results from {Url}", url);
             return null;
         }

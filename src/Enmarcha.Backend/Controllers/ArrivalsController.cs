@@ -46,6 +46,10 @@ public partial class ArrivalsController : ControllerBase
         [FromQuery] bool reduced
     )
     {
+        using var activity = Telemetry.Source.StartActivity("GetArrivals");
+        activity?.SetTag("stop.id", id);
+        activity?.SetTag("reduced", reduced);
+
         var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
         var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
         var todayLocal = nowLocal.Date;
@@ -65,12 +69,14 @@ public partial class ArrivalsController : ControllerBase
 
         if (responseBody is not { IsSuccess: true } || responseBody.Data?.Stop == null)
         {
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, "Error fetching stop data from OTP");
             LogErrorFetchingStopData(response.StatusCode, await response.Content.ReadAsStringAsync());
             return StatusCode(500, "Error fetching stop data");
         }
 
         var stop = responseBody.Data.Stop;
         _logger.LogInformation("Fetched {Count} arrivals for stop {StopName} ({StopId})", stop.Arrivals.Count, stop.Name, id);
+        activity?.SetTag("arrivals.count", stop.Arrivals.Count);
 
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)

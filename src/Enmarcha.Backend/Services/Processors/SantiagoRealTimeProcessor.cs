@@ -12,11 +12,11 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
     private readonly ILogger<SantiagoRealTimeProcessor> _logger;
 
     public SantiagoRealTimeProcessor(
-        HttpClient http,
+        SantiagoRealtimeEstimatesProvider realtime,
         FeedService feedService,
         ILogger<SantiagoRealTimeProcessor> logger)
     {
-        _realtime = new SantiagoRealtimeEstimatesProvider(http);
+        _realtime = realtime;
         _feedService = feedService;
         _logger = logger;
     }
@@ -31,6 +31,7 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
         try
         {
             var realtime = await _realtime.GetEstimatesForStop(numericStopId);
+            System.Diagnostics.Activity.Current?.SetTag("realtime.count", realtime.Count);
 
             var usedTripIds = new HashSet<string>();
 
@@ -46,7 +47,7 @@ public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
                         RouteMatch = true
                     })
                     .Where(x => x.RouteMatch) // Strict route matching
-                    .Where(x => x.TimeDiff is >= -5 and <= 25) // Allow 2m early (RealTime < Schedule) or 25m late (RealTime > Schedule)
+                    .Where(x => x.TimeDiff is >= -5 and <= 35) // Allow 2m early (RealTime < Schedule) or 25m late (RealTime > Schedule)
                     .OrderBy(x => Math.Abs(x.TimeDiff)) // Best time fit
                     .FirstOrDefault();
 

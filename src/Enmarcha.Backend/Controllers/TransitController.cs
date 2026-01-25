@@ -38,14 +38,19 @@ public class TransitController : ControllerBase
     [HttpGet("routes")]
     public async Task<ActionResult<List<RouteDto>>> GetRoutes([FromQuery] string[] feeds)
     {
+        using var activity = Telemetry.Source.StartActivity("GetRoutes");
         if (feeds.Length == 0)
         {
             feeds = ["tussa", "vitrasa", "tranvias", "feve"];
         }
+        activity?.SetTag("feeds", string.Join(",", feeds));
 
         var serviceDate = DateTime.Now.ToString("yyyy-MM-dd");
         var cacheKey = $"routes_{string.Join("_", feeds)}_{serviceDate}";
-        if (_cache.TryGetValue(cacheKey, out List<RouteDto>? cachedRoutes))
+        var cacheHit = _cache.TryGetValue(cacheKey, out List<RouteDto>? cachedRoutes);
+        activity?.SetTag("cache.hit", cacheHit);
+
+        if (cacheHit && cachedRoutes != null)
         {
             return Ok(cachedRoutes);
         }
@@ -71,6 +76,7 @@ public class TransitController : ControllerBase
         }
         catch (Exception e)
         {
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, e.Message);
             _logger.LogError(e, "Error fetching routes");
             return StatusCode(500, "An error occurred while fetching routes.");
         }
@@ -79,10 +85,16 @@ public class TransitController : ControllerBase
     [HttpGet("routes/{id}")]
     public async Task<ActionResult<RouteDetailsDto>> GetRouteDetails(string id)
     {
+        using var activity = Telemetry.Source.StartActivity("GetRouteDetails");
+        activity?.SetTag("route.id", id);
+
         var serviceDate = DateTime.Now.ToString("yyyy-MM-dd");
         var cacheKey = $"route_details_{id}_{serviceDate}";
 
-        if (_cache.TryGetValue(cacheKey, out RouteDetailsDto? cachedDetails))
+        var cacheHit = _cache.TryGetValue(cacheKey, out RouteDetailsDto? cachedDetails);
+        activity?.SetTag("cache.hit", cacheHit);
+
+        if (cacheHit && cachedDetails != null)
         {
             return Ok(cachedDetails);
         }
@@ -104,7 +116,7 @@ public class TransitController : ControllerBase
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Error fetching route details for {Id}", id);
+            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, e.Message); _logger.LogError(e, "Error fetching route details for {Id}", id);
             return StatusCode(500, "An error occurred while fetching route details.");
         }
     }
