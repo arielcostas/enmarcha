@@ -6,6 +6,7 @@ using Enmarcha.Backend.Helpers;
 using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
+using FuzzySharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -22,6 +23,7 @@ public partial class ArrivalsController : ControllerBase
     private readonly ArrivalsPipeline _pipeline;
     private readonly FeedService _feedService;
     private readonly AppConfiguration _config;
+    private readonly OtpService _otpService;
 
     public ArrivalsController(
         ILogger<ArrivalsController> logger,
@@ -29,7 +31,8 @@ public partial class ArrivalsController : ControllerBase
         HttpClient httpClient,
         ArrivalsPipeline pipeline,
         FeedService feedService,
-        IOptions<AppConfiguration> configOptions
+        IOptions<AppConfiguration> configOptions,
+        OtpService otpService
     )
     {
         _logger = logger;
@@ -38,6 +41,7 @@ public partial class ArrivalsController : ControllerBase
         _pipeline = pipeline;
         _feedService = feedService;
         _config = configOptions.Value;
+        _otpService = otpService;
     }
 
     [HttpGet("arrivals")]
@@ -239,10 +243,72 @@ public partial class ArrivalsController : ControllerBase
     }
 
     [HttpGet("search")]
-    public IActionResult SearchStops([FromQuery] string q)
+    public async Task<IActionResult> SearchStops([FromQuery] string q)
     {
-        // Placeholder for future implementation with Postgres and fuzzy searching
-        return Ok(new List<object>());
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            return Ok(new List<object>());
+        }
+
+        const string cacheKey = "arrivals_search_mapped_stops";
+        if (!_cache.TryGetValue(cacheKey, out List<dynamic>? allStops) || allStops == null)
+        {
+            var allStopsRaw = await _otpService.GetStopsByBboxAsync(-9.3, 41.7, -6.7, 43.8);
+
+            allStops = allStopsRaw.Select(s =>
+            {
+                var feedId = s.GtfsId.Split(':', 2)[0];
+                var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
+                var code = _feedService.NormalizeStopCode(feedId, s.Code ?? "");
+                var name = _feedService.NormalizeStopName(feedId, s.Name);
+
+                return (dynamic)new
+                {
+                    stopId = s.GtfsId,
+                    stopCode = code,
+                    name = name,
+                    latitude = s.Lat,
+                    longitude = s.Lon,
+                    lines = s.Routes?
+                        .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                        .Select(r => new
+                        {
+                            line = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                            colour = r.Color ?? fallbackColor,
+                            textColour = r.TextColor is null or "000000" ?
+                                ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
+                                r.TextColor
+                        })
+                        .ToList() ?? [],
+                    label = string.IsNullOrWhiteSpace(code) ? name : $"{name} ({code})"
+                };
+            }).ToList();
+
+            _cache.Set(cacheKey, allStops, TimeSpan.FromHours(1));
+        }
+
+        // 1. Exact or prefix matches by stop code
+        var codeMatches = allStops
+            .Where(s => s.stopCode != null && ((string)s.stopCode).StartsWith(q, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(s => ((string)s.stopCode).Length)
+            .Take(10)
+            .ToList();
+
+        // 2. Fuzzy search stops by label
+        var fuzzyResults = Process.ExtractSorted(
+            q,
+            allStops.Select(s => (string)s.label),
+            cutoff: 60
+        ).Take(15).Select(r => allStops[r.Index]).ToList();
+
+        // Combine and deduplicate
+        var results = codeMatches.Concat(fuzzyResults)
+            .GroupBy(s => s.stopId)
+            .Select(g => g.First())
+            .Take(20)
+            .ToList();
+
+        return Ok(results);
     }
 
     [LoggerMessage(LogLevel.Error, "Error fetching stop data, received {statusCode} {responseBody}")]

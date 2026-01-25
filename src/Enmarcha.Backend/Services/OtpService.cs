@@ -5,6 +5,7 @@ using Enmarcha.Backend.Helpers;
 using Enmarcha.Backend.Types.Otp;
 using Enmarcha.Backend.Types.Planner;
 using Enmarcha.Backend.Types.Transit;
+using Enmarcha.Sources.OpenTripPlannerGql;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -87,6 +88,42 @@ public class OtpService
                     .ToList()
             }).ToList()
         };
+    }
+
+    public async Task<List<StopTileResponse.Stop>> GetStopsByBboxAsync(double minLon, double minLat, double maxLon, double maxLat)
+    {
+        const string cacheKey = "otp_all_stops_detailed";
+        if (_cache.TryGetValue(cacheKey, out List<StopTileResponse.Stop>? cachedStops) && cachedStops != null)
+        {
+            return cachedStops;
+        }
+
+        try
+        {
+            var bbox = new StopTileRequestContent.Bbox(minLon, minLat, maxLon, maxLat);
+            var query = StopTileRequestContent.Query(bbox);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
+            request.Content = JsonContent.Create(new GraphClientRequest { Query = query });
+
+            var response = await _httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<StopTileResponse>>();
+
+            if (responseBody is not { IsSuccess: true } || responseBody.Data?.StopsByBbox == null)
+            {
+                _logger.LogError("Error fetching stops from OTP for caching");
+                return new List<StopTileResponse.Stop>();
+            }
+
+            var stops = responseBody.Data.StopsByBbox;
+            _cache.Set(cacheKey, stops, TimeSpan.FromHours(18));
+            return stops;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception fetching stops from OTP for caching");
+            return new List<StopTileResponse.Stop>();
+        }
     }
 
     private Leg MapLeg(OtpLeg otpLeg)

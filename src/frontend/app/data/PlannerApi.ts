@@ -4,6 +4,8 @@ export interface PlannerSearchResult {
   lat: number;
   lon: number;
   layer?: string;
+  stopId?: string;
+  stopCode?: string;
 }
 
 export interface RoutePlan {

@@ -143,8 +143,20 @@ export default function StopList() {
         return;
       }
 
-      // Placeholder for future backend search
-      setSearchResults([]);
+      try {
+        const response = await fetch(
+          `/api/stops/search?q=${encodeURIComponent(searchQuery)}`
+        );
+        if (response.ok) {
+          const results = await response.json();
+          setSearchResults(results);
+        } else {
+          setSearchResults([]);
+        }
+      } catch (error) {
+        console.error("Search failed:", error);
+        setSearchResults([]);
+      }
     }, 300);
   };
 

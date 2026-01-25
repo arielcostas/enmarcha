@@ -83,4 +83,6 @@ public class PlannerSearchResult
     public double Lat { get; set; }
     public double Lon { get; set; }
     public string? Layer { get; set; }
+    public string? StopId { get; set; }
+    public string? StopCode { get; set; }
 }

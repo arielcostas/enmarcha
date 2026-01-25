@@ -61,17 +61,31 @@ public partial class RoutePlannerController : ControllerBase
         var geocodingResults = await nominatimTask;
         var allStops = await stopsTask;
 
-        // Fuzzy search stops
+        // 1. Exact or prefix matches by stop code
+        var codeMatches = allStops
+            .Where(s => s.StopCode != null && s.StopCode.StartsWith(query, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(s => s.StopCode?.Length) // Shorter codes (more exact matches) first
+            .Take(5)
+            .ToList();
+
+        // 2. Fuzzy search stops by label (Name + Code)
         var fuzzyResults = Process.ExtractSorted(
             query,
-            allStops.Select(s => s.Name ?? string.Empty),
+            allStops.Select(s => s.Label ?? string.Empty),
             cutoff: 60
-        ).Take(4).Select(r => allStops[r.Index]).ToList();
+        ).Take(6).Select(r => allStops[r.Index]).ToList();
+
+        // Merge stops, prioritizing code matches
+        var stopResults = codeMatches.Concat(fuzzyResults)
+            .GroupBy(s => s.StopId)
+            .Select(g => g.First())
+            .Take(6)
+            .ToList();
 
         // Merge results: geocoding first, then stops, deduplicating by coordinates (approx)
         var finalResults = new List<PlannerSearchResult>(geocodingResults);
 
-        foreach (var res in fuzzyResults)
+        foreach (var res in stopResults)
         {
             if (!finalResults.Any(f => Math.Abs(f.Lat - res.Lat) < 0.00001 && Math.Abs(f.Lon - res.Lon) < 0.00001))
             {
@@ -138,53 +152,33 @@ public partial class RoutePlannerController : ControllerBase
 
     private async Task<List<PlannerSearchResult>> GetCachedStopsAsync()
     {
-        const string cacheKey = "otp_all_stops";
-        if (_cache.TryGetValue(cacheKey, out List<PlannerSearchResult>? cachedStops) && cachedStops != null)
+        const string cacheKey = "planner_mapped_stops";
+        if (_cache.TryGetValue(cacheKey, out List<PlannerSearchResult>? cachedStops))
         {
-            return cachedStops;
+            return cachedStops!;
         }
 
-        try
+        var allStopsRaw = await _otpService.GetStopsByBboxAsync(-9.3, 41.7, -6.7, 43.8);
+
+        var stops = allStopsRaw.Select(s =>
         {
-            // Galicia bounds: minLon, minLat, maxLon, maxLat
-            var bbox = new StopTileRequestContent.Bbox(-9.3, 41.7, -6.7, 43.8);
-            var query = StopTileRequestContent.Query(bbox);
+            var feedId = s.GtfsId.Split(':')[0];
+            var name = _feedService.NormalizeStopName(feedId, s.Name);
+            var code = _feedService.NormalizeStopCode(feedId, s.Code ?? string.Empty);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
-            request.Content = JsonContent.Create(new GraphClientRequest { Query = query });
-
-            var response = await _httpClient.SendAsync(request);
-            var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<StopTileResponse>>();
-
-            if (responseBody is not { IsSuccess: true } || responseBody.Data?.StopsByBbox == null)
+            return new PlannerSearchResult
             {
-                _logger.LogError("Error fetching stops from OTP for caching");
-                return new List<PlannerSearchResult>();
-            }
+                Name = name,
+                Label = string.IsNullOrWhiteSpace(code) ? name : $"{name} ({code})",
+                Lat = s.Lat,
+                Lon = s.Lon,
+                Layer = "stop",
+                StopId = s.GtfsId,
+                StopCode = code
+            };
+        }).ToList();
 
-            var stops = responseBody.Data.StopsByBbox.Select(s =>
-            {
-                var feedId = s.GtfsId.Split(':')[0];
-                var name = _feedService.NormalizeStopName(feedId, s.Name);
-                var code = _feedService.NormalizeStopCode(feedId, s.Code ?? string.Empty);
-
-                return new PlannerSearchResult
-                {
-                    Name = name,
-                    Label = string.IsNullOrWhiteSpace(code) ? name : $"{name} ({code})",
-                    Lat = s.Lat,
-                    Lon = s.Lon,
-                    Layer = "stop"
-                };
-            }).ToList();
-
-            _cache.Set(cacheKey, stops, TimeSpan.FromHours(18));
-            return stops;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Exception fetching stops from OTP for caching");
-            return new List<PlannerSearchResult>();
-        }
+        _cache.Set(cacheKey, stops, TimeSpan.FromHours(1));
+        return stops;
     }
 }
