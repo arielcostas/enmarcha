@@ -1,5 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { LayoutGrid, List, Map as MapIcon } from "lucide-react";
+import {
+  Bus,
+  ChevronDown,
+  Clock,
+  LayoutGrid,
+  List,
+  Map as MapIcon,
+  X,
+} from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,6 +36,7 @@ export default function RouteDetailsPage() {
   const [layoutMode, setLayoutMode] = useState<"balanced" | "map" | "list">(
     "balanced"
   );
+  const [isPatternPickerOpen, setIsPatternPickerOpen] = useState(false);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(
     () => new Date()
   );
@@ -147,6 +156,10 @@ export default function RouteDetailsPage() {
 
   const selectedPattern =
     activePatterns.find((p) => p.id === selectedPatternId) || activePatterns[0];
+
+  const selectedPatternLabel = selectedPattern
+    ? selectedPattern.headsign || selectedPattern.name
+    : t("routes.details", "Detalles de ruta");
 
   const mapHeightClass =
     layoutMode === "map"
@@ -312,37 +325,25 @@ export default function RouteDetailsPage() {
 
           <div className="px-3 py-2 bg-surface border-y border-border">
             <div className="flex items-center gap-2">
-              <select
-                className="w-full px-3 py-1.5 box-border bg-surface text-text focus:ring-2 focus:ring-primary outline-none text-sm rounded-md border border-border flex-2"
-                value={selectedPattern?.id}
-                onChange={(e) => {
-                  setSelectedPatternId(e.target.value);
-                  setSelectedStopId(null);
-                }}
+              <button
+                type="button"
+                onClick={() => setIsPatternPickerOpen(true)}
+                className="w-full flex-2 px-3 py-1.5 text-left box-border bg-surface text-text text-sm rounded-md border border-border hover:border-primary/60 focus:ring-2 focus:ring-primary outline-none"
               >
-                {Object.entries(patternsByDirection).map(([dir, patterns]) => (
-                  <optgroup
-                    key={dir}
-                    label={
-                      dir === "0"
-                        ? t("routes.direction_outbound", "Ida")
-                        : t("routes.direction_inbound", "Vuelta")
-                    }
-                  >
-                    {patterns.map((pattern) => (
-                      <option key={pattern.id} value={pattern.id}>
-                        {pattern.code
-                          ? `${parseInt(pattern.code.slice(-2)).toString()}: `
-                          : ""}
-                        {pattern.headsign || pattern.name}{" "}
-                        {t("routes.trip_count_short", {
-                          count: pattern.tripCount,
-                        })}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-medium">
+                    {selectedPatternLabel}
+                  </span>
+                  {selectedPattern?.tripCount != null && (
+                    <span className="text-xs text-muted">
+                      {t("routes.trip_count_short", {
+                        count: selectedPattern.tripCount,
+                      })}
+                    </span>
+                  )}
+                  <ChevronDown size={16} className="ml-auto text-muted" />
+                </div>
+              </button>
 
               <select
                 className="w-full px-3 py-1.5 box-border bg-surface text-text focus:ring-2 focus:ring-primary outline-none text-sm rounded-md border border-border flex-1"
@@ -365,6 +366,139 @@ export default function RouteDetailsPage() {
               </select>
             </div>
           </div>
+
+          {isPatternPickerOpen && (
+            <div
+              className="absolute inset-0 z-20 flex items-end sm:items-center justify-center bg-black/40"
+              onClick={() => setIsPatternPickerOpen(false)}
+            >
+              <div
+                className="w-full sm:max-w-lg bg-background rounded-t-2xl sm:rounded-2xl border border-border shadow-xl max-h-[75%] overflow-hidden"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <div>
+                    <p className="text-sm font-semibold text-text">
+                      {t("routes.trips", "Trayectos")}
+                    </p>
+                    <p className="text-xs text-muted">
+                      {t("routes.choose_trip", "Elige un trayecto")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPatternPickerOpen(false)}
+                    className="p-2 rounded-full hover:bg-surface"
+                    aria-label={t("routes.close", "Cerrar")}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto max-h-[60vh] pb-3">
+                  {[0, 1].map((dir) => {
+                    const patterns = patternsByDirection[dir] ?? [];
+                    if (patterns.length === 0) return null;
+                    const directionLabel =
+                      dir === 0
+                        ? t("routes.direction_outbound", "Ida")
+                        : t("routes.direction_inbound", "Vuelta");
+                    const sortedPatterns = [...patterns].sort(
+                      (a, b) => b.tripCount - a.tripCount
+                    );
+
+                    return (
+                      <div key={dir}>
+                        <div className="px-4 py-2 text-xs font-semibold text-muted uppercase tracking-wide">
+                          {directionLabel}
+                        </div>
+                        <div className="space-y-2 px-3 pb-3">
+                          {sortedPatterns.map((pattern) => {
+                            const destination =
+                              pattern.headsign || pattern.name || "";
+                            const firstStop = pattern.stops[0]?.name ?? "";
+                            const lastStop =
+                              pattern.stops[pattern.stops.length - 1]?.name ??
+                              "";
+                            const times =
+                              pattern.stops[0]?.scheduledDepartures?.slice(
+                                0,
+                                3
+                              ) ?? [];
+
+                            return (
+                              <button
+                                key={pattern.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedPatternId(pattern.id);
+                                  setSelectedStopId(null);
+                                  setIsPatternPickerOpen(false);
+                                }}
+                                className={`w-full text-left rounded-xl border px-3 py-3 transition-colors ${
+                                  selectedPattern?.id === pattern.id
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border bg-surface hover:border-primary/50"
+                                }`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-base font-semibold text-text truncate">
+                                        {destination ||
+                                          t("routes.trip", "Trayecto")}
+                                      </p>
+                                    </div>
+                                    <p className="text-xs text-muted mt-1 truncate">
+                                      {firstStop}
+                                      {firstStop && lastStop ? " → " : ""}
+                                      {lastStop}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-muted">
+                                    {pattern.tripCount <= 3 &&
+                                    times.length > 0 ? (
+                                      <div className="flex items-center gap-1">
+                                        <Clock size={14} />
+                                        <span>
+                                          {times
+                                            .map((dep) => {
+                                              const h = Math.floor(dep / 3600)
+                                                .toString()
+                                                .padStart(2, "0");
+                                              const m = Math.floor(
+                                                (dep % 3600) / 60
+                                              )
+                                                .toString()
+                                                .padStart(2, "0");
+                                              return `${h}:${m}`;
+                                            })
+                                            .join(" · ")}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1">
+                                        <Bus size={14} />
+                                        <span>
+                                          {t("routes.trip_count_short", {
+                                            count: pattern.tripCount,
+                                          })}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto px-4 py-3 bg-background">
             <h3 className="text-base font-semibold mb-3 text-text">
