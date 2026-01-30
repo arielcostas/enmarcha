@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { LayoutGrid, List, Map as MapIcon } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,17 +20,35 @@ import "../tailwind-full.css";
 
 export default function RouteDetailsPage() {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedPatternId, setSelectedPatternId] = useState<string | null>(
     null
   );
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [layoutMode, setLayoutMode] = useState<"balanced" | "map" | "list">(
+    "balanced"
+  );
+  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(
+    () => new Date()
+  );
   const mapRef = useRef<MapRef>(null);
   const stopRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  const formatDateKey = (value: Date) => {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const selectedDateKey = useMemo(
+    () => formatDateKey(selectedWeekDate),
+    [selectedWeekDate]
+  );
+
   const { data: route, isLoading } = useQuery({
-    queryKey: ["route", id],
-    queryFn: () => fetchRouteDetails(id!),
+    queryKey: ["route", id, selectedDateKey],
+    queryFn: () => fetchRouteDetails(id!, selectedDateKey),
     enabled: !!id,
   });
 
@@ -71,6 +90,35 @@ export default function RouteDetailsPage() {
 
   useBackButton({ to: "/routes" });
 
+  const weekDays = useMemo(() => {
+    const base = new Date();
+    return [-2, -1, 0, 1, 2, 3, 4].map((offset) => {
+      const date = new Date(base);
+      date.setDate(base.getDate() + offset);
+
+      let label: string;
+      if (offset === -1) {
+        label = t("routes.day_yesterday", "Ayer");
+      } else if (offset === 0) {
+        label = t("routes.day_today", "Hoy");
+      } else if (offset === 1) {
+        label = t("routes.day_tomorrow", "Mañana");
+      } else {
+        label = date.toLocaleDateString(i18n.language || "es-ES", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
+      }
+
+      return {
+        key: formatDateKey(date),
+        date,
+        label,
+      };
+    });
+  }, [i18n.language, t]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -100,6 +148,31 @@ export default function RouteDetailsPage() {
   const selectedPattern =
     activePatterns.find((p) => p.id === selectedPatternId) || activePatterns[0];
 
+  const mapHeightClass =
+    layoutMode === "map"
+      ? "h-[75%] md:h-[75%]"
+      : layoutMode === "list"
+        ? "h-[25%] md:h-[25%]"
+        : "h-[50%] md:h-[50%]";
+
+  const layoutOptions = [
+    {
+      id: "balanced",
+      label: t("routes.layout_balanced", "Equilibrada"),
+      icon: LayoutGrid,
+    },
+    {
+      id: "map",
+      label: t("routes.layout_map", "Mapa"),
+      icon: MapIcon,
+    },
+    {
+      id: "list",
+      label: t("routes.layout_list", "Paradas"),
+      icon: List,
+    },
+  ] as const;
+
   const handleStopClick = (
     stopId: string,
     lat: number,
@@ -109,7 +182,7 @@ export default function RouteDetailsPage() {
     setSelectedStopId(stopId);
     mapRef.current?.flyTo({
       center: [lon, lat],
-      zoom: 16,
+      zoom: 15,
       duration: 1000,
     });
 
@@ -160,7 +233,7 @@ export default function RouteDetailsPage() {
     <div className="flex flex-col h-full overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          <div className="h-1/2 relative">
+          <div className={`${mapHeightClass} relative`}>
             <AppMap
               ref={mapRef}
               initialViewState={
@@ -212,45 +285,92 @@ export default function RouteDetailsPage() {
                 />
               </Source>
             </AppMap>
+
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded-full border border-border bg-background/90 p-1 shadow-sm backdrop-blur">
+              {layoutOptions.map((option) => {
+                const Icon = option.icon;
+                const isActive = layoutMode === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => setLayoutMode(option.id)}
+                    className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                      isActive
+                        ? "bg-primary text-white"
+                        : "text-muted hover:text-text"
+                    }`}
+                    aria-label={option.label}
+                    title={option.label}
+                  >
+                    <Icon size={16} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <select
-            className="px-4 py-2 box-border bg-surface text-text focus:ring-2 focus:ring-primary outline-none"
-            value={selectedPattern?.id}
-            onChange={(e) => {
-              setSelectedPatternId(e.target.value);
-              setSelectedStopId(null);
-            }}
-          >
-            {Object.entries(patternsByDirection).map(([dir, patterns]) => (
-              <optgroup
-                key={dir}
-                label={
-                  dir === "0"
-                    ? t("routes.direction_outbound", "Ida")
-                    : t("routes.direction_inbound", "Vuelta")
-                }
+          <div className="px-3 py-2 bg-surface border-y border-border">
+            <div className="flex items-center gap-2">
+              <select
+                className="w-full px-3 py-1.5 box-border bg-surface text-text focus:ring-2 focus:ring-primary outline-none text-sm rounded-md border border-border flex-2"
+                value={selectedPattern?.id}
+                onChange={(e) => {
+                  setSelectedPatternId(e.target.value);
+                  setSelectedStopId(null);
+                }}
               >
-                {patterns.map((pattern) => (
-                  <option key={pattern.id} value={pattern.id}>
-                    {pattern.code
-                      ? `${parseInt(pattern.code.slice(-2)).toString()}: `
-                      : ""}
-                    {pattern.headsign || pattern.name}{" "}
-                    {t("routes.trip_count_short", {
-                      count: pattern.tripCount,
-                    })}
+                {Object.entries(patternsByDirection).map(([dir, patterns]) => (
+                  <optgroup
+                    key={dir}
+                    label={
+                      dir === "0"
+                        ? t("routes.direction_outbound", "Ida")
+                        : t("routes.direction_inbound", "Vuelta")
+                    }
+                  >
+                    {patterns.map((pattern) => (
+                      <option key={pattern.id} value={pattern.id}>
+                        {pattern.code
+                          ? `${parseInt(pattern.code.slice(-2)).toString()}: `
+                          : ""}
+                        {pattern.headsign || pattern.name}{" "}
+                        {t("routes.trip_count_short", {
+                          count: pattern.tripCount,
+                        })}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+
+              <select
+                className="w-full px-3 py-1.5 box-border bg-surface text-text focus:ring-2 focus:ring-primary outline-none text-sm rounded-md border border-border flex-1"
+                value={selectedDateKey}
+                onChange={(e) => {
+                  const next = weekDays.find(
+                    (day) => day.key === e.target.value
+                  );
+                  if (next) {
+                    setSelectedWeekDate(next.date);
+                  }
+                }}
+                aria-label={t("routes.week_date", "Fecha")}
+              >
+                {weekDays.map((day) => (
+                  <option key={day.key} value={day.key}>
+                    {day.label}
                   </option>
                 ))}
-              </optgroup>
-            ))}
-          </select>
+              </select>
+            </div>
+          </div>
 
-          <div className="flex-1 overflow-y-auto p-4 bg-background">
-            <h3 className="text-lg font-bold mb-4">
+          <div className="flex-1 overflow-y-auto px-4 py-3 bg-background">
+            <h3 className="text-base font-semibold mb-3 text-text">
               {t("routes.stops", "Paradas")}
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2">
               {selectedPattern?.stops.map((stop, idx) => (
                 <div
                   key={`${stop.id}-${idx}`}
@@ -260,7 +380,7 @@ export default function RouteDetailsPage() {
                   onClick={() =>
                     handleStopClick(stop.id, stop.lat, stop.lon, false)
                   }
-                  className={`flex items-start gap-4 p-3 rounded-lg border transition-colors cursor-pointer ${
+                  className={`flex items-start gap-3 p-2.5 rounded-lg border transition-colors cursor-pointer ${
                     selectedStopId === stop.id
                       ? "bg-primary/5 border-primary"
                       : "bg-surface border-border hover:border-primary/50"
@@ -268,17 +388,17 @@ export default function RouteDetailsPage() {
                 >
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-3 h-3 rounded-full mt-1.5 ${selectedStopId === stop.id ? "bg-primary" : "bg-gray-400"}`}
+                      className={`w-2.5 h-2.5 rounded-full mt-1.5 ${selectedStopId === stop.id ? "bg-primary" : "bg-gray-400"}`}
                     ></div>
                     {idx < selectedPattern.stops.length - 1 && (
-                      <div className="w-0.5 h-full bg-border -mb-3 mt-1"></div>
+                      <div className="w-0.5 h-full bg-border -mb-2.5 mt-1"></div>
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-text">
+                    <p className="font-semibold text-text text-sm">
                       {stop.name}
                       {stop.code && (
-                        <span className="text-xs font-normal text-gray-500 ml-2">
+                        <span className="text-[11px] font-normal text-gray-500 ml-2">
                           {stop.code}
                         </span>
                       )}

@@ -23,12 +23,24 @@ export const fetchRoutes = async (feeds: string[] = []): Promise<Route[]> => {
   return RouteSchema.array().parse(data);
 };
 
-export const fetchRouteDetails = async (id: string): Promise<RouteDetails> => {
-  const resp = await fetch(`/api/transit/routes/${encodeURIComponent(id)}`, {
-    headers: {
-      Accept: "application/json",
-    },
-  });
+export const fetchRouteDetails = async (
+  id: string,
+  date?: string
+): Promise<RouteDetails> => {
+  const params = new URLSearchParams();
+  if (date) {
+    params.set("date", date);
+  }
+
+  const query = params.toString();
+  const resp = await fetch(
+    `/api/transit/routes/${encodeURIComponent(id)}${query ? `?${query}` : ""}`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    }
+  );
 
   if (!resp.ok) {
     throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);

@@ -7,6 +7,7 @@ using Enmarcha.Backend.Types.Transit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using System.Globalization;
 
 namespace Enmarcha.Backend.Controllers;
 
@@ -83,12 +84,31 @@ public class TransitController : ControllerBase
     }
 
     [HttpGet("routes/{id}")]
-    public async Task<ActionResult<RouteDetailsDto>> GetRouteDetails(string id)
+    public async Task<ActionResult<RouteDetailsDto>> GetRouteDetails(
+        string id,
+        [FromQuery] string? date
+    )
     {
         using var activity = Telemetry.Source.StartActivity("GetRouteDetails");
         activity?.SetTag("route.id", id);
 
-        var serviceDate = DateTime.Now.ToString("yyyy-MM-dd");
+        string serviceDate;
+        if (!string.IsNullOrWhiteSpace(date))
+        {
+            if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            {
+                return BadRequest("Invalid date. Use yyyy-MM-dd.");
+            }
+
+            serviceDate = parsedDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+            var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
+            serviceDate = nowLocal.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+
         var cacheKey = $"route_details_{id}_{serviceDate}";
 
         var cacheHit = _cache.TryGetValue(cacheKey, out RouteDetailsDto? cachedDetails);
