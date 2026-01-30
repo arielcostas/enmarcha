@@ -177,6 +177,7 @@
     "choose_trip": "Elige un trayecto",
     "close": "Cerrar",
     "trip": "Trayecto",
+    "view_stop": "Ver parada",
     "trip_count": "{{count}} viajes hoy",
     "trip_count_one": "1 viaje hoy",
     "trip_count_short": "({{count}} viajes)",

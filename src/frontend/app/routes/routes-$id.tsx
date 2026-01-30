@@ -16,7 +16,7 @@ import {
   Source,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { fetchRouteDetails } from "~/api/transit";
 import { AppMap } from "~/components/shared/AppMap";
 import {
@@ -537,6 +537,15 @@ export default function RouteDetailsPage() {
                         </span>
                       )}
                     </p>
+
+                    {selectedStopId === stop.id && (
+                      <Link
+                        to={`/stops/${stop.id}`}
+                        className="mt-1 inline-flex items-center text-xs font-semibold text-primary hover:underline"
+                      >
+                        {t("routes.view_stop", "Ver parada")}
+                      </Link>
+                    )}
 
                     {selectedStopId === stop.id &&
                       stop.scheduledDepartures.length > 0 && (

@@ -160,7 +160,7 @@
     "trips": "Traxectos",
     "choose_trip": "Escolle un traxecto",
     "close": "Pechar",
-    "trip": "Traxecto"
+    "trip": "Traxecto""view_stop": "Ver parada",
   },
   "routes": {
     "description": "A continuación móstrase unha lista das rutas de autobús urbano cos seus respectivos traxectos.",

@@ -177,6 +177,7 @@
     "choose_trip": "Choose a trip",
     "close": "Close",
     "trip": "Trip",
+    "view_stop": "View stop",
     "trip_count": "{{count}} trips today",
     "trip_count_one": "1 trip today",
     "trip_count_short": "({{count}} trips)",
