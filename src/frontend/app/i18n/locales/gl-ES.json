@@ -149,6 +149,7 @@
   "navbar": {
     "home": "Inicio",
     "map": "Mapa",
+    "stops": "Paradas",
     "planner": "Planificador",
     "routes": "Rutas",
     "favourites": "Favoritos"

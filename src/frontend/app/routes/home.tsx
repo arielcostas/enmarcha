@@ -235,15 +235,7 @@ export default function StopList() {
           type="search"
           placeholder={randomPlaceholder}
           onChange={handleStopSearch}
-          className="
-            w-full px-4 py-2 text-sm
-            border border-border rounded-xl
-            bg-surface
-            text-text
-            placeholder:text-muted placeholder:opacity-80
-            focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent
-            transition-all duration-200
-          "
+          className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary shadow-sm placeholder-gray-500"
         />
       </div>
 

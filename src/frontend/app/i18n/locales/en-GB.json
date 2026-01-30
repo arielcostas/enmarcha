@@ -156,6 +156,7 @@
   "navbar": {
     "home": "Home",
     "map": "Map",
+    "stops": "Stops",
     "planner": "Planner",
     "routes": "Routes",
     "favourites": "Favourites"

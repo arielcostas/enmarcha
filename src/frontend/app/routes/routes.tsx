@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { fetchRoutes } from "~/api/transit";
@@ -9,13 +10,20 @@ import "../tailwind-full.css";
 export default function RoutesPage() {
   const { t } = useTranslation();
   usePageTitle(t("navbar.routes", "Rutas"));
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: routes, isLoading } = useQuery({
     queryKey: ["routes"],
     queryFn: () => fetchRoutes(["tussa", "vitrasa", "tranvias", "feve"]),
   });
 
-  const routesByAgency = routes?.reduce(
+  const filteredRoutes = routes?.filter(
+    (route) =>
+      route.shortName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      route.longName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const routesByAgency = filteredRoutes?.reduce(
     (acc, route) => {
       const agency = route.agencyName || t("routes.unknown_agency", "Otros");
       if (!acc[agency]) acc[agency] = [];
@@ -27,12 +35,15 @@ export default function RoutesPage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <p className="mb-6 text-gray-700 dark:text-gray-300">
-        {t(
-          "routes.description",
-          "A continuación se muestra una lista de las rutas de autobús urbano con sus respectivos trayectos."
-        )}
-      </p>
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder={t("routes.search_placeholder", "Buscar rutas...")}
+          className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary shadow-sm placeholder-gray-500"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
 
       {isLoading && (
         <div className="flex justify-center py-12">
