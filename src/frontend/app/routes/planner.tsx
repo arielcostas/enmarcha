@@ -11,7 +11,7 @@ import LineIcon from "~/components/LineIcon";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
-import { usePageTitle } from "~/contexts/PageTitleContext";
+import { useBackButton, usePageTitle } from "~/contexts/PageTitleContext";
 import { type Itinerary } from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
 import "../tailwind-full.css";
@@ -185,6 +185,7 @@ const ItineraryDetail = ({
   onClose: () => void;
 }) => {
   const { t } = useTranslation();
+  useBackButton({ onBack: onClose });
   const mapRef = useRef<MapRef>(null);
   const { destination: userDestination } = usePlanner();
   const [nextArrivals, setNextArrivals] = useState<
@@ -319,7 +320,8 @@ const ItineraryDetail = ({
               );
 
               if (resp.ok) {
-                arrivalsByStop[stopKey] = await resp.json() satisfies ConsolidatedCirculation[];
+                arrivalsByStop[stopKey] =
+                  (await resp.json()) satisfies ConsolidatedCirculation[];
               }
             } catch (err) {
               console.warn(
@@ -463,13 +465,6 @@ const ItineraryDetail = ({
             />
           </Source>
         </AppMap>
-
-        <button
-          onClick={onClose}
-          className="absolute top-4 left-4 bg-white dark:bg-slate-800 p-2 px-4 rounded-lg shadow-lg z-10 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          {t("planner.back")}
-        </button>
       </div>
 
       {/* Details Panel */}

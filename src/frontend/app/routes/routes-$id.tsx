@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AttributionControl,
@@ -10,7 +10,11 @@ import {
 import { useParams } from "react-router";
 import { fetchRouteDetails } from "~/api/transit";
 import { AppMap } from "~/components/shared/AppMap";
-import { usePageTitle } from "~/contexts/PageTitleContext";
+import {
+  useBackButton,
+  usePageTitle,
+  usePageTitleNode,
+} from "~/contexts/PageTitleContext";
 import "../tailwind-full.css";
 
 export default function RouteDetailsPage() {
@@ -34,6 +38,38 @@ export default function RouteDetailsPage() {
       ? `${route.shortName} - ${route.longName}`
       : t("routes.details", "Detalles de ruta")
   );
+
+  const titleNode = useMemo(() => {
+    if (!route) {
+      return (
+        <span className="text-base font-semibold text-text">
+          {t("routes.details", "Detalles de ruta")}
+        </span>
+      );
+    }
+
+    return (
+      <div className="flex flex-col min-w-0">
+        <div className="flex items-center gap-2">
+          <span
+            className="text-lg font-bold leading-none"
+            style={{
+              color: route.color ? `#${route.color}` : "var(--text-color)",
+            }}
+          >
+            {route.shortName || route.longName}
+          </span>
+          <span className="text-sm text-text/90 truncate text-wrap tracking-tight leading-none">
+            {route.longName}
+          </span>
+        </div>
+      </div>
+    );
+  }, [route, t]);
+
+  usePageTitleNode(titleNode);
+
+  useBackButton({ to: "/routes" });
 
   if (isLoading) {
     return (
@@ -122,38 +158,6 @@ export default function RouteDetailsPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="p-4 bg-surface border-b border-border">
-        <select
-          className="w-full p-2 rounded-lg border border-border bg-background text-text focus:ring-2 focus:ring-primary outline-none"
-          value={selectedPattern?.id}
-          onChange={(e) => {
-            setSelectedPatternId(e.target.value);
-            setSelectedStopId(null);
-          }}
-        >
-          {Object.entries(patternsByDirection).map(([dir, patterns]) => (
-            <optgroup
-              key={dir}
-              label={
-                dir === "0"
-                  ? t("routes.direction_outbound", "Ida")
-                  : t("routes.direction_inbound", "Vuelta")
-              }
-            >
-              {patterns.map((pattern) => (
-                <option key={pattern.id} value={pattern.id}>
-                  {pattern.code
-                    ? `${parseInt(pattern.code.slice(-2)).toString()}: `
-                    : ""}
-                  {pattern.headsign || pattern.name}{" "}
-                  {t("routes.trip_count_short", { count: pattern.tripCount })}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </div>
-
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 flex flex-col relative overflow-hidden">
           <div className="h-1/2 relative">
@@ -179,11 +183,7 @@ export default function RouteDetailsPage() {
               showTraffic={false}
               attributionControl={false}
             >
-              <AttributionControl
-                position="bottom-right"
-                compact={false}
-                customAttribution={route.agencyName || undefined}
-              />
+              <AttributionControl position="bottom-left" compact={true} />
               {selectedPattern?.geometry && (
                 <Source type="geojson" data={geojson}>
                   <Layer
@@ -213,6 +213,38 @@ export default function RouteDetailsPage() {
               </Source>
             </AppMap>
           </div>
+
+          <select
+            className="px-4 py-2 box-border bg-surface text-text focus:ring-2 focus:ring-primary outline-none"
+            value={selectedPattern?.id}
+            onChange={(e) => {
+              setSelectedPatternId(e.target.value);
+              setSelectedStopId(null);
+            }}
+          >
+            {Object.entries(patternsByDirection).map(([dir, patterns]) => (
+              <optgroup
+                key={dir}
+                label={
+                  dir === "0"
+                    ? t("routes.direction_outbound", "Ida")
+                    : t("routes.direction_inbound", "Vuelta")
+                }
+              >
+                {patterns.map((pattern) => (
+                  <option key={pattern.id} value={pattern.id}>
+                    {pattern.code
+                      ? `${parseInt(pattern.code.slice(-2)).toString()}: `
+                      : ""}
+                    {pattern.headsign || pattern.name}{" "}
+                    {t("routes.trip_count_short", {
+                      count: pattern.tripCount,
+                    })}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
 
           <div className="flex-1 overflow-y-auto p-4 bg-background">
             <h3 className="text-lg font-bold mb-4">

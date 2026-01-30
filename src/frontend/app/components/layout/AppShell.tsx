@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import {
   PageTitleProvider,
   usePageTitleContext,
@@ -13,6 +13,7 @@ import NavBar from "./NavBar";
 const AppShellContent: React.FC = () => {
   const { title } = usePageTitleContext();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <div className="app-shell">
@@ -25,7 +26,7 @@ const AppShellContent: React.FC = () => {
       <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
       <div className="app-shell__body">
         <main className="app-shell__main">
-          <Outlet />
+          <Outlet key={location.pathname} />
         </main>
       </div>
       <footer className="app-shell__bottom-nav">
