@@ -191,10 +191,10 @@ public class TileController : ControllerBase
     {
         return feedId switch
         {
-            "vitrasa" or "tussa" or "tranvias" => "bus",
+            "vitrasa" or "tussa" or "tranvias" or "shuttle" => "bus",
             "xunta" => "coach",
             "renfe" or "feve" => "train",
-            _ => throw new ArgumentException("Feed ID not a known type", feedId)
+            _ => "unknown"
         };
     }
 

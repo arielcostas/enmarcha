@@ -14,7 +14,7 @@ export default function RoutesPage() {
 
   const { data: routes, isLoading } = useQuery({
     queryKey: ["routes"],
-    queryFn: () => fetchRoutes(["tussa", "vitrasa", "tranvias", "feve"]),
+    queryFn: () => fetchRoutes(["vitrasa", "tranvias", "tussa", "feve", "shuttle"]),
   });
 
   const filteredRoutes = routes?.filter(

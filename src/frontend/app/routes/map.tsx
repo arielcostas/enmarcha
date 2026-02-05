@@ -111,7 +111,10 @@ export default function StopMap() {
   };
 
   const stopLayerFilter = useMemo(() => {
-    const filter: any[] = ["any"];
+    const filter: any[] = [
+        "any",
+        ["==", ["get", "transitKind"], "unknown"]
+    ];
     if (showCitybusStops) {
       filter.push(["==", ["get", "transitKind"], "bus"]);
     }
