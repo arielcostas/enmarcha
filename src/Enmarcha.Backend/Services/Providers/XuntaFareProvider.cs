@@ -7,8 +7,8 @@ namespace Enmarcha.Backend.Services.Providers;
 
 public class PriceRecord
 {
-    [Name("conc_inicio")] public string Origin { get; set; }
-    [Name("conc_fin")] public string Destination { get; set; }
+    [Name("conc_inicio")] public required string Origin { get; set; }
+    [Name("conc_fin")] public required string Destination { get; set; }
     [Name("bonificacion")] public string? MetroArea { get; set; }
     [Name("efectivo")] public decimal PriceCash { get; set; }
     [Name("tpg")] public decimal PriceCard { get; set; }

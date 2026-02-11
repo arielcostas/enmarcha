@@ -21,11 +21,11 @@ def download_municipality_list() -> None:
 
 
 def download_fare_data() -> None:
-    resp = requests.get('https://www.bus.gal/sites/w_tpgal/files/faq/2025/06/202507-12._calculadora_tarifas_ptpg_2025_descuentos_cas.xlsx')
+    resp = requests.get('https://www.bus.gal/sites/w_tpgal/files/faq/2026/01/202601._calculadora_tarifas_ptpg_2026_descuentos_cas.xlsx')
     if resp.status_code != 200:
         raise Exception(f"Failed to download file: {resp.status_code}")
     content_bytes = BytesIO(resp.content)
-    return pd.read_excel(content_bytes, sheet_name='PTPG_Tarifas_2025')
+    return pd.read_excel(content_bytes, sheet_name='PTPG_Tarifas_2026')
 
 
 GALICIA_CCAA = '12'
@@ -92,4 +92,4 @@ if __name__ == "__main__":
     fare_data_df['efectivo'] = fare_data_df['efectivo'].round(2)
     fare_data_df['tpg'] = fare_data_df['tpg'].round(2)
 
-    fare_data_df.to_csv('xunta_fares_galicia_2025.csv', index=False)
+    fare_data_df.to_csv('xunta_fares.csv', index=False)
