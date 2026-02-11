@@ -5,7 +5,6 @@ using NetTopologySuite.IO.VectorTiles.Mapbox;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.Extensions.Caching.Memory;
-using System.Text.Json;
 using Enmarcha.Sources.OpenTripPlannerGql;
 using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Backend.Configuration;
@@ -126,36 +125,7 @@ public class TileController : ControllerBase
                     { "code", $"{idParts[0]}:{codeWithinFeed}" },
                     { "name", _feedService.NormalizeStopName(feedId, stop.Name) },
                     { "icon", GetIconNameForFeed(feedId) },
-                    { "transitKind", GetTransitKind(feedId) },
-                    // Routes
-                    { "routes", JsonSerializer
-                        .Serialize(
-                            distinctRoutes.Select(r => {
-                            var colour = r.Color ?? Color;
-                            string textColour;
-
-                            if (r.Color is null) // None is present, use fallback
-                            {
-                                textColour = TextColor;
-                            }
-                            else if (r.TextColor is null || r.TextColor.EndsWith("000000"))
-                            {
-                                // Text colour not provided, or default-black; check the better contrasting
-                                textColour = ContrastHelper.GetBestTextColour(colour);
-                            }
-                            else
-                            {
-                                // Use provided text colour
-                                textColour = r.TextColor;
-                            }
-
-                            return new {
-                                shortName = r.ShortName,
-                                colour,
-                                textColour
-                            };
-                        }))
-                    }
+                    { "transitKind", GetTransitKind(feedId) }
                 }
             };
 

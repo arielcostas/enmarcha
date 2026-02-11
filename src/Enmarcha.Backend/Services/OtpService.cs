@@ -180,7 +180,7 @@ public class OtpService
         var feedId = otpPlace.StopId?.Split(':')[0] ?? "unknown";
         return new PlannerPlace
         {
-            Name = _feedService.NormalizeStopName(feedId, otpPlace.Name),
+            Name = _feedService.NormalizeStopName(feedId, otpPlace.Name!),
             Lat = otpPlace.Lat,
             Lon = otpPlace.Lon,
             StopId = otpPlace.StopId, // Use string directly

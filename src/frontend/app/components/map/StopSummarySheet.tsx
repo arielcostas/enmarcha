@@ -18,11 +18,6 @@ export interface StopSheetProps {
     stopCode?: string;
     stopFeed?: string;
     name: string;
-    lines: {
-      line: string;
-      colour?: string;
-      textColour?: string;
-    }[];
   };
 }
 
@@ -57,10 +52,10 @@ export const StopSummarySheet: React.FC<StopSheetProps> = ({
             </div>
 
             <div className={`flex flex-wrap flex-row gap-2`}>
-              {stop.lines.map((lineObj) => (
+              {data?.routes.map((lineObj) => (
                 <LineIcon
-                  key={lineObj.line}
-                  line={lineObj.line}
+                  key={lineObj.shortName}
+                  line={lineObj.shortName}
                   mode="pill"
                   colour={lineObj.colour}
                   textColour={lineObj.textColour}

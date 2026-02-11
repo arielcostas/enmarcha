@@ -134,9 +134,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         scheduledHeadsign = otpArr.Trip.TripHeadsign;
                     }
 
-                    _logger.LogDebug("Matched RT estimate: Line {Line}, RT: {RTRoute} ({RTMin}m), Scheduled: {ScheduledRoute} ({ScheduledMin}m), Delay: {Delay}m",
-                        estimate.Line, estimate.Route, estimate.Minutes, scheduledHeadsign, scheduledMinutes, delayMinutes);
-
                     // Prefer real-time headsign UNLESS it's just the last stop name (which is less informative)
                     if (!string.IsNullOrWhiteSpace(estimate.Route))
                     {
@@ -151,9 +148,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                                 isJustLastStop = estimateRouteNormalized == arrivalLastStopNormalized;
                             }
                         }
-
-                        _logger.LogDebug("Headsign: RT='{RT}' vs Scheduled='{Scheduled}', IsJustLastStop={Last}, WillUseRT={Use}",
-                            estimate.Route, scheduledHeadsign, isJustLastStop, !isJustLastStop);
 
                         // Use real-time headsign unless it's just the final stop name
                         if (!isJustLastStop)

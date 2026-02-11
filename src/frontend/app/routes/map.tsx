@@ -111,10 +111,7 @@ export default function StopMap() {
   };
 
   const stopLayerFilter = useMemo(() => {
-    const filter: any[] = [
-        "any",
-        ["==", ["get", "transitKind"], "unknown"]
-    ];
+    const filter: any[] = ["any", ["==", ["get", "transitKind"], "unknown"]];
     if (showCitybusStops) {
       filter.push(["==", ["get", "transitKind"], "bus"]);
     }
@@ -126,11 +123,6 @@ export default function StopMap() {
     }
     return filter as FilterSpecification;
   }, [showCitybusStops, showIntercityBusStops, showTrainStops]);
-
-  const getLatitude = (center: any) =>
-    Array.isArray(center) ? center[0] : center.lat;
-  const getLongitude = (center: any) =>
-    Array.isArray(center) ? center[1] : center.lng;
 
   const handlePointClick = (feature: any) => {
     const props: {
@@ -145,24 +137,10 @@ export default function StopMap() {
       return;
     }
 
-    const stopId = props.id;
-    const routes: {
-      shortName: string;
-      colour: string;
-      textColour: string;
-    }[] = JSON.parse(props.routes || "[]");
-
     setSelectedStop({
       stopId: props.id,
       stopCode: props.code,
       name: props.name || "Unknown Stop",
-      lines: routes.map((route) => {
-        return {
-          line: route.shortName,
-          colour: route.colour,
-          textColour: route.textColour,
-        };
-      }),
     });
     setIsSheetOpen(true);
   };
