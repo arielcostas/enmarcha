@@ -17,6 +17,12 @@
   "prefer_related_applications": false,
   "icons": [
     {
+      "src": "/icon-splash.png",
+      "type": "image/png",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
       "src": "/icon-square.png",
       "sizes": "any",
       "type": "image/png",
