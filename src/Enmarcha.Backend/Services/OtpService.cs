@@ -35,13 +35,25 @@ public class OtpService
     public RouteDto MapRoute(RoutesListResponse.RouteItem route)
     {
         var feedId = route.GtfsId.Split(':')[0];
+        var color = route.Color;
+        if (!string.IsNullOrWhiteSpace(color))
+        {
+            if (!color.StartsWith("#")) color = "#" + color;
+        }
+
+        if (string.IsNullOrWhiteSpace(color) || color.Length != 7)
+        {
+            (color, _) = _feedService.GetFallbackColourForFeed(feedId);
+        }
+
+        var textColor = ContrastHelper.GetBestTextColour(color.TrimStart('#'));
         return new RouteDto
         {
             Id = route.GtfsId,
             ShortName = _feedService.NormalizeRouteShortName(feedId, route.ShortName ?? string.Empty),
             LongName = route.LongName,
-            Color = route.Color,
-            TextColor = route.TextColor,
+            Color = color,
+            TextColor = textColor,
             SortOrder = route.SortOrder,
             AgencyName = route.Agency?.Name,
             TripCount = route.Patterns.Sum(p => p.TripsForDate.Count)
@@ -51,12 +63,25 @@ public class OtpService
     public RouteDetailsDto MapRouteDetails(RouteDetailsResponse.RouteItem route)
     {
         var feedId = route.GtfsId?.Split(':')[0] ?? "unknown";
+        var color = route.Color;
+        if (!string.IsNullOrWhiteSpace(color))
+        {
+            if (!color.StartsWith("#")) color = "#" + color;
+        }
+
+        if (string.IsNullOrWhiteSpace(color) || color.Length != 7)
+        {
+            (color, _) = _feedService.GetFallbackColourForFeed(feedId);
+        }
+
+        var textColor = ContrastHelper.GetBestTextColour(color.TrimStart('#'));
+
         return new RouteDetailsDto
         {
             ShortName = _feedService.NormalizeRouteShortName(feedId, route.ShortName ?? string.Empty),
             LongName = route.LongName,
-            Color = route.Color,
-            TextColor = route.TextColor,
+            Color = color,
+            TextColor = textColor,
             AgencyName = route.Agency?.Name,
             Patterns = route.Patterns.Select(p => MapPattern(p, feedId)).ToList()
         };
