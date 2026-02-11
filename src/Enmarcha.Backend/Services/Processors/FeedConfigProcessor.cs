@@ -47,6 +47,8 @@ public class FeedConfigProcessor : IArrivalsProcessor
     {
         arrival.Headsign.Destination = arrival.Headsign.Destination.Replace("*", "");
 
+        var destinationTrimmed = arrival.Headsign.Destination.TrimStart();
+
         if (arrival.Headsign.Destination == "FORA DE SERVIZO.G.B.")
         {
             arrival.Headsign.Destination = "García Barbón, 7 (fora de servizo)";
@@ -55,9 +57,21 @@ public class FeedConfigProcessor : IArrivalsProcessor
 
         switch (arrival.Route.ShortName)
         {
-            case "A" when arrival.Headsign.Destination.StartsWith("\"1\""):
+            case "A" when destinationTrimmed.StartsWith("\"1\"", StringComparison.Ordinal) ||
+                           (destinationTrimmed.Length >= 1 && destinationTrimmed[0] == '1' &&
+                            (destinationTrimmed.Length == 1 || !char.IsDigit(destinationTrimmed[1]))):
                 arrival.Route.ShortName = "A1";
-                arrival.Headsign.Destination = arrival.Headsign.Destination.Replace("\"1\"", "");
+                // NormalizeStopName() removes quotes for Vitrasa, so handle both "\"1\"" and leading "1".
+                if (destinationTrimmed.StartsWith("\"1\"", StringComparison.Ordinal))
+                {
+                    destinationTrimmed = destinationTrimmed.Substring(3);
+                }
+                else
+                {
+                    destinationTrimmed = destinationTrimmed.Substring(1);
+                }
+
+                arrival.Headsign.Destination = destinationTrimmed.TrimStart(' ', '-', '.', ':');
                 break;
             case "6":
                 arrival.Headsign.Destination = arrival.Headsign.Destination.Replace("\"", "");

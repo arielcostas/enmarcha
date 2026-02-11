@@ -37,6 +37,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                         gtfsId
                         serviceId
                         routeShortName
+                        tripHeadsign
                         route {{
                             gtfsId
                             color
@@ -111,6 +112,8 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("serviceId")] public required string ServiceId { get; set; }
 
         [JsonPropertyName("routeShortName")] public required string RouteShortName { get; set; }
+
+        [JsonPropertyName("tripHeadsign")] public string? TripHeadsign { get; set; }
 
         [JsonPropertyName("departureStoptime")]
         public required DepartureStoptime DepartureStoptime { get; set; }

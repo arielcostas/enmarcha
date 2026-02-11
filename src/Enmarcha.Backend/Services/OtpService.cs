@@ -303,6 +303,8 @@ public class OtpService
         var shortName = _feedService.NormalizeRouteShortName(feedId, leg.Route?.ShortName ?? string.Empty);
         var headsign = leg.Headsign;
 
+        var headsignTrimmed = headsign?.Trim();
+
         if (feedId == "vitrasa")
         {
             headsign = headsign?.Replace("*", "");
@@ -313,9 +315,21 @@ public class OtpService
 
             switch (shortName)
             {
-                case "A" when headsign != null && headsign.StartsWith("\"1\""):
+                case "A" when headsignTrimmed != null &&
+                               (headsignTrimmed.StartsWith("\"1\"", StringComparison.Ordinal) ||
+                                (headsignTrimmed.Length >= 1 && headsignTrimmed[0] == '1' &&
+                                 (headsignTrimmed.Length == 1 || !char.IsDigit(headsignTrimmed[1])))):
                     shortName = "A1";
-                    headsign = headsign.Replace("\"1\"", "");
+                    if (headsignTrimmed.StartsWith("\"1\"", StringComparison.Ordinal))
+                    {
+                        headsign = headsignTrimmed[3..];
+                    }
+                    else
+                    {
+                        headsign = headsignTrimmed[1..];
+                    }
+
+                    headsign = headsign.TrimStart(' ', '-', '.', ':');
                     break;
                 case "6":
                     headsign = headsign?.Replace("\"", "");

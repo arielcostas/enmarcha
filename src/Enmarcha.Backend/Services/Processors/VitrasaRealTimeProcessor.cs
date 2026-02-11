@@ -66,7 +66,13 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     .Where(a => a.Route.ShortName.Trim() == estimate.Line.Trim())
                     .Select(a =>
                     {
-                        var arrivalRouteNormalized = _feedService.NormalizeRouteNameForMatching(a.Headsign.Destination);
+                        // Use tripHeadsign from GTFS if available, otherwise fall back to stop-level headsign
+                        string scheduleHeadsign = a.Headsign.Destination;
+                        if (a.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
+                        {
+                            scheduleHeadsign = otpArr.Trip.TripHeadsign;
+                        }
+                        var arrivalRouteNormalized = _feedService.NormalizeRouteNameForMatching(scheduleHeadsign);
                         string? arrivalLongNameNormalized = null;
                         string? arrivalLastStopNormalized = null;
 
@@ -122,10 +128,38 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     var delayMinutes = estimate.Minutes - scheduledMinutes;
                     arrival.Delay = new DelayBadge { Minutes = delayMinutes };
 
-                    // Prefer real-time headsign if available and different
+                    string scheduledHeadsign = arrival.Headsign.Destination;
+                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
+                    {
+                        scheduledHeadsign = otpArr.Trip.TripHeadsign;
+                    }
+
+                    _logger.LogDebug("Matched RT estimate: Line {Line}, RT: {RTRoute} ({RTMin}m), Scheduled: {ScheduledRoute} ({ScheduledMin}m), Delay: {Delay}m",
+                        estimate.Line, estimate.Route, estimate.Minutes, scheduledHeadsign, scheduledMinutes, delayMinutes);
+
+                    // Prefer real-time headsign UNLESS it's just the last stop name (which is less informative)
                     if (!string.IsNullOrWhiteSpace(estimate.Route))
                     {
-                        arrival.Headsign.Destination = estimate.Route;
+                        bool isJustLastStop = false;
+
+                        if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
+                        {
+                            var lastStop = otpArrival.Trip.Stoptimes.LastOrDefault();
+                            if (lastStop != null)
+                            {
+                                var arrivalLastStopNormalized = _feedService.NormalizeRouteNameForMatching(lastStop.Stop.Name);
+                                isJustLastStop = estimateRouteNormalized == arrivalLastStopNormalized;
+                            }
+                        }
+
+                        _logger.LogDebug("Headsign: RT='{RT}' vs Scheduled='{Scheduled}', IsJustLastStop={Last}, WillUseRT={Use}",
+                            estimate.Route, scheduledHeadsign, isJustLastStop, !isJustLastStop);
+
+                        // Use real-time headsign unless it's just the final stop name
+                        if (!isJustLastStop)
+                        {
+                            arrival.Headsign.Destination = estimate.Route;
+                        }
                     }
 
                     // Calculate position
@@ -150,25 +184,22 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                             currentPosition = result.BusPosition;
                             stopShapeIndex = result.StopIndex;
 
-                            if (currentPosition != null)
-                            {
-                                _logger.LogInformation("Calculated position from OTP geometry for trip {TripId}: {Lat}, {Lon}", arrival.TripId, currentPosition.Latitude, currentPosition.Longitude);
-                            }
-
                             // Populate Shape GeoJSON
                             if (!context.IsReduced && currentPosition != null)
                             {
-                                var features = new List<object>();
-                                features.Add(new
+                                var features = new List<object>
                                 {
-                                    type = "Feature",
-                                    geometry = new
+                                    new
                                     {
-                                        type = "LineString",
-                                        coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
-                                    },
-                                    properties = new { type = "route" }
-                                });
+                                        type = "Feature",
+                                        geometry = new
+                                        {
+                                            type = "LineString",
+                                            coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
+                                        },
+                                        properties = new { type = "route" }
+                                    }
+                                };
 
                                 // Add stops if available
                                 if (otpArrival.Trip.Stoptimes != null)

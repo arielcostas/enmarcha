@@ -117,7 +117,7 @@ public partial class ArrivalsController : ControllerBase
                 },
                 Headsign = new HeadsignInfo
                 {
-                    Destination = item.Headsign
+                    Destination = item.Trip.TripHeadsign ?? item.Headsign,
                 },
                 Estimate = new ArrivalDetails
                 {
