@@ -24,6 +24,7 @@ import {
   usePageTitle,
   usePageTitleNode,
 } from "~/contexts/PageTitleContext";
+import { formatHex } from "~/utils/colours";
 import "../tailwind-full.css";
 
 export default function RouteDetailsPage() {
@@ -82,7 +83,7 @@ export default function RouteDetailsPage() {
           <span
             className="text-lg font-bold leading-none"
             style={{
-              color: route.color ? `#${route.color}` : "var(--text-color)",
+              color: route.color ? formatHex(route.color) : "var(--text-color)",
             }}
           >
             {route.shortName || route.longName}
@@ -276,7 +277,9 @@ export default function RouteDetailsPage() {
                     id="route-line"
                     type="line"
                     paint={{
-                      "line-color": route.color ? `#${route.color}` : "#3b82f6",
+                      "line-color": route.color
+                        ? formatHex(route.color)
+                        : "#3b82f6",
                       "line-width": 4,
                       "line-opacity": 0.8,
                     }}
@@ -292,7 +295,7 @@ export default function RouteDetailsPage() {
                     "circle-color": "#ffffff",
                     "circle-stroke-width": 2,
                     "circle-stroke-color": route.color
-                      ? `#${route.color}`
+                      ? formatHex(route.color)
                       : "#3b82f6",
                   }}
                 />
