@@ -4,10 +4,16 @@
   "name": "EnMarcha",
   "description": "Aplicación de transporte pública para Galicia. Consulta horarios, llegadas y rutas de trenes, autobuses interurbanos y distintos urbanos.",
   "short_name": "EnMarcha",
-  "start_url": "/",
+  "start_url": "https://enmarcha.app/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "browser"
+  ],
   "orientation": "portrait",
   "lang": "es",
+  "dir": "ltr",
   "background_color": "#27187D",
   "theme_color": "#27187D",
   "scope": "/",
@@ -17,21 +23,39 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icon-splash.png",
+      "src": "/icon-192.png",
       "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
       "sizes": "any",
       "purpose": "any"
     },
     {
-      "src": "/icon-square.png",
-      "sizes": "any",
+      "src": "/icon-maskable-192.png",
       "type": "image/png",
+      "sizes": "192x192",
       "purpose": "maskable"
     },
     {
-      "src": "/icon-inverse.png",
+      "src": "/icon-maskable-512.png",
       "type": "image/png",
-      "sizes": "any",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-monochrome-256.png",
+      "type": "image/png",
+      "sizes": "256x256",
       "purpose": "monochrome"
     }
   ],

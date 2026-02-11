@@ -38,10 +38,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-        <link rel="icon" type="image/png" href="/icon-round.png" />
-        <link rel="apple-touch-icon" href="/icon-round.png" sizes="256x256" />
+        <link rel="icon" type="image/png" href="/icon-512.png" />
+        <link rel="apple-touch-icon" href="/icon-512.png" sizes="512x512" />
 
-        <meta name="theme-color" content="#F7F7FF" />
+        <meta name="theme-color" content="#27187D" />
         <link rel="canonical" href="https://enmarcha.app/" />
 
         <meta
@@ -57,10 +57,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta property="og:title" content="EnMarcha" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://enmarcha.app/" />
-        <meta
-          property="og:image"
-          content="https://enmarcha.app/icon-round.png"
-        />
+        <meta property="og:image" content="https://enmarcha.app/icon-512.png" />
         <meta
           property="og:description"
           content="Aplicación web para encontrar paradas y tiempos de llegada de los autobuses urbanos"
@@ -295,6 +292,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                  navigator.serviceWorker.register("/pwa-worker.js").catch(console.error);
+                });
+              }
+            `,
+          }}
+        />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -302,15 +310,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * This is the "root HTML" that shows up before React/Remix kicks in.
+ * It will be baked into the static index.html.
+ */
+export function HydrateFallback() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        backgroundColor: "#27187D",
+      }}
+    >
+      <img
+        src="/icon-512.png"
+        alt="EnMarcha"
+        style={{ width: "128px", height: "128px", borderRadius: "100%" }}
+      />
+    </div>
+  );
+}
+
 import { AppShell } from "./components/layout/AppShell";
 
 export default function App() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/pwa-worker.js").catch((error) => {
-      console.error("Error registering SW:", error);
-    });
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
