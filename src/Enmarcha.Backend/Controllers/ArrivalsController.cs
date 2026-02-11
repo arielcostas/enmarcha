@@ -157,10 +157,7 @@ public partial class ArrivalsController : ControllerBase
                 Longitude = stop.Lon
             },
             Routes = [.. stop.Routes
-                .OrderBy(
-                    r => r.ShortName,
-                    Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
-                )
+                .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
                 .Select(r => new RouteInfo
                 {
                     GtfsId = r.GtfsId,

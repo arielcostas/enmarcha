@@ -68,7 +68,7 @@ public class TransitController : ControllerBase
 
             var routes = response.Data.Routes
                 .Select(_otpService.MapRoute)
-                .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.Id))
                 .ToList();
 
             _cache.Set(cacheKey, routes, TimeSpan.FromHours(1));

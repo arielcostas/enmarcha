@@ -1,0 +1,442 @@
+[
+    {
+        "id": "vitrasa:8",
+        "shortName": "A",
+        "longName": "ARENAL – PORTO / UNIVERSIDADE",
+        "color": "#77298F",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 66
+    },
+    {
+        "id": "vitrasa:104",
+        "shortName": "H",
+        "longName": "NAVIA - BOUZAS - HOSPITAL ALVARO CUNQUEIRO",
+        "color": "#0060A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 1
+    },
+    {
+        "id": "vitrasa:751",
+        "shortName": "LZD",
+        "longName": "STELLANTIS - ALV. CUNQUEIRO",
+        "color": "#3D4EA7",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 2
+    },
+    {
+        "id": "vitrasa:304",
+        "shortName": "PTL",
+        "longName": "PARQUE TECNOLÓXICO",
+        "color": "#96DC99",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 2
+    },
+    {
+        "id": "vitrasa:1",
+        "shortName": "C1",
+        "longName": "CIRCULAR CENTRO",
+        "color": "#ED4713",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 91
+    },
+    {
+        "id": "vitrasa:101",
+        "shortName": "H1",
+        "longName": "POLICARPO SANZ – HOSPITAL ÁLVARO CUNQUEIRO",
+        "color": "#0060A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 30
+    },
+    {
+        "id": "vitrasa:30",
+        "shortName": "N1",
+        "longName": "SAMIL  – BUENOS AIRES",
+        "color": "#C44848",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 8
+    },
+    {
+        "id": "vitrasa:301",
+        "shortName": "PSA1",
+        "longName": "STELLANTIS - G.BARBON",
+        "color": "#009900",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 4
+    },
+    {
+        "id": "vitrasa:201",
+        "shortName": "U1",
+        "longName": "LANZADEIRA PZA. AMÉRICA – UNIVERSIDADE",
+        "color": "#AC6404",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 71
+    },
+    {
+        "id": "vitrasa:102",
+        "shortName": "H2",
+        "longName": "GREGORIO ESPINO – HOSPITAL ÁLVARO CUNQU",
+        "color": "#0060A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 47
+    },
+    {
+        "id": "vitrasa:202",
+        "shortName": "U2",
+        "longName": "LANZADEIRA PZA. DE ESPAÑA – UNIVERSIDADE",
+        "color": "#AC6404",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 66
+    },
+    {
+        "id": "vitrasa:3001",
+        "shortName": "C3d",
+        "longName": "BOUZAS/COIA – ENCARNACIÓN Por G. BARBÓN",
+        "color": "#FFCC00",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 120
+    },
+    {
+        "id": "vitrasa:3002",
+        "shortName": "C3i",
+        "longName": "BOUZAS/COIA – ENCARNACIÓN por TRV. VIGO",
+        "color": "#FFCC00",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 122
+    },
+    {
+        "id": "vitrasa:105",
+        "shortName": "H3",
+        "longName": "GARCÍA BARBÓN – HOSPITAL ÁLVARO CUNQUEIRO",
+        "color": "#0060A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 4
+    },
+    {
+        "id": "vitrasa:4001",
+        "shortName": "4A",
+        "longName": "ARAGÓN - COIA",
+        "color": "#009900",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 61
+    },
+    {
+        "id": "vitrasa:4003",
+        "shortName": "4C",
+        "longName": "G. ESPINO - COIA",
+        "color": "#009900",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 53
+    },
+    {
+        "id": "vitrasa:3305",
+        "shortName": "N4",
+        "longName": "NAVIA - G. ESPINO",
+        "color": "#C44848",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 0
+    },
+    {
+        "id": "vitrasa:4004",
+        "shortName": "PSA4",
+        "longName": "STELLANTIS - G. BARBON",
+        "color": "#009900",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 3
+    },
+    {
+        "id": "vitrasa:5001",
+        "shortName": "5A",
+        "longName": "NAVIA-TRV. DE VIGO",
+        "color": "#CCAFAF",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 61
+    },
+    {
+        "id": "vitrasa:5004",
+        "shortName": "5B",
+        "longName": "NAVIA-S. BADÍA",
+        "color": "#DFD5D5",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 61
+    },
+    {
+        "id": "vitrasa:6",
+        "shortName": "6",
+        "longName": "HOSP. ALVARO CUNQUEIRO - BEADE – PZA. ESPAÑA",
+        "color": "#CC3399",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 33
+    },
+    {
+        "id": "vitrasa:7",
+        "shortName": "7",
+        "longName": "PZA. ESPAÑA – GARRIDA / ZAMÁNS / SOBREIRA",
+        "color": "#96DC99",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 67
+    },
+    {
+        "id": "vitrasa:9002",
+        "shortName": "9B",
+        "longName": "P. SANZ - RABADEIRA",
+        "color": "#F4CA8C",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 34
+    },
+    {
+        "id": "vitrasa:10",
+        "shortName": "10",
+        "longName": "TEIS – CANIDO – SAIÁNS",
+        "color": "#993300",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 36
+    },
+    {
+        "id": "vitrasa:11",
+        "shortName": "11",
+        "longName": "SAN MIGUEL - CABRAL",
+        "color": "#D9556D",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 65
+    },
+    {
+        "id": "vitrasa:1201",
+        "shortName": "12A",
+        "longName": "SAIÁNS – MUÍÑOS – HOSP. MEIXOEIRO",
+        "color": "#6A96BE",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 34
+    },
+    {
+        "id": "vitrasa:1202",
+        "shortName": "12B",
+        "longName": "HOSP. ALVARO CUNQUEIRO – HOSP. MEIXOEIRO",
+        "color": "#6A96BE",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 33
+    },
+    {
+        "id": "vitrasa:13",
+        "shortName": "13",
+        "longName": "TEIXUGUEIRAS – HOSP. MEIXOEIRO",
+        "color": "#00B0F0",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 47
+    },
+    {
+        "id": "vitrasa:14",
+        "shortName": "14",
+        "longName": "CHANS – GRAN VÍA",
+        "color": "#818E7E",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 35
+    },
+    {
+        "id": "vitrasa:1501",
+        "shortName": "15A",
+        "longName": "CABRAL - SAMIL",
+        "color": "#D8A8CE",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 68
+    },
+    {
+        "id": "vitrasa:1506",
+        "shortName": "15B",
+        "longName": "HOSP. MEIXOEIRO - SAMIL / NAVIA",
+        "color": "#D8A8CE",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 33
+    },
+    {
+        "id": "vitrasa:1507",
+        "shortName": "15C",
+        "longName": "UNIVERSIDADE – SAMIL / NAVIA",
+        "color": "#D8A8CE",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 35
+    },
+    {
+        "id": "vitrasa:16",
+        "shortName": "16",
+        "longName": "COIA – ESTACIÓN FF.CC. (GUIXAR)",
+        "color": "#818E7E",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 32
+    },
+    {
+        "id": "vitrasa:17",
+        "shortName": "17",
+        "longName": "MATAMÁ (BALSA) – A GUÍA / RÍOS",
+        "color": "#D6F51F",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 65
+    },
+    {
+        "id": "vitrasa:18",
+        "shortName": "18A",
+        "longName": "AREAL/COLÓN - SÁRDOMA/POULEIRA",
+        "color": "#D450A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 28
+    },
+    {
+        "id": "vitrasa:1801",
+        "shortName": "18B",
+        "longName": "URZAIZ / P.ESPAÑA - POULEIRA",
+        "color": "#D450A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 9
+    },
+    {
+        "id": "vitrasa:1802",
+        "shortName": "18H",
+        "longName": "URZAIZ / P. ESPAÑA - H. ALV. CUNQUEIRO",
+        "color": "#D450A8",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 6
+    },
+    {
+        "id": "vitrasa:23",
+        "shortName": "23",
+        "longName": "M. ECHEGARAY – G. ESPINO",
+        "color": "#B9C8E4",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 48
+    },
+    {
+        "id": "vitrasa:24",
+        "shortName": "24",
+        "longName": "POULO – ESTACIÓN FF.CC. (GUIXAR)",
+        "color": "#BFBFBF",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 30
+    },
+    {
+        "id": "vitrasa:25",
+        "shortName": "25",
+        "longName": "PZA. ESPAÑA – SABAXÁNS / CAEIRO",
+        "color": "#AC6404",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 31
+    },
+    {
+        "id": "vitrasa:27",
+        "shortName": "27",
+        "longName": "BEADE (C. CULTURAL) – RABADEIRA",
+        "color": "#704A2A",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 34
+    },
+    {
+        "id": "vitrasa:28",
+        "shortName": "28",
+        "longName": "VIGOZOO - SAN PAIO - BOUZAS",
+        "color": "#B0BDFE",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 14
+    },
+    {
+        "id": "vitrasa:29",
+        "shortName": "29",
+        "longName": "FRAGOSELO / S. ANDRÉS – PZA. ESPAÑA",
+        "color": "#F8B85A",
+        "textColor": "#000000",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 56
+    },
+    {
+        "id": "vitrasa:31",
+        "shortName": "31",
+        "longName": "SAN LOURENZO – HOSP. MEIXOEIRO",
+        "color": "#F57F00",
+        "textColor": "#FFFFFF",
+        "sortOrder": null,
+        "agencyName": "Viguesa de Transportes S.L.",
+        "tripCount": 60
+    }
+]
