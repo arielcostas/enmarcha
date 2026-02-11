@@ -8,9 +8,7 @@ import React, {
 } from "react";
 import { Layer, Marker, Source, type MapRef } from "react-map-gl/maplibre";
 import { Sheet } from "react-modal-sheet";
-import { useApp } from "~/AppContext";
 import { AppMap } from "~/components/shared/AppMap";
-import { getLineColour } from "~/data/LineColors";
 import type { Stop } from "~/data/StopDataProvider";
 import "./StopMapModal.css";
 
@@ -23,17 +21,14 @@ export interface Position {
 
 export interface ConsolidatedCirculationForMap {
   id: string;
-  line: string;
-  route: string;
   currentPosition?: Position;
   stopShapeIndex?: number;
-  isPreviousTrip?: boolean;
-  previousTripShapeId?: string | null;
-  schedule?: {
-    shapeId?: string | null;
-  };
+  colour: string;
+  textColour: string;
   shape?: any;
 }
+
+// TODO: Replace `circulations`+`selectedCirculationId` with a single `selectedCirculation` prop
 
 interface StopMapModalProps {
   stop: Stop;
@@ -50,12 +45,10 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
   onClose,
   selectedCirculationId,
 }) => {
-  const { theme } = useApp();
   const mapRef = useRef<MapRef | null>(null);
   const hasFitBounds = useRef(false);
   const userInteracted = useRef(false);
   const [shapeData, setShapeData] = useState<any | null>(null);
-  const [previousShapeData, setPreviousShapeData] = useState<any | null>(null);
 
   // Filter circulations that have GPS coordinates
   const busesWithPosition = useMemo(
@@ -163,7 +156,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
           }
         } else {
           // Current trip: Start from Bus (if not previous), End at User Stop
-          if (!previousShapeData && currentPos) {
+          if (currentPos) {
             const busIdx = findClosestStopIndex(stops, {
               lat: currentPos.latitude,
               lon: currentPos.longitude,
@@ -234,7 +227,6 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
       }
     };
 
-    addShapePoints(previousShapeData, true);
     addShapePoints(shapeData, false);
 
     if (points.length === 0) {
@@ -292,7 +284,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
         } as any);
       }
     } catch {}
-  }, [stop, selectedBus, shapeData, previousShapeData]);
+  }, [stop, selectedBus, shapeData]);
 
   // Resize map and fit bounds when modal opens
   useEffect(() => {
@@ -324,7 +316,6 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
       hasFitBounds.current = false;
       userInteracted.current = false;
       setShapeData(null);
-      setPreviousShapeData(null);
     }
   }, [isOpen]);
 
@@ -332,19 +323,16 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
   useEffect(() => {
     if (!isOpen || !selectedBus) {
       setShapeData(null);
-      setPreviousShapeData(null);
       return;
     }
 
     if (selectedBus.shape) {
       setShapeData(selectedBus.shape);
-      setPreviousShapeData(null);
       handleCenter();
       return;
     }
 
     setShapeData(null);
-    setPreviousShapeData(null);
   }, [isOpen, selectedBus]);
 
   if (!selectedBus && busesWithPosition.length === 0) {
@@ -392,58 +380,6 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                   handleCenter();
                 }}
               >
-                {/* Previous Shape Layer */}
-                {previousShapeData && selectedBus && (
-                  <Source
-                    id="prev-route-shape"
-                    type="geojson"
-                    data={previousShapeData}
-                  >
-                    {/* 1. Black border */}
-                    <Layer
-                      id="prev-route-shape-border"
-                      type="line"
-                      paint={{
-                        "line-color": "#000000",
-                        "line-width": 6,
-                        "line-opacity": 0.8,
-                      }}
-                      layout={{
-                        "line-cap": "round",
-                        "line-join": "round",
-                      }}
-                    />
-                    {/* 2. White background */}
-                    <Layer
-                      id="prev-route-shape-white"
-                      type="line"
-                      paint={{
-                        "line-color": "#FFFFFF",
-                        "line-width": 4,
-                      }}
-                      layout={{
-                        "line-cap": "round",
-                        "line-join": "round",
-                      }}
-                    />
-                    {/* 3. Colored dashes */}
-                    <Layer
-                      id="prev-route-shape-inner"
-                      type="line"
-                      paint={{
-                        "line-color": getLineColour(selectedBus.line)
-                          .background,
-                        "line-width": 4,
-                        "line-dasharray": [2, 2],
-                      }}
-                      layout={{
-                        "line-cap": "round",
-                        "line-join": "round",
-                      }}
-                    />
-                  </Source>
-                )}
-
                 {/* Shape Layer */}
                 {shapeData && selectedBus && (
                   <Source id="route-shape" type="geojson" data={shapeData}>
@@ -451,8 +387,8 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                       id="route-shape-border"
                       type="line"
                       paint={{
-                        "line-color": "#000000",
-                        "line-width": 5,
+                        "line-color": selectedBus.textColour,
+                        "line-width": 7,
                         "line-opacity": 0.6,
                       }}
                       layout={{
@@ -464,10 +400,8 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                       id="route-shape-inner"
                       type="line"
                       paint={{
-                        "line-color": getLineColour(selectedBus.line)
-                          .background,
-                        "line-width": 3,
-                        "line-opacity": 0.7,
+                        "line-color": selectedBus.colour,
+                        "line-width": 5,
                       }}
                       layout={{
                         "line-cap": "round",
@@ -484,8 +418,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                         "circle-color": "#FFFFFF",
                         "circle-radius": 4,
                         "circle-stroke-width": 2,
-                        "circle-stroke-color": getLineColour(selectedBus.line)
-                          .background,
+                        "circle-stroke-color": selectedBus.colour,
                       }}
                     />
                   </Source>
@@ -557,7 +490,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                       >
                         <path
                           d="M12 2 L22 22 L12 17 L2 22 Z"
-                          fill={getLineColour(selectedBus.line).background}
+                          fill={selectedBus.colour}
                           stroke="#000"
                           strokeWidth="2"
                           strokeLinejoin="round"

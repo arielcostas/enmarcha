@@ -11,6 +11,7 @@ import { PullToRefresh } from "~/components/PullToRefresh";
 import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
 import { usePageTitle } from "~/contexts/PageTitleContext";
+import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
 import "./stops-$id.css";
 
@@ -231,13 +232,10 @@ export default function Estimates() {
             }}
             circulations={(data ?? []).map((a) => ({
               id: getArrivalId(a),
-              line: a.route.shortName,
-              route: a.headsign.destination,
               currentPosition: a.currentPosition ?? undefined,
               stopShapeIndex: a.stopShapeIndex ?? undefined,
-              schedule: {
-                shapeId: undefined,
-              },
+              colour: formatHex(a.route.colour),
+              textColour: formatHex(a.route.textColour),
               shape: a.shape,
             }))}
             isOpen={isMapModalOpen}
