@@ -36,8 +36,14 @@ export const ShiftBadgeSchema = z.object({
 export const PositionSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
-  orientationDegrees: z.number(),
-  shapeIndex: z.number(),
+  orientationDegrees: z.number().optional().nullable(),
+  shapeIndex: z.number().optional().nullable(),
+});
+
+export const BusStopUsagePointSchema = z.object({
+  h: z.number().int(),
+  t: z.number().int(),
+  d: z.number().int(),
 });
 
 export const VehicleInformationSchema = z.object({
@@ -67,6 +73,7 @@ export const StopArrivalsResponseSchema = z.object({
   stopLocation: PositionSchema.optional().nullable(),
   routes: z.array(RouteInfoSchema),
   arrivals: z.array(ArrivalSchema),
+  usage: z.array(BusStopUsagePointSchema).optional().nullable(),
 });
 
 export type RouteInfo = z.infer<typeof RouteInfoSchema>;
@@ -77,6 +84,7 @@ export type DelayBadge = z.infer<typeof DelayBadgeSchema>;
 export type ShiftBadge = z.infer<typeof ShiftBadgeSchema>;
 export type Position = z.infer<typeof PositionSchema>;
 export type Arrival = z.infer<typeof ArrivalSchema>;
+export type BusStopUsagePoint = z.infer<typeof BusStopUsagePointSchema>;
 export type StopArrivalsResponse = z.infer<typeof StopArrivalsResponseSchema>;
 
 // Transit Routes

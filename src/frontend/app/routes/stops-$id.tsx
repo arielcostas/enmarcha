@@ -1,18 +1,31 @@
-import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
+import {
+  ChartNoAxesColumn,
+  CircleHelp,
+  Eye,
+  EyeClosed,
+  Star,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { fetchArrivals } from "~/api/arrivals";
-import { type Arrival, type Position, type RouteInfo } from "~/api/schema";
+import {
+  type Arrival,
+  type Position,
+  type RouteInfo,
+  type StopArrivalsResponse,
+} from "~/api/schema";
 import { ArrivalList } from "~/components/arrivals/ArrivalList";
 import { ErrorDisplay } from "~/components/ErrorDisplay";
 import LineIcon from "~/components/LineIcon";
 import { PullToRefresh } from "~/components/PullToRefresh";
 import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
+import { StopUsageModal } from "~/components/stop/StopUsageModal";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
+import "../tailwind-full.css";
 import "./stops-$id.css";
 
 export const getArrivalId = (a: Arrival): string => {
@@ -36,7 +49,7 @@ export default function Estimates() {
   );
 
   // Data state
-  const [data, setData] = useState<Arrival[] | null>(null);
+  const [data, setData] = useState<StopArrivalsResponse | null>(null);
   const [dataDate, setDataDate] = useState<Date | null>(null);
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<ErrorInfo | null>(null);
@@ -45,6 +58,7 @@ export default function Estimates() {
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isUsageVisible, setIsUsageVisible] = useState(false);
   const [isReducedView, setIsReducedView] = useState(false);
   const [selectedArrivalId, setSelectedArrivalId] = useState<
     string | undefined
@@ -84,7 +98,7 @@ export default function Estimates() {
       setDataError(null);
 
       const response = await fetchArrivals(stopId, false);
-      setData(response.arrivals);
+      setData(response);
       setStopName(response.stopName);
       setApiRoutes(response.routes);
       if (response.stopLocation) {
@@ -179,6 +193,15 @@ export default function Estimates() {
                     onClick={toggleFavourite}
                   />
 
+                  {data.usage && data.usage.length > 0 && (
+                    <ChartNoAxesColumn
+                      className={`cursor-pointer transition-colors ${
+                        isUsageVisible ? "text-primary" : "text-muted"
+                      }`}
+                      onClick={() => setIsUsageVisible(!isUsageVisible)}
+                    />
+                  )}
+
                   <CircleHelp
                     className="text-muted cursor-pointer"
                     onClick={() => setIsHelpModalOpen(true)}
@@ -210,7 +233,7 @@ export default function Estimates() {
                 </div>
               </div>
               <ArrivalList
-                arrivals={data}
+                arrivals={data.arrivals}
                 reduced={isReducedView}
                 onArrivalClick={(arrival) => {
                   setSelectedArrivalId(getArrivalId(arrival));
@@ -230,7 +253,7 @@ export default function Estimates() {
               longitude: apiLocation?.longitude,
               lines: [],
             }}
-            circulations={(data ?? []).map((a) => ({
+            circulations={(data?.arrivals ?? []).map((a) => ({
               id: getArrivalId(a),
               currentPosition: a.currentPosition ?? undefined,
               stopShapeIndex: a.stopShapeIndex ?? undefined,
@@ -248,6 +271,14 @@ export default function Estimates() {
           isOpen={isHelpModalOpen}
           onClose={() => setIsHelpModalOpen(false)}
         />
+
+        {data?.usage && (
+          <StopUsageModal
+            isOpen={isUsageVisible}
+            onClose={() => setIsUsageVisible(false)}
+            usage={data.usage}
+          />
+        )}
       </div>
     </PullToRefresh>
   );

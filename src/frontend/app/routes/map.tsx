@@ -307,6 +307,18 @@ export default function StopMap() {
             "text-anchor": "center",
             "text-justify": "center",
             "text-size": ["interpolate", ["linear"], ["zoom"], 11, 8, 22, 16],
+            "symbol-sort-key": [
+              "match",
+              ["get", "transitKind"],
+              "coach",
+              3,
+              "train",
+              2,
+              "bus",
+              1,
+              0,
+            ],
+            "text-allow-overlap": false,
           }}
           paint={{
             "text-color": [

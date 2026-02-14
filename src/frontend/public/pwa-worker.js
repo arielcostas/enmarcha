@@ -1,10 +1,13 @@
-const CACHE_VERSION = "20260101a";
+const CACHE_VERSION = "20260211a";
 const STATIC_CACHE_NAME = `static-cache-${CACHE_VERSION}`;
 const STATIC_CACHE_ASSETS = [
   "/favicon.ico",
-  "/icon-square-256.png",
-  "/icon-round-256.png",
-  "/icon-inverse.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-192.png",
+  "/icon-maskable-512.png",
+  "/icon-monochrome-256.png",
+  "/icon.svg",
 ];
 
 const EXPR_CACHE_AFTER_FIRST_VIEW = /(\/assets\/.*)/;

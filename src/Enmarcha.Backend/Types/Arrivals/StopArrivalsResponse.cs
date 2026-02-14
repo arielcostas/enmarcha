@@ -18,4 +18,7 @@ public class StopArrivalsResponse
 
     [JsonPropertyName("arrivals")]
     public List<Arrival> Arrivals { get; set; } = [];
+
+    [JsonPropertyName("usage")]
+    public List<BusStopUsagePoint>? Usage { get; set; }
 }

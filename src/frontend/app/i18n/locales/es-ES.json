@@ -222,5 +222,20 @@
     "gps_quality": "Calidad GPS",
     "gps_reliable": "Los datos del GPS son del viaje actual, y la posición es una estimación fiable.",
     "gps_imprecise": "Los datos del GPS parecen indicar que el autobús está realizando el viaje anterior (posiblemente de otra línea). La posición puede no ser fiable."
+  },
+  "days": {
+    "monday": "L",
+    "tuesday": "M",
+    "wednesday": "X",
+    "thursday": "J",
+    "friday": "V",
+    "saturday": "S",
+    "sunday": "D"
+  },
+  "stop": {
+    "usage_title": "Ocupación por horas",
+    "usage_passengers": "pas.",
+    "usage_disclaimer": "Basado en la ocupación histórica promedio de los últimos meses disponible en datos.vigo.org. No refleja la ocupación en tiempo real.",
+    "usage_scale_info": "La escala del gráfico no es lineal para resaltar mejor los valores bajos."
   }
 }

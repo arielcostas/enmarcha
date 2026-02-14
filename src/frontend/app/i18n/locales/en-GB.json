@@ -222,5 +222,20 @@
     "gps_quality": "GPS Quality",
     "gps_reliable": "GPS data is from the current trip, and the position is a reliable estimate.",
     "gps_imprecise": "GPS data seems to indicate the bus is on the previous trip (possibly from another line). The position might not be reliable."
+  },
+  "days": {
+    "monday": "Mo",
+    "tuesday": "Tu",
+    "wednesday": "We",
+    "thursday": "Th",
+    "friday": "Fr",
+    "saturday": "Sa",
+    "sunday": "Su"
+  },
+  "stop": {
+    "usage_title": "Hourly occupancy",
+    "usage_passengers": "pax",
+    "usage_disclaimer": "Based on average historical occupancy from recent months available at datos.vigo.org. Does not reflect real-time occupancy.",
+    "usage_scale_info": "Graph uses a non-linear scale to better highlight lower occupancy values."
   }
 }

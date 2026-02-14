@@ -128,6 +128,7 @@ builder.Services.AddSingleton<LineFormatterService>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, SantiagoRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, VigoUsageProcessor>();
 
 builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();

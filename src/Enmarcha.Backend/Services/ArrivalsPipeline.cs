@@ -23,6 +23,7 @@ public class ArrivalsContext
     public Position? StopLocation { get; set; }
 
     public required List<Arrival> Arrivals { get; set; }
+    public List<BusStopUsagePoint>? Usage { get; set; }
     public required DateTime NowLocal { get; set; }
 }
 

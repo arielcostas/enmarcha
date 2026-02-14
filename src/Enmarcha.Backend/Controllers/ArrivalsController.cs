@@ -130,7 +130,7 @@ public partial class ArrivalsController : ControllerBase
             arrivals.Add(arrival);
         }
 
-        await _pipeline.ExecuteAsync(new ArrivalsContext
+        var context = new ArrivalsContext
         {
             StopId = id,
             StopCode = stop.Code,
@@ -138,7 +138,9 @@ public partial class ArrivalsController : ControllerBase
             Arrivals = arrivals,
             NowLocal = nowLocal,
             StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon }
-        });
+        };
+
+        await _pipeline.ExecuteAsync(context);
 
         var feedId = id.Split(':')[0];
 
@@ -167,7 +169,8 @@ public partial class ArrivalsController : ControllerBase
                         ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
                         r.TextColor
                 })],
-            Arrivals = [.. arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)]
+            Arrivals = [.. arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)],
+            Usage = context.Usage
         });
 
     }
