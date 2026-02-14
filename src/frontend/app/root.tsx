@@ -7,6 +7,7 @@ import {
 } from "react-router";
 
 import "@fontsource-variable/outfit";
+import "@fontsource-variable/roboto";
 import type { Route } from "./+types/root";
 import "./root.css";
 
