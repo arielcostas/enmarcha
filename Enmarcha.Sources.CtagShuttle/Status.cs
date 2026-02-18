@@ -17,10 +17,10 @@ public class CtagShuttleStatus
     public Status Status => Status.Parse(StatusValue);
     
     [JsonIgnore]
-    public DateTime LastPositionAt => DateTime.Parse(LastPositionAtValue);
+    public DateTime LastPositionAt => DateTime.Parse(LastPositionAtValue, null, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
     
     [JsonIgnore]
-    public DateTime LastOccupancyAt => DateTime.Parse(LastOccupancyAtValue);
+    public DateTime LastOccupancyAt => DateTime.Parse(LastOccupancyAtValue, null, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal);
 }
 
 public enum Status

@@ -42,7 +42,10 @@ public class CtagShuttleRealTimeProcessor : AbstractRealTimeProcessor
             System.Diagnostics.Activity.Current?.SetTag("shuttle.status", status.StatusValue);
 
             // Validate position timestamp - skip if data is stale (>3 minutes old)
-            var positionAge = (context.NowLocal - status.LastPositionAt).TotalMinutes;
+            // Convert UTC timestamp to Madrid time for comparison
+            var madridTz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+            var lastPositionMadrid = TimeZoneInfo.ConvertTimeFromUtc(status.LastPositionAt, madridTz);
+            var positionAge = (context.NowLocal - lastPositionMadrid).TotalMinutes;
             if (positionAge > MaxPositionAgeMinutes)
             {
                 _logger.LogInformation(
