@@ -128,6 +128,7 @@ builder.Services.AddSingleton<LineFormatterService>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, SantiagoRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, CtagShuttleRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, VigoUsageProcessor>();
 
 builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
@@ -142,6 +143,7 @@ builder.Services.AddHttpClient<IGeocodingService, GeoapifyGeocodingService>();
 builder.Services.AddHttpClient<OtpService>();
 builder.Services.AddHttpClient<Enmarcha.Sources.TranviasCoruna.CorunaRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.Tussa.SantiagoRealtimeEstimatesProvider>();
+builder.Services.AddHttpClient<Enmarcha.Sources.CtagShuttle.CtagShuttleRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
 var app = builder.Build();

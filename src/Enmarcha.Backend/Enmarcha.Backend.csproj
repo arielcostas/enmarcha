@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Enmarcha.Sources.CtagShuttle\Enmarcha.Sources.CtagShuttle.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.OpenTripPlannerGql\Enmarcha.Sources.OpenTripPlannerGql.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.TranviasCoruna\Enmarcha.Sources.TranviasCoruna.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.Tussa\Enmarcha.Sources.Tussa.csproj" />

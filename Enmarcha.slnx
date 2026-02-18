@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Enmarcha.Sources.CtagShuttle/Enmarcha.Sources.CtagShuttle.csproj" />
   <Project Path="src/Enmarcha.Backend/Enmarcha.Backend.csproj" />
   <Project Path="src/Enmarcha.Experimental.ServiceViewer/Enmarcha.Experimental.ServiceViewer.csproj" />
   <Project Path="src/Enmarcha.Sources.OpenTripPlannerGql/Enmarcha.Sources.OpenTripPlannerGql.csproj" />
