@@ -15,6 +15,7 @@ import Map, {
   type MapRef,
   type StyleSpecification,
 } from "react-map-gl/maplibre";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import { useApp } from "~/AppContext";
 import { APP_CONSTANTS } from "~/config/constants";
@@ -82,6 +83,7 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
       showCameras: settingsShowCameras,
       mapPositionMode,
     } = useApp();
+    const { i18n } = useTranslation();
     const mapRef = useRef<MapRef>(null);
     const [mapStyle, setMapStyle] = useState<StyleSpecification>(DEFAULT_STYLE);
     const location = useLocation();
@@ -96,10 +98,13 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
     useImperativeHandle(ref, () => mapRef.current!);
 
     useEffect(() => {
-      loadStyle("openfreemap", theme, { includeTraffic: showTraffic })
+      loadStyle("openfreemap", theme, {
+        includeTraffic: showTraffic,
+        language: i18n.language,
+      })
         .then((style) => setMapStyle(style))
         .catch((error) => console.error("Failed to load map style:", error));
-    }, [theme, showTraffic]);
+    }, [theme, showTraffic, i18n.language]);
 
     useEffect(() => {
       const handleMapChange = () => {
