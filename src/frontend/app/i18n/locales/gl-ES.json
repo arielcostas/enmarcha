@@ -106,7 +106,8 @@
   "map": {
     "popup_title": "Parada",
     "lines": "Liñas",
-    "view_all_estimates": "Ver todas as estimacións"
+    "view_all_estimates": "Ver todas as estimacións",
+    "select_nearby_stop": "Seleccionar parada"
   },
   "planner": {
     "where_to": "Onde queres ir?",

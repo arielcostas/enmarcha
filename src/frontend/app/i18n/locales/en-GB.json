@@ -102,7 +102,8 @@
   "map": {
     "popup_title": "Stop",
     "lines": "Lines",
-    "view_all_estimates": "View all estimates"
+    "view_all_estimates": "View all estimates",
+    "select_nearby_stop": "Select stop"
   },
   "planner": {
     "where_to": "Where do you want to go?",

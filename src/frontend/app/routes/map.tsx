@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, MapPin, X } from "lucide-react";
 import type { FilterSpecification } from "maplibre-gl";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,6 +37,9 @@ export default function StopMap() {
     StopSheetProps["stop"] | null
   >(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [disambiguationStops, setDisambiguationStops] = useState<
+    Array<StopSheetProps["stop"]>
+  >([]);
   const mapRef = useRef<MapRef>(null);
 
   const {
@@ -105,9 +108,42 @@ export default function StopMap() {
       );
       return;
     }
-    const feature = features[0];
 
-    handlePointClick(feature);
+    // Collect only stop-layer features with valid properties
+    const stopFeatures = features.filter(
+      (f) => f.layer?.id?.startsWith("stops") && f.properties?.id
+    );
+
+    if (stopFeatures.length === 0) return;
+
+    if (stopFeatures.length === 1) {
+      // Single unambiguous stop – open the sheet directly
+      handlePointClick(stopFeatures[0]);
+      return;
+    }
+
+    // Multiple overlapping stops – deduplicate by stop id and ask the user
+    const seen = new Set<string>();
+    const candidates: Array<StopSheetProps["stop"]> = [];
+    for (const f of stopFeatures) {
+      const id: string = f.properties!.id;
+      if (!seen.has(id)) {
+        seen.add(id);
+        candidates.push({
+          stopId: id,
+          stopCode: f.properties!.code,
+          name: f.properties!.name || "Unknown Stop",
+        });
+      }
+    }
+
+    if (candidates.length === 1) {
+      // After deduplication only one stop remains
+      setSelectedStop(candidates[0]);
+      setIsSheetOpen(true);
+    } else {
+      setDisambiguationStops(candidates);
+    }
   };
 
   const stopLayerFilter = useMemo(() => {
@@ -349,6 +385,51 @@ export default function StopMap() {
             onClose={() => setIsSheetOpen(false)}
             stop={selectedStop}
           />
+        )}
+
+        {disambiguationStops.length > 1 && (
+          <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center pointer-events-none pb-safe">
+            <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-slate-900 rounded-t-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-base">
+                  {t("map.select_nearby_stop", "Seleccionar parada")}
+                </h3>
+                <button
+                  onClick={() => setDisambiguationStops([])}
+                  className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label={t("planner.close", "Cerrar")}
+                >
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                {disambiguationStops.map((stop) => (
+                  <li key={stop.stopId}>
+                    <button
+                      className="w-full flex items-center gap-3 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-lg px-2"
+                      onClick={() => {
+                        setDisambiguationStops([]);
+                        setSelectedStop(stop);
+                        setIsSheetOpen(true);
+                      }}
+                    >
+                      <MapPin className="w-4 h-4 flex-shrink-0 text-primary-600" />
+                      <div>
+                        <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
+                          {stop.name}
+                        </div>
+                        {stop.stopCode && (
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
+                            {stop.stopCode}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         )}
       </AppMap>
     </div>
