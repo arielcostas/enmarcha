@@ -103,11 +103,6 @@ export async function loadStyle(
       delete style.sources?.vigo_traffic;
     }
 
-    // Remove the pseudo-3D building-top layer (fill-translate shadow effect).
-    style.layers = (style.layers || []).filter(
-      (layer: any) => layer.id !== "building-top"
-    );
-
     // Apply language-aware label expressions.
     if (language) {
       applyLanguageToStyle(style, language);

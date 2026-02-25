@@ -879,32 +879,7 @@
           16,
           1
         ],
-        "fill-outline-color": "#dfdbd7",
-        "fill-translate": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          14,
-          [
-            "literal",
-            [
-              0,
-              0
-            ]
-          ],
-          16,
-          [
-            "literal",
-            [
-              -2,
-              -2
-            ]
-          ]
-        ]
+        "fill-outline-color": "#dfdbd7"
       }
     },
     {
