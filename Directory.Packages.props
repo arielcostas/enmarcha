@@ -4,14 +4,14 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-      <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+      <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.3" />
 
-      <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.1" />
+      <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
       <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
       <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="10.0.0" />
 
       <PackageVersion Include="Costasdev.VigoTransitApi" Version="0.1.0" />
-      <PackageVersion Include="Google.Protobuf" Version="3.33.1" />
+      <PackageVersion Include="Google.Protobuf" Version="3.34.0" />
       <PackageVersion Include="ProjNet" Version="2.1.0" />
 
       <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
