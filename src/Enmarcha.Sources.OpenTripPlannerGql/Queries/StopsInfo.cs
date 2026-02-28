@@ -19,6 +19,7 @@ public class StopsInfoContent : IGraphRequest<StopsInfoContent.Args>
                 lat
                 lon
                 routes {{
+                    gtfsId
                     shortName
                     color
                     textColor
@@ -50,6 +51,7 @@ public class StopsInfoResponse : AbstractGraphResponse
 
     public class RouteDetails
     {
+        [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
         [JsonPropertyName("shortName")] public string? ShortName { get; set; }
         [JsonPropertyName("color")] public string? Color { get; set; }
         [JsonPropertyName("textColor")] public string? TextColor { get; set; }

@@ -94,6 +94,51 @@ public class FeedService
         return NormalizeRouteShortName(feedId, shortName);
     }
 
+    /// <summary>
+    /// When more than this many distinct routes share the same 3-character short-name prefix,
+    /// they are collapsed into a single entry showing only the prefix.
+    /// </summary>
+    private const int RouteCollapseThreshold = 5;
+
+    /// <summary>
+    /// Deduplicates routes by <see cref="RouteInfo.ShortName"/> and collapses groups of more than
+    /// <see cref="RouteCollapseThreshold"/> routes that share the same 3-character prefix into a
+    /// single entry using that prefix as the name.
+    /// </summary>
+    public List<RouteInfo> ConsolidateRoutes(IEnumerable<RouteInfo> routes)
+    {
+        // Deduplicate by short name (case-insensitive)
+        var deduplicated = routes
+            .GroupBy(r => r.ShortName, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
+            .ToList();
+
+        // Group by the first 3 characters; collapse groups exceeding the threshold.
+        // When collapsing, the first entry's colour is used — routes in the same prefix
+        // group (e.g. all xunta "621.*" lines) share the same operator colour.
+        var result = new List<RouteInfo>();
+        foreach (var group in deduplicated.GroupBy(r => r.ShortName.Length >= 3 ? r.ShortName[..3] : r.ShortName))
+        {
+            var items = group.ToList();
+            if (items.Count > RouteCollapseThreshold)
+            {
+                result.Add(new RouteInfo
+                {
+                    GtfsId = items[0].GtfsId,
+                    ShortName = group.Key,
+                    Colour = items[0].Colour,
+                    TextColour = items[0].TextColour
+                });
+            }
+            else
+            {
+                result.AddRange(items);
+            }
+        }
+
+        return result;
+    }
+
     public string NormalizeStopName(string feedId, string name)
     {
         if (feedId == "vitrasa")

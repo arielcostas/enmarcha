@@ -158,17 +158,18 @@ public partial class ArrivalsController : ControllerBase
                 Latitude = stop.Lat,
                 Longitude = stop.Lon
             },
-            Routes = [.. stop.Routes
-                .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
-                .Select(r => new RouteInfo
-                {
-                    GtfsId = r.GtfsId,
-                    ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                    Colour = r.Color ?? fallbackColor,
-                    TextColour = r.TextColor is null or "000000" ?
-                        ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
-                        r.TextColor
-                })],
+            Routes = [.. _feedService.ConsolidateRoutes(
+                stop.Routes
+                    .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
+                    .Select(r => new RouteInfo
+                    {
+                        GtfsId = r.GtfsId,
+                        ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                        Colour = r.Color ?? fallbackColor,
+                        TextColour = r.TextColor is null or "000000" ?
+                            ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
+                            r.TextColor
+                    }))],
             Arrivals = [.. arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)],
             Usage = context.Usage
         });
@@ -224,15 +225,23 @@ public partial class ArrivalsController : ControllerBase
                     id = s.GtfsId,
                     code = _feedService.NormalizeStopCode(feedId, s.Code ?? ""),
                     name = s.Name,
-                    routes = s.Routes
-                        .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                    routes = _feedService.ConsolidateRoutes(
+                        s.Routes
+                            .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                            .Select(r => new RouteInfo
+                            {
+                                GtfsId = r.GtfsId,
+                                ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                                Colour = r.Color ?? fallbackColor,
+                                TextColour = r.TextColor is null or "000000" ?
+                                    ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
+                                    r.TextColor
+                            }))
                         .Select(r => new
                         {
-                            shortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                            colour = r.Color ?? fallbackColor,
-                            textColour = r.TextColor is null or "000000" ?
-                                ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
-                                r.TextColor
+                            shortName = r.ShortName,
+                            colour = r.Colour,
+                            textColour = r.TextColour
                         })
                         .ToList()
                 };
@@ -269,17 +278,25 @@ public partial class ArrivalsController : ControllerBase
                     name = name,
                     latitude = s.Lat,
                     longitude = s.Lon,
-                    lines = s.Routes?
-                        .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                    lines = _feedService.ConsolidateRoutes(
+                        (s.Routes ?? [])
+                            .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                            .Select(r => new RouteInfo
+                            {
+                                GtfsId = r.GtfsId,
+                                ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                                Colour = r.Color ?? fallbackColor,
+                                TextColour = r.TextColor is null or "000000" ?
+                                    ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
+                                    r.TextColor
+                            }))
                         .Select(r => new
                         {
-                            line = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                            colour = r.Color ?? fallbackColor,
-                            textColour = r.TextColor is null or "000000" ?
-                                ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
-                                r.TextColor
+                            line = r.ShortName,
+                            colour = r.Colour,
+                            textColour = r.TextColour
                         })
-                        .ToList() ?? [],
+                        .ToList(),
                     label = string.IsNullOrWhiteSpace(code) ? name : $"{name} ({code})"
                 };
             }).ToList();
