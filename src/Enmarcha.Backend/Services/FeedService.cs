@@ -94,6 +94,59 @@ public class FeedService
         return NormalizeRouteShortName(feedId, shortName);
     }
 
+    /// <summary>
+    /// When 5 or more distinct routes share the same 3-character short-name prefix,
+    /// they are collapsed into a single entry showing "XG{prefix}" (xunta feed only).
+    /// </summary>
+    private const int RouteCollapseThreshold = 5;
+
+    /// <summary>
+    /// Deduplicates routes by <see cref="RouteInfo.ShortName"/> (always). For the xunta feed only,
+    /// also collapses groups of <see cref="RouteCollapseThreshold"/> or more routes that share the
+    /// same 3-character prefix into a single entry named "XG{prefix}" (e.g. "XG621").
+    /// Other feeds are returned deduplicated but otherwise unchanged.
+    /// </summary>
+    public List<RouteInfo> ConsolidateRoutes(string feedId, IEnumerable<RouteInfo> routes)
+    {
+        // Deduplicate by short name (case-insensitive)
+        var deduplicated = routes
+            .GroupBy(r => r.ShortName, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
+            .ToList();
+
+        // Prefix collapsing only applies to xunta routes, which can have dozens of
+        // sub-routes per contract that would otherwise flood the badge list.
+        if (feedId != "xunta")
+        {
+            return deduplicated;
+        }
+
+        // Group by the first 3 characters; collapse groups meeting the threshold.
+        // When collapsing, the first entry's colour is used — routes in the same prefix
+        // group (e.g. all xunta "621.*" lines) share the same operator colour.
+        var result = new List<RouteInfo>();
+        foreach (var group in deduplicated.GroupBy(r => r.ShortName.Length >= 3 ? r.ShortName[..3] : r.ShortName))
+        {
+            var items = group.ToList();
+            if (items.Count >= RouteCollapseThreshold)
+            {
+                result.Add(new RouteInfo
+                {
+                    GtfsId = items[0].GtfsId,
+                    ShortName = $"XG{group.Key}",
+                    Colour = items[0].Colour,
+                    TextColour = items[0].TextColour
+                });
+            }
+            else
+            {
+                result.AddRange(items);
+            }
+        }
+
+        return result;
+    }
+
     public string NormalizeStopName(string feedId, string name)
     {
         if (feedId == "vitrasa")
