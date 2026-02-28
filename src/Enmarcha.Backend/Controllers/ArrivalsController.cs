@@ -158,7 +158,7 @@ public partial class ArrivalsController : ControllerBase
                 Latitude = stop.Lat,
                 Longitude = stop.Lon
             },
-            Routes = [.. _feedService.ConsolidateRoutes(
+            Routes = [.. _feedService.ConsolidateRoutes(feedId,
                 stop.Routes
                     .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
                     .Select(r => new RouteInfo
@@ -225,7 +225,7 @@ public partial class ArrivalsController : ControllerBase
                     id = s.GtfsId,
                     code = _feedService.NormalizeStopCode(feedId, s.Code ?? ""),
                     name = s.Name,
-                    routes = _feedService.ConsolidateRoutes(
+                    routes = _feedService.ConsolidateRoutes(feedId,
                         s.Routes
                             .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
                             .Select(r => new RouteInfo
@@ -278,7 +278,7 @@ public partial class ArrivalsController : ControllerBase
                     name = name,
                     latitude = s.Lat,
                     longitude = s.Lon,
-                    lines = _feedService.ConsolidateRoutes(
+                    lines = _feedService.ConsolidateRoutes(feedId,
                         (s.Routes ?? [])
                             .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
                             .Select(r => new RouteInfo
