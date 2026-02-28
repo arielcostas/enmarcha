@@ -23,22 +23,20 @@ function buildLanguageTextField(language: string): unknown[] {
     case "es":
       return [
         "coalesce",
+        ["get", "name"],
         ["get", "name:es"],
         ["get", "name:latin"],
-        ["get", "name"],
       ];
     case "gl":
       return [
         "coalesce",
-        ["get", "name:gl"],
-        ["get", "name:es"],
-        ["get", "name:latin"],
         ["get", "name"],
+        ["get", "name:gl"],
+        ["get", "name:latin"],
       ];
     case "en":
       return [
         "coalesce",
-        ["get", "name:en"],
         ["get", "name_en"],
         ["get", "name:latin"],
         ["get", "name"],
