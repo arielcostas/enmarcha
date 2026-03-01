@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const RouteInfoSchema = z.object({
+  gtfsId: z.string().optional().nullable(),
   shortName: z.string(),
   colour: z.string(),
   textColour: z.string(),
