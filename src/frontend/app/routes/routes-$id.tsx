@@ -18,13 +18,13 @@ import {
 } from "react-map-gl/maplibre";
 import { Link, useParams } from "react-router";
 import { fetchRouteDetails } from "~/api/transit";
-import { useStopArrivals } from "~/hooks/useArrivals";
 import { AppMap } from "~/components/shared/AppMap";
 import {
   useBackButton,
   usePageTitle,
   usePageTitleNode,
 } from "~/contexts/PageTitleContext";
+import { useStopArrivals } from "~/hooks/useArrivals";
 import { formatHex } from "~/utils/colours";
 import "../tailwind-full.css";
 
@@ -61,8 +61,10 @@ export default function RouteDetailsPage() {
   const now = new Date();
   const nowSeconds =
     now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-  const formatDelayMinutes = (delayMinutes: number) =>
-    ` (${delayMinutes > 0 ? "+" : ""}${delayMinutes})`;
+  const formatDelayMinutes = (delayMinutes: number) => {
+    if (delayMinutes === 0) return "OK";
+    return delayMinutes > 0 ? ` (R${delayMinutes})` : ` A(${delayMinutes})`;
+  };
 
   const { data: route, isLoading } = useQuery({
     queryKey: ["route", id, selectedDateKey],
@@ -176,7 +178,7 @@ export default function RouteDetailsPage() {
     ? selectedPattern.headsign || selectedPattern.name
     : t("routes.details", "Detalles de ruta");
   const sameDirectionPatterns = selectedPattern
-    ? patternsByDirection[selectedPattern.directionId] ?? []
+    ? (patternsByDirection[selectedPattern.directionId] ?? [])
     : [];
   const departuresByStop = (() => {
     const byStop = new Map<
@@ -596,20 +598,22 @@ export default function RouteDetailsPage() {
                     {selectedStopId === stop.id &&
                       (departuresByStop.get(stop.id)?.length ?? 0) > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {(departuresByStop
-                            .get(stop.id)
-                            ?.filter((item) =>
-                              isTodaySelectedDate
-                                ? item.departure >= nowSeconds - ONE_HOUR_SECONDS
-                                : true
-                            ) ?? []
+                          {(
+                            departuresByStop
+                              .get(stop.id)
+                              ?.filter((item) =>
+                                isTodaySelectedDate
+                                  ? item.departure >=
+                                    nowSeconds - ONE_HOUR_SECONDS
+                                  : true
+                              ) ?? []
                           ).map((item, i) => (
                             <span
                               key={`${item.patternId}-${item.departure}-${i}`}
-                              className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              className={`text-[11px] px-2 py-0.5 rounded ${
                                 item.patternId === selectedPattern?.id
-                                  ? "bg-gray-100 dark:bg-gray-800"
-                                  : "bg-gray-50 dark:bg-gray-900 text-gray-500"
+                                  ? "bg-gray-100 dark:bg-gray-900"
+                                  : "bg-gray-50 dark:bg-gray-900 text-gray-400 font-light"
                               }`}
                             >
                               {Math.floor(item.departure / 3600)
@@ -639,9 +643,9 @@ export default function RouteDetailsPage() {
                               (arrival, i) => (
                                 <span
                                   key={`${arrival.tripId}-${i}`}
-                                  className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded"
+                                  className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded"
                                 >
-                                  {arrival.estimate.minutes}′
+                                  {arrival.estimate.minutes}
                                   {arrival.delay?.minutes
                                     ? formatDelayMinutes(arrival.delay.minutes)
                                     : ""}
