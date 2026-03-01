@@ -63,7 +63,9 @@ export default function RouteDetailsPage() {
     now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
   const formatDelayMinutes = (delayMinutes: number) => {
     if (delayMinutes === 0) return "OK";
-    return delayMinutes > 0 ? ` (R${delayMinutes})` : ` A(${delayMinutes})`;
+    return delayMinutes > 0
+      ? ` (R${Math.abs(delayMinutes)})`
+      : ` (A${Math.abs(delayMinutes)})`;
   };
 
   const { data: route, isLoading } = useQuery({
