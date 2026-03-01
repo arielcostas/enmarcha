@@ -18,6 +18,7 @@ import {
 } from "react-map-gl/maplibre";
 import { Link, useParams } from "react-router";
 import { fetchRouteDetails } from "~/api/transit";
+import { useStopArrivals } from "~/hooks/useArrivals";
 import { AppMap } from "~/components/shared/AppMap";
 import {
   useBackButton,
@@ -55,12 +56,22 @@ export default function RouteDetailsPage() {
     () => formatDateKey(selectedWeekDate),
     [selectedWeekDate]
   );
+  const isTodaySelectedDate = selectedDateKey === formatDateKey(new Date());
+  const now = new Date();
+  const nowSeconds =
+    now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
   const { data: route, isLoading } = useQuery({
     queryKey: ["route", id, selectedDateKey],
     queryFn: () => fetchRouteDetails(id!, selectedDateKey),
     enabled: !!id,
   });
+  const { data: selectedStopRealtime, isLoading: isRealtimeLoading } =
+    useStopArrivals(
+      selectedStopId ?? "",
+      true,
+      Boolean(selectedStopId) && isTodaySelectedDate
+    );
 
   usePageTitle(
     route?.shortName
@@ -161,6 +172,35 @@ export default function RouteDetailsPage() {
   const selectedPatternLabel = selectedPattern
     ? selectedPattern.headsign || selectedPattern.name
     : t("routes.details", "Detalles de ruta");
+  const sameDirectionPatterns = selectedPattern
+    ? patternsByDirection[selectedPattern.directionId] ?? []
+    : [];
+  const departuresByStop = useMemo(() => {
+    const byStop = new Map<
+      string,
+      { departure: number; patternId: string; tripId?: string | null }[]
+    >();
+
+    for (const pattern of sameDirectionPatterns) {
+      for (const stop of pattern.stops) {
+        const current = byStop.get(stop.id) ?? [];
+        current.push(
+          ...stop.scheduledDepartures.map((departure) => ({
+            departure,
+            patternId: pattern.id,
+            tripId: null,
+          }))
+        );
+        byStop.set(stop.id, current);
+      }
+    }
+
+    for (const stopDepartures of byStop.values()) {
+      stopDepartures.sort((a, b) => a.departure - b.departure);
+    }
+
+    return byStop;
+  }, [sameDirectionPatterns]);
 
   const mapHeightClass =
     layoutMode === "map"
@@ -551,24 +591,64 @@ export default function RouteDetailsPage() {
                     )}
 
                     {selectedStopId === stop.id &&
-                      stop.scheduledDepartures.length > 0 && (
+                      (departuresByStop.get(stop.id)?.length ?? 0) > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {stop.scheduledDepartures.map((dep, i) => (
+                          {(departuresByStop
+                            .get(stop.id)
+                            ?.filter((item) =>
+                              isTodaySelectedDate
+                                ? item.departure >= nowSeconds - 3600
+                                : true
+                            ) ?? []
+                          ).map((item, i) => (
                             <span
-                              key={i}
-                              className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded"
+                              key={`${item.patternId}-${item.departure}-${i}`}
+                              className={`text-[10px] px-1.5 py-0.5 rounded ${
+                                item.patternId === selectedPattern?.id
+                                  ? "bg-gray-100 dark:bg-gray-800"
+                                  : "bg-gray-50 dark:bg-gray-900 text-gray-500"
+                              }`}
                             >
-                              {Math.floor(dep / 3600)
+                              {Math.floor(item.departure / 3600)
                                 .toString()
                                 .padStart(2, "0")}
                               :
-                              {Math.floor((dep % 3600) / 60)
+                              {Math.floor((item.departure % 3600) / 60)
                                 .toString()
                                 .padStart(2, "0")}
                             </span>
                           ))}
                         </div>
                       )}
+
+                    {selectedStopId === stop.id && isTodaySelectedDate && (
+                      <div className="mt-2">
+                        <div className="text-[10px] uppercase tracking-wide text-muted mb-1">
+                          {t("routes.realtime", "Tiempo real")}
+                        </div>
+                        {isRealtimeLoading ? (
+                          <div className="text-[11px] text-muted">
+                            {t("routes.loading_realtime", "Cargando...")}
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {(selectedStopRealtime?.arrivals ?? []).map(
+                              (arrival, i) => (
+                                <span
+                                  key={`${arrival.tripId}-${i}`}
+                                  className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded"
+                                >
+                                  {arrival.estimate.minutes}′
+                                  {arrival.delay?.minutes
+                                    ? ` (${arrival.delay.minutes > 0 ? "+" : ""}${arrival.delay.minutes})`
+                                    : ""}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
