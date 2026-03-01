@@ -24,6 +24,7 @@ import {
   usePageTitle,
   usePageTitleNode,
 } from "~/contexts/PageTitleContext";
+import { useStopArrivals } from "~/hooks/useArrivals";
 import { formatHex } from "~/utils/colours";
 import "../tailwind-full.css";
 
@@ -55,12 +56,51 @@ export default function RouteDetailsPage() {
     () => formatDateKey(selectedWeekDate),
     [selectedWeekDate]
   );
+  const ONE_HOUR_SECONDS = 3600;
+  const isTodaySelectedDate = selectedDateKey === formatDateKey(new Date());
+  const now = new Date();
+  const nowSeconds =
+    now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const formatDelayMinutes = (delayMinutes: number) => {
+    if (delayMinutes === 0) return "OK";
+    return delayMinutes > 0
+      ? ` (R${Math.abs(delayMinutes)})`
+      : ` (A${Math.abs(delayMinutes)})`;
+  };
 
   const { data: route, isLoading } = useQuery({
     queryKey: ["route", id, selectedDateKey],
     queryFn: () => fetchRouteDetails(id!, selectedDateKey),
     enabled: !!id,
   });
+  const { data: selectedStopRealtime, isLoading: isRealtimeLoading } =
+    useStopArrivals(
+      selectedStopId ?? "",
+      true,
+      Boolean(selectedStopId) && isTodaySelectedDate
+    );
+  const filteredRealtimeArrivals = useMemo(() => {
+    const arrivals = selectedStopRealtime?.arrivals ?? [];
+    if (arrivals.length === 0) {
+      return [];
+    }
+
+    const routeId = id?.trim();
+    const routeShortName = route?.shortName?.trim().toLowerCase();
+
+    return arrivals.filter((arrival) => {
+      const arrivalGtfsId = arrival.route.gtfsId?.trim();
+      if (routeId && arrivalGtfsId) {
+        return arrivalGtfsId === routeId;
+      }
+
+      if (routeShortName) {
+        return arrival.route.shortName.trim().toLowerCase() === routeShortName;
+      }
+
+      return true;
+    });
+  }, [selectedStopRealtime?.arrivals, id, route?.shortName]);
 
   usePageTitle(
     route?.shortName
@@ -161,6 +201,35 @@ export default function RouteDetailsPage() {
   const selectedPatternLabel = selectedPattern
     ? selectedPattern.headsign || selectedPattern.name
     : t("routes.details", "Detalles de ruta");
+  const sameDirectionPatterns = selectedPattern
+    ? (patternsByDirection[selectedPattern.directionId] ?? [])
+    : [];
+  const departuresByStop = (() => {
+    const byStop = new Map<
+      string,
+      { departure: number; patternId: string; tripId?: string | null }[]
+    >();
+
+    for (const pattern of sameDirectionPatterns) {
+      for (const stop of pattern.stops) {
+        const current = byStop.get(stop.id) ?? [];
+        current.push(
+          ...stop.scheduledDepartures.map((departure) => ({
+            departure,
+            patternId: pattern.id,
+            tripId: null,
+          }))
+        );
+        byStop.set(stop.id, current);
+      }
+    }
+
+    for (const stopDepartures of byStop.values()) {
+      stopDepartures.sort((a, b) => a.departure - b.departure);
+    }
+
+    return byStop;
+  })();
 
   const mapHeightClass =
     layoutMode === "map"
@@ -274,14 +343,33 @@ export default function RouteDetailsPage() {
               {selectedPattern?.geometry && (
                 <Source type="geojson" data={geojson}>
                   <Layer
-                    id="route-line"
+                    id="route-line-border"
+                    type="line"
+                    paint={{
+                      "line-color":
+                        route.textColor && route.textColor.trim()
+                          ? formatHex(route.textColor)
+                          : "#111827",
+                      "line-width": 7,
+                      "line-opacity": 0.75,
+                    }}
+                    layout={{
+                      "line-cap": "round",
+                      "line-join": "round",
+                    }}
+                  />
+                  <Layer
+                    id="route-line-inner"
                     type="line"
                     paint={{
                       "line-color": route.color
                         ? formatHex(route.color)
                         : "#3b82f6",
-                      "line-width": 4,
-                      "line-opacity": 0.8,
+                      "line-width": 5,
+                    }}
+                    layout={{
+                      "line-cap": "round",
+                      "line-join": "round",
                     }}
                   />
                 </Source>
@@ -551,24 +639,93 @@ export default function RouteDetailsPage() {
                     )}
 
                     {selectedStopId === stop.id &&
-                      stop.scheduledDepartures.length > 0 && (
+                      (departuresByStop.get(stop.id)?.length ?? 0) > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {stop.scheduledDepartures.map((dep, i) => (
+                          {(
+                            departuresByStop
+                              .get(stop.id)
+                              ?.filter((item) =>
+                                isTodaySelectedDate
+                                  ? item.departure >=
+                                    nowSeconds - ONE_HOUR_SECONDS
+                                  : true
+                              ) ?? []
+                          ).map((item, i) => (
                             <span
-                              key={i}
-                              className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded"
+                              key={`${item.patternId}-${item.departure}-${i}`}
+                              className={`text-[11px] px-2 py-0.5 rounded ${
+                                item.patternId === selectedPattern?.id
+                                  ? "bg-gray-100 dark:bg-gray-900"
+                                  : "bg-gray-50 dark:bg-gray-900 text-gray-400 font-light"
+                              }`}
                             >
-                              {Math.floor(dep / 3600)
+                              {Math.floor(item.departure / 3600)
                                 .toString()
                                 .padStart(2, "0")}
                               :
-                              {Math.floor((dep % 3600) / 60)
+                              {Math.floor((item.departure % 3600) / 60)
                                 .toString()
                                 .padStart(2, "0")}
                             </span>
                           ))}
                         </div>
                       )}
+
+                    {selectedStopId === stop.id && isTodaySelectedDate && (
+                      <div className="mt-2">
+                        <div className="text-[10px] uppercase tracking-wide text-muted mb-1">
+                          {t("routes.realtime", "Tiempo real")}
+                        </div>
+                        {isRealtimeLoading ? (
+                          <div className="text-[11px] text-muted">
+                            {t("routes.loading_realtime", "Cargando...")}
+                          </div>
+                        ) : filteredRealtimeArrivals.length === 0 ? (
+                          <div className="text-[11px] text-muted">
+                            {t(
+                              "routes.realtime_no_route_estimates",
+                              "Sin estimaciones para esta línea"
+                            )}
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-2.5 py-2">
+                              <span className="text-[11px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
+                                {t("routes.next_arrival", "Próximo")}
+                              </span>
+                              <span className="inline-flex min-w-16 items-center justify-center rounded-xl bg-green-600 px-3 py-1.5 text-base font-bold leading-none text-white">
+                                {filteredRealtimeArrivals[0].estimate.minutes}′
+                                {filteredRealtimeArrivals[0].delay?.minutes
+                                  ? formatDelayMinutes(
+                                      filteredRealtimeArrivals[0].delay.minutes
+                                    )
+                                  : ""}
+                              </span>
+                            </div>
+
+                            {filteredRealtimeArrivals.length > 1 && (
+                              <div className="mt-2 flex flex-wrap justify-end gap-1">
+                                {filteredRealtimeArrivals
+                                  .slice(1)
+                                  .map((arrival, i) => (
+                                    <span
+                                      key={`${arrival.tripId}-${i}`}
+                                      className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded"
+                                    >
+                                      {arrival.estimate.minutes}′
+                                      {arrival.delay?.minutes
+                                        ? formatDelayMinutes(
+                                            arrival.delay.minutes
+                                          )
+                                        : ""}
+                                    </span>
+                                  ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
