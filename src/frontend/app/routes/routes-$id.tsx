@@ -56,10 +56,13 @@ export default function RouteDetailsPage() {
     () => formatDateKey(selectedWeekDate),
     [selectedWeekDate]
   );
+  const ONE_HOUR_SECONDS = 3600;
   const isTodaySelectedDate = selectedDateKey === formatDateKey(new Date());
   const now = new Date();
   const nowSeconds =
     now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const formatDelayMinutes = (delayMinutes: number) =>
+    ` (${delayMinutes > 0 ? "+" : ""}${delayMinutes})`;
 
   const { data: route, isLoading } = useQuery({
     queryKey: ["route", id, selectedDateKey],
@@ -597,7 +600,7 @@ export default function RouteDetailsPage() {
                             .get(stop.id)
                             ?.filter((item) =>
                               isTodaySelectedDate
-                                ? item.departure >= nowSeconds - 3600
+                                ? item.departure >= nowSeconds - ONE_HOUR_SECONDS
                                 : true
                             ) ?? []
                           ).map((item, i) => (
@@ -640,7 +643,7 @@ export default function RouteDetailsPage() {
                                 >
                                   {arrival.estimate.minutes}′
                                   {arrival.delay?.minutes
-                                    ? ` (${arrival.delay.minutes > 0 ? "+" : ""}${arrival.delay.minutes})`
+                                    ? formatDelayMinutes(arrival.delay.minutes)
                                     : ""}
                                 </span>
                               )
