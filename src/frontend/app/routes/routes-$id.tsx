@@ -178,7 +178,7 @@ export default function RouteDetailsPage() {
   const sameDirectionPatterns = selectedPattern
     ? patternsByDirection[selectedPattern.directionId] ?? []
     : [];
-  const departuresByStop = useMemo(() => {
+  const departuresByStop = (() => {
     const byStop = new Map<
       string,
       { departure: number; patternId: string; tripId?: string | null }[]
@@ -203,7 +203,7 @@ export default function RouteDetailsPage() {
     }
 
     return byStop;
-  }, [sameDirectionPatterns]);
+  })();
 
   const mapHeightClass =
     layoutMode === "map"
