@@ -689,12 +689,24 @@ export default function RouteDetailsPage() {
                           </div>
                         ) : (
                           <>
-                            <div className="flex items-center justify-between gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-2.5 py-2">
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
+                            <div className="flex items-center justify-between gap-2 rounded-lg border border-green-700/40 bg-green-100 px-2.5 py-2 dark:border-green-500/50 dark:bg-green-900/30">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-green-900 dark:text-green-100">
+                                <Clock size={12} />
                                 {t("routes.next_arrival", "Próximo")}
                               </span>
-                              <span className="inline-flex min-w-16 items-center justify-center rounded-xl bg-green-600 px-3 py-1.5 text-base font-bold leading-none text-white">
-                                {filteredRealtimeArrivals[0].estimate.minutes}′
+                              <span
+                                className="inline-flex min-w-16 items-center justify-center rounded-xl bg-green-700 px-3 py-1.5 text-base font-bold leading-none text-white"
+                                aria-label={t(
+                                  "routes.next_arrival_in_minutes",
+                                  "Próximo en {{minutes}} minutos",
+                                  {
+                                    minutes:
+                                      filteredRealtimeArrivals[0].estimate.minutes,
+                                  }
+                                )}
+                              >
+                                {filteredRealtimeArrivals[0].estimate.minutes}{" "}
+                                min
                                 {filteredRealtimeArrivals[0].delay?.minutes
                                   ? formatDelayMinutes(
                                       filteredRealtimeArrivals[0].delay.minutes
@@ -712,7 +724,7 @@ export default function RouteDetailsPage() {
                                       key={`${arrival.tripId}-${i}`}
                                       className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded"
                                     >
-                                      {arrival.estimate.minutes}′
+                                      {arrival.estimate.minutes} min
                                       {arrival.delay?.minutes
                                         ? formatDelayMinutes(
                                             arrival.delay.minutes
