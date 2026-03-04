@@ -366,6 +366,8 @@ export default function StopMap() {
               "#508096",
               "tranvias",
               "#E61C29",
+              "ourense",
+              "#E87D0D",
               "xunta",
               "#007BC4",
               "renfe",
