@@ -49,9 +49,15 @@ public class SortingHelper
 
         var feed = routeId?.Split(':')[0];
 
-        if (feed == "vitrasa")
+        if (feed is "vitrasa" or "tussa")
         {
-            int group = GetVitrasaRouteGroup(shortName);
+            int group = feed switch
+            {
+                "vitrasa" => GetVitrasaRouteGroup(shortName),
+                "tussa" => GetTussaRouteGroup(shortName),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
             // For "Others" group, sub-sort by alphabetic prefix to keep N*, PSA*, U* etc. grouped
             string prefix = group == 3 ? ExtractAlphaPrefix(shortName) : "";
             int number = ExtractNumber(shortName);
@@ -108,6 +114,16 @@ public class SortingHelper
 
         // Everything else is regular (numbered routes like 4A, 6, 10, single letters like A)
         return 1;
+    }
+
+    private static int GetTussaRouteGroup(string shortName)
+    {
+        if (shortName[0] == 'C')
+        {
+            return 1;
+        }
+
+        return 0;
     }
 
     private static int ExtractNumber(string name)
