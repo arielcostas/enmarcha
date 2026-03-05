@@ -40,6 +40,7 @@ public class FeedService
             "vitrasa" => ("#81D002", "#000000"),
             "tussa" => ("#508096", "#FFFFFF"),
             "tranvias" => ("#E61C29", "#FFFFFF"),
+            "ourense" => ("#ffb319", "#000000"),
             "xunta" => ("#007BC4", "#FFFFFF"),
             "renfe" => ("#870164", "#FFFFFF"),
             "feve" => ("#EE3D32", "#FFFFFF"),
@@ -192,7 +193,7 @@ public class FeedService
     {
         if (nextStops.Count == 0) return null;
 
-        if (feedId is "vitrasa" or "tranvias" or "tussa")
+        if (feedId is "vitrasa" or "tranvias" or "tussa" or "ourense")
         {
             var streets = nextStops
                 .Select(GetStreetName)

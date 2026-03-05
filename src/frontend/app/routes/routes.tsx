@@ -12,9 +12,18 @@ export default function RoutesPage() {
   usePageTitle(t("navbar.routes", "Rutas"));
   const [searchQuery, setSearchQuery] = useState("");
 
+  const orderedAgencies = [
+    "vitrasa",
+    "tranvias",
+    "tussa",
+    "ourense",
+    "feve",
+    "shuttle",
+  ];
+
   const { data: routes, isLoading } = useQuery({
     queryKey: ["routes"],
-    queryFn: () => fetchRoutes(["vitrasa", "tranvias", "tussa", "feve", "shuttle"]),
+    queryFn: () => fetchRoutes(orderedAgencies),
   });
 
   const filteredRoutes = routes?.filter(
@@ -53,34 +62,45 @@ export default function RoutesPage() {
 
       <div className="space-y-8">
         {routesByAgency &&
-          Object.entries(routesByAgency).map(([agency, agencyRoutes]) => (
-            <div key={agency}>
-              <h2 className="text-xl font-bold text-text mb-4 border-b border-border pb-2">
-                {agency}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {agencyRoutes.map((route) => (
-                  <Link
-                    key={route.id}
-                    to={`/routes/${route.id}`}
-                    className="flex items-center gap-3 p-4 bg-surface rounded-lg shadow hover:shadow-lg transition-shadow border border-border"
-                  >
-                    <LineIcon
-                      line={route.shortName ?? "?"}
-                      mode="pill"
-                      colour={route.color ?? undefined}
-                      textColour={route.textColor ?? undefined}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm md:text-md font-semibold text-text">
-                        {route.longName}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+          Object.entries(routesByAgency)
+            .sort(([a], [b]) => {
+              const indexA = orderedAgencies.indexOf(a.toLowerCase());
+              const indexB = orderedAgencies.indexOf(b.toLowerCase());
+              if (indexA === -1 && indexB === -1) {
+                return a.localeCompare(b);
+              }
+              if (indexA === -1) return 1;
+              if (indexB === -1) return -1;
+              return indexA - indexB;
+            })
+            .map(([agency, agencyRoutes]) => (
+              <div key={agency}>
+                <h2 className="text-xl font-bold text-text mb-4 border-b border-border pb-2">
+                  {agency}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {agencyRoutes.map((route) => (
+                    <Link
+                      key={route.id}
+                      to={`/routes/${route.id}`}
+                      className="flex items-center gap-3 p-4 bg-surface rounded-lg shadow hover:shadow-lg transition-shadow border border-border"
+                    >
+                      <LineIcon
+                        line={route.shortName ?? "?"}
+                        mode="pill"
+                        colour={route.color ?? undefined}
+                        textColour={route.textColor ?? undefined}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm md:text-md font-semibold text-text">
+                          {route.longName}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
       </div>
     </div>
   );
