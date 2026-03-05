@@ -30,6 +30,7 @@ export interface Itinerary {
 
 export interface Leg {
   mode?: string;
+  feedId?: string;
   routeName?: string;
   routeShortName?: string;
   routeLongName?: string;
@@ -53,6 +54,7 @@ export interface PlannerPlace {
   lon: number;
   stopId?: string;
   stopCode?: string;
+  zoneId?: string;
 }
 
 export interface PlannerGeometry {

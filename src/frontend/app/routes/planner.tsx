@@ -1,4 +1,4 @@
-import { Coins, CreditCard, Footprints } from "lucide-react";
+import { AlertTriangle, Coins, CreditCard, Footprints } from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -70,6 +70,25 @@ const sumWalkMetrics = (legs: Itinerary["legs"]) => {
   });
 
   return { meters, minutes: Math.max(0, Math.round(minutes)) };
+};
+
+const URBAN_MUNICIPALITIES: Record<string, string> = {
+  "15030": "A Coruña",
+  "27028": "Lugo",
+  "32054": "Ourense",
+  "15078": "Santiago de Compostela",
+  "36057": "Vigo",
+};
+
+const getUrbanMunicipalityWarning = (
+  leg: Itinerary["legs"][number]
+): string | null => {
+  if (leg.feedId !== "xunta") return null;
+  const fromMunicipality = leg.from?.zoneId?.substring(0, 5);
+  const toMunicipality = leg.to?.zoneId?.substring(0, 5);
+  if (!fromMunicipality || !toMunicipality) return null;
+  if (fromMunicipality !== toMunicipality) return null;
+  return URBAN_MUNICIPALITIES[fromMunicipality] ?? null;
 };
 
 const ItinerarySummary = ({
@@ -653,6 +672,25 @@ const ItineraryDetail = ({
                               </ul>
                             </details>
                           )}
+                        {(() => {
+                          const municipality = getUrbanMunicipalityWarning(leg);
+                          if (!municipality) return null;
+                          return (
+                            <div className="mt-2 flex items-start gap-2 rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-200">
+                              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400" />
+                              <div>
+                                <div className="font-semibold">
+                                  {t("planner.urban_traffic_warning")}
+                                </div>
+                                <div>
+                                  {t("planner.urban_traffic_warning_desc", {
+                                    municipality,
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </>
                     )}
                   </div>
@@ -668,7 +706,7 @@ const ItineraryDetail = ({
 
 export default function PlannerPage() {
   const { t } = useTranslation();
-  usePageTitle(t("navbar.planner", "Planificador"));
+  () => usePageTitle(t("navbar.planner", "Planificador"));
   const location = useLocation();
   const {
     plan,

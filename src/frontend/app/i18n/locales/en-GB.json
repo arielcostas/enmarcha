@@ -147,7 +147,9 @@
     "operator": "Operator",
     "back": "← Back",
     "fare": "€{{amount}}",
-    "free": "Free"
+    "free": "Free",
+    "urban_traffic_warning": "Possible transit restriction",
+    "urban_traffic_warning_desc": "Both stops on this leg are within {{municipality}}, which has its own urban transport. It's likely you are not allowed to do this trip with Xunta services."
   },
   "common": {
     "loading": "Loading...",
@@ -160,6 +162,7 @@
     "stops": "Stops",
     "planner": "Planner",
     "routes": "Routes",
+    "settings": "Settings",
     "favourites": "Favourites"
   },
   "routes": {
