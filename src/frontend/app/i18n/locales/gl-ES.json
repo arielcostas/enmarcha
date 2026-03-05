@@ -144,7 +144,9 @@
     "operator": "Operador",
     "back": "← Atrás",
     "fare": "{{amount}} €",
-    "free": "Gratuíto"
+    "free": "Gratuíto",
+    "urban_traffic_warning": "Posible restrición de tráfico",
+    "urban_traffic_warning_desc": "As dúas paradas deste tramo están en {{municipality}}, que dispón de transporte urbano propio. É posible que a Xunta non poida operar neste traxecto."
   },
   "common": {
     "loading": "Cargando...",

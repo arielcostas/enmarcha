@@ -181,6 +181,7 @@ export const PlannerPlaceSchema = z.object({
   lon: z.number(),
   stopId: z.string().optional().nullable(),
   stopCode: z.string().optional().nullable(),
+  zoneId: z.string().optional().nullable(),
 });
 
 export const PlannerGeometrySchema = z.object({
