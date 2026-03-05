@@ -175,7 +175,7 @@ public class CtagShuttleRealTimeProcessor : AbstractRealTimeProcessor
                     .Where(a => a.Estimate.Minutes >= 0)
                     .OrderBy(a => a.Estimate.Minutes)
                     .FirstOrDefault();
-                
+
                 _logger.LogDebug("No matching arrival found, using next upcoming trip");
             }
 

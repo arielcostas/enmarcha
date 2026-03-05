@@ -137,7 +137,7 @@ jobs:
       - name: Deploy frontend
         if: needs.detect-changes.outputs.frontend == 'true'
         run: |
-          scp -r dist/frontend/* ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/var/www/enmarcha/
+          rsync -avz dist/frontend/ ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/var/www/enmarcha/
 
       - name: Stop service
         if: needs.detect-changes.outputs.backend == 'true'
@@ -145,7 +145,7 @@ jobs:
 
       - name: Upload backend
         if: needs.detect-changes.outputs.backend == 'true'
-        run: scp -r dist/backend/* app@${{ secrets.TARGET_HOST }}:/opt/enmarcha/
+        run: rsync -avz dist/backend/ ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/opt/enmarcha/
 
       - name: Allow execution
         if: needs.detect-changes.outputs.backend == 'true'
