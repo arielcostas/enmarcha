@@ -148,8 +148,8 @@
     "back": "← Back",
     "fare": "€{{amount}}",
     "free": "Free",
-    "urban_traffic_warning": "Possible traffic restriction",
-    "urban_traffic_warning_desc": "Both stops on this leg are in {{municipality}}, which has its own urban transport. The Xunta service may not be allowed to operate on this journey."
+    "urban_traffic_warning": "Possible transit restriction",
+    "urban_traffic_warning_desc": "Both stops on this leg are within {{municipality}}, which has its own urban transport. It's likely you are not allowed to do this trip with Xunta services."
   },
   "common": {
     "loading": "Loading...",
@@ -162,6 +162,7 @@
     "stops": "Stops",
     "planner": "Planner",
     "routes": "Routes",
+    "settings": "Settings",
     "favourites": "Favourites"
   },
   "routes": {

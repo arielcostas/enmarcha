@@ -7,10 +7,6 @@
     "data_gtfs": "Horarios programados",
     "data_gtfs_source": "Feed GTFS oficial (datos abertos municipais)",
     "data_realtime": "Datos en tempo real",
-    "day_yesterday": "Onte",
-    "day_today": "Hoxe",
-    "day_tomorrow": "Mañá",
-    "week_date": "Data",
     "data_realtime_source": "API da cidade",
     "data_traffic": "Estado do tráfico",
     "data_traffic_source": "Datos abertos municipais",
@@ -131,6 +127,13 @@
     "searching_ellipsis": "Buscando…",
     "results": "Resultados",
     "close": "Pechar",
+    "collapse": "Contraer",
+    "pick_on_map": "Seleccionar en mapa",
+    "pick_on_map_desc": "Selecciona un punto visualmente",
+    "pick_origin": "Seleccionar orixe",
+    "pick_destination": "Seleccionar destino",
+    "pick_instruction": "Move o mapa para colocar o destino na ubicación desexada",
+    "confirm_location": "Confirmar ubicación",
     "results_title": "Resultados",
     "clear": "Limpar",
     "recent_routes": "Rutas recentes",
@@ -146,7 +149,7 @@
     "fare": "{{amount}} €",
     "free": "Gratuíto",
     "urban_traffic_warning": "Posible restrición de tráfico",
-    "urban_traffic_warning_desc": "As dúas paradas deste tramo están en {{municipality}}, que dispón de transporte urbano propio. É posible que a Xunta non poida operar neste traxecto."
+    "urban_traffic_warning_desc": "As dúas paradas deste tramo están en {{municipality}}, que dispón de transporte urbano propio. É probable que non poidas utilizar os servizos da Xunta neste traxecto."
   },
   "common": {
     "loading": "Cargando...",
@@ -164,6 +167,7 @@
     "choose_trip": "Escolle un traxecto",
     "close": "Pechar",
     "trip": "Traxecto",
+    "settings": "Axustes",
     "view_stop": "Ver parada"
   },
   "routes": {

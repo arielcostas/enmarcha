@@ -84,11 +84,11 @@ const getUrbanMunicipalityWarning = (
   leg: Itinerary["legs"][number]
 ): string | null => {
   if (leg.feedId !== "xunta") return null;
-  const fromZone = leg.from?.zoneId;
-  const toZone = leg.to?.zoneId;
-  if (!fromZone || !toZone) return null;
-  if (fromZone !== toZone) return null;
-  return URBAN_MUNICIPALITIES[fromZone] ?? null;
+  const fromMunicipality = leg.from?.zoneId?.substring(0, 5);
+  const toMunicipality = leg.to?.zoneId?.substring(0, 5);
+  if (!fromMunicipality || !toMunicipality) return null;
+  if (fromMunicipality !== toMunicipality) return null;
+  return URBAN_MUNICIPALITIES[fromMunicipality] ?? null;
 };
 
 const ItinerarySummary = ({
@@ -706,7 +706,7 @@ const ItineraryDetail = ({
 
 export default function PlannerPage() {
   const { t } = useTranslation();
-  usePageTitle(t("navbar.planner", "Planificador"));
+  () => usePageTitle(t("navbar.planner", "Planificador"));
   const location = useLocation();
   const {
     plan,
