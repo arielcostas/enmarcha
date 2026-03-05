@@ -342,7 +342,7 @@ export default function StopMap() {
             "text-offset": [0, 3],
             "text-anchor": "center",
             "text-justify": "center",
-            "text-size": ["interpolate", ["linear"], ["zoom"], 11, 8, 22, 16],
+            "text-size": ["interpolate", ["linear"], ["zoom"], 11, 10, 22, 17],
             "symbol-sort-key": [
               "match",
               ["get", "transitKind"],
@@ -367,7 +367,7 @@ export default function StopMap() {
               "tranvias",
               "#E61C29",
               "ourense",
-              "#27187D",
+              "#ffb319",
               "xunta",
               "#007BC4",
               "renfe",
@@ -376,8 +376,14 @@ export default function StopMap() {
               "#EE3D32",
               "#27187D",
             ],
-            "text-halo-color": "#FFF",
-            "text-halo-width": 1,
+            "text-halo-color": [
+              "match",
+              ["get", "feed"],
+              "ourense",
+              "#000000",
+              "#FFF",
+            ],
+            "text-halo-width": ["match", ["get", "feed"], "ourense", 1.5, 1],
           }}
         />
 

@@ -150,6 +150,7 @@ public class TileController : ControllerBase
             "vitrasa" => "stop-vitrasa",
             "tussa" => "stop-tussa",
             "tranvias" => "stop-tranvias",
+            "ourense" => "stop-ourense",
             "xunta" => "stop-xunta",
             "renfe" => "stop-renfe",
             "feve" => "stop-feve",
@@ -161,7 +162,7 @@ public class TileController : ControllerBase
     {
         return feedId switch
         {
-            "vitrasa" or "tussa" or "tranvias" or "shuttle" => "bus",
+            "vitrasa" or "tussa" or "tranvias" or "shuttle" or "ourense" => "bus",
             "xunta" => "coach",
             "renfe" or "feve" => "train",
             _ => "unknown"

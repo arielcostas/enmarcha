@@ -40,7 +40,7 @@ public class FeedService
             "vitrasa" => ("#81D002", "#000000"),
             "tussa" => ("#508096", "#FFFFFF"),
             "tranvias" => ("#E61C29", "#FFFFFF"),
-            "ourense" => ("#fcdc18", "#000000"),
+            "ourense" => ("#ffb319", "#000000"),
             "xunta" => ("#007BC4", "#FFFFFF"),
             "renfe" => ("#870164", "#FFFFFF"),
             "feve" => ("#EE3D32", "#FFFFFF"),
