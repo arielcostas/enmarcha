@@ -97,6 +97,8 @@ public class TileController : ControllerBase
         VectorTile vt = new() { TileId = tileDef.Id };
         var stopsLayer = new Layer { Name = "stops" };
 
+        var features = new List<Feature>();
+
         responseBody.Data?.StopsByBbox?.ForEach(stop =>
         {
             var idParts = stop.GtfsId.Split(':', 2);
@@ -129,8 +131,19 @@ public class TileController : ControllerBase
                 }
             };
 
-            stopsLayer.Features.Add(feature);
+            features.Add(feature);
         });
+
+        foreach (var feature in features.OrderBy(f => f.Attributes["transitKind"] as string switch
+        {
+            "bus" => 3,
+            "train" => 2,
+            "coach" => 1,
+            _ => 0
+        }))
+        {
+            stopsLayer.Features.Add(feature);
+        }
 
         vt.Layers.Add(stopsLayer);
 
