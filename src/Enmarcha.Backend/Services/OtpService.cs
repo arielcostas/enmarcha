@@ -18,17 +18,15 @@ public class OtpService
     private readonly IMemoryCache _cache;
     private readonly ILogger<OtpService> _logger;
     private readonly FareService _fareService;
-    private readonly LineFormatterService _lineFormatter;
     private readonly FeedService _feedService;
 
-    public OtpService(HttpClient httpClient, IOptions<AppConfiguration> config, IMemoryCache cache, ILogger<OtpService> logger, FareService fareService, LineFormatterService lineFormatter, FeedService feedService)
+    public OtpService(HttpClient httpClient, IOptions<AppConfiguration> config, IMemoryCache cache, ILogger<OtpService> logger, FareService fareService, FeedService feedService)
     {
         _httpClient = httpClient;
         _config = config.Value;
         _cache = cache;
         _logger = logger;
         _fareService = fareService;
-        _lineFormatter = lineFormatter;
         _feedService = feedService;
     }
 
@@ -333,23 +331,6 @@ public class OtpService
                     break;
                 case "6":
                     headsign = headsign?.Replace("\"", "");
-                    break;
-                case "FUT":
-                    if (headsign == "CASTELAO-CAMELIAS-G.BARBÓN.M.GARRIDO")
-                    {
-                        shortName = "MAR";
-                        headsign = "MARCADOR ⚽: CASTELAO-CAMELIAS-G.BARBÓN.M.GARRIDO";
-                    }
-                    else if (headsign == "P. ESPAÑA-T.VIGO-S.BADÍA")
-                    {
-                        shortName = "RIO";
-                        headsign = "RÍO ⚽: P. ESPAÑA-T.VIGO-S.BADÍA";
-                    }
-                    else if (headsign == "NAVIA-BOUZAS-URZAIZ-G. ESPINO")
-                    {
-                        shortName = "GOL";
-                        headsign = "GOL ⚽: NAVIA-BOUZAS-URZAIZ-G. ESPINO";
-                    }
                     break;
             }
         }

@@ -123,7 +123,6 @@ builder.Services.AddSingleton<XuntaFareProvider>();
 builder.Services.AddSingleton<ShapeTraversalService>();
 builder.Services.AddSingleton<FeedService>();
 builder.Services.AddSingleton<FareService>();
-builder.Services.AddSingleton<LineFormatterService>();
 
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();

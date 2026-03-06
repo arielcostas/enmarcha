@@ -92,6 +92,8 @@ public class FeedConfigProcessor : IArrivalsProcessor
                     arrival.Route.ShortName = "GOL";
                     arrival.Headsign.Destination = "GOL ⚽: NAVIA-BOUZAS-URZAIZ-G. ESPINO";
                 }
+                arrival.Route.Colour = "6CACE4";
+                arrival.Route.TextColour = "000000";
                 break;
         }
     }
