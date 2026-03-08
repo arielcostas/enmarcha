@@ -1,5 +1,28 @@
 @import "../../tailwind.css";
 
+.arrival-card {
+  display: grid;
+  grid-template-areas:
+    "icon route minutes"
+    "meta meta meta";
+
+  grid-template-columns: auto 1fr auto;
+}
+
+arrival-card--icon {
+  grid-area: icon;
+}
+.arrival-card--route {
+  grid-area: route;
+  min-width: 0;
+}
+.arrival-card--minutes {
+  grid-area: minutes;
+}
+.arrival-card--meta {
+  grid-area: meta;
+}
+
 .time-running {
   @apply bg-green-600/20 dark:bg-green-600/25 text-[#1a9e56] dark:text-[#22c55e];
 }

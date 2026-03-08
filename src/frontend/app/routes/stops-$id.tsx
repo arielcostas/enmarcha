@@ -17,8 +17,8 @@ import {
 } from "~/api/schema";
 import { ArrivalList } from "~/components/arrivals/ArrivalList";
 import { ErrorDisplay } from "~/components/ErrorDisplay";
-import LineIcon from "~/components/LineIcon";
 import { PullToRefresh } from "~/components/PullToRefresh";
+import RouteIcon from "~/components/RouteIcon";
 import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
 import { StopUsageModal } from "~/components/stop/StopUsageModal";
@@ -155,7 +155,7 @@ export default function Estimates() {
           <div className={`estimates-lines-container scrollable`}>
             {apiRoutes.map((line) => (
               <div key={line.shortName} className="estimates-line-icon">
-                <LineIcon
+                <RouteIcon
                   line={line.shortName}
                   colour={line.colour}
                   textColour={line.textColour}

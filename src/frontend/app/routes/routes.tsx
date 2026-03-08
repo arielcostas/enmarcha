@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { fetchRoutes } from "~/api/transit";
-import LineIcon from "~/components/LineIcon";
+import RouteIcon from "~/components/RouteIcon";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import "../tailwind-full.css";
 
@@ -85,7 +85,7 @@ export default function RoutesPage() {
                       to={`/routes/${route.id}`}
                       className="flex items-center gap-3 p-4 bg-surface rounded-lg shadow hover:shadow-lg transition-shadow border border-border"
                     >
-                      <LineIcon
+                      <RouteIcon
                         line={route.shortName ?? "?"}
                         mode="pill"
                         colour={route.color ?? undefined}

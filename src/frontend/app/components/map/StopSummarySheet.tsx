@@ -6,7 +6,7 @@ import { Link } from "react-router";
 import { ArrivalList } from "~/components/arrivals/ArrivalList";
 import { useStopArrivals } from "../../hooks/useArrivals";
 import { ErrorDisplay } from "../ErrorDisplay";
-import LineIcon from "../LineIcon";
+import RouteIcon from "../RouteIcon";
 import "./StopSummarySheet.css";
 import { StopSummarySheetSkeleton } from "./StopSummarySheetSkeleton";
 
@@ -53,7 +53,7 @@ export const StopSummarySheet: React.FC<StopSheetProps> = ({
 
             <div className={`flex flex-wrap flex-row gap-2`}>
               {data?.routes.map((lineObj) => (
-                <LineIcon
+                <RouteIcon
                   key={lineObj.shortName}
                   line={lineObj.shortName}
                   mode="pill"

@@ -1,14 +1,15 @@
 import React, { useMemo } from "react";
-import "./LineIcon.css";
+import { formatHex } from "~/utils/colours";
+import "./RouteIcon.css";
 
-interface LineIconProps {
+interface RouteIconProps {
   line: string;
   mode?: "rounded" | "pill" | "default";
-  colour?: string;
-  textColour?: string;
+  colour: string;
+  textColour: string;
 }
 
-const LineIcon: React.FC<LineIconProps> = ({
+const RouteIcon: React.FC<RouteIconProps> = ({
   line,
   mode = "default",
   colour,
@@ -23,17 +24,11 @@ const LineIcon: React.FC<LineIconProps> = ({
   }, [actualLine]);
 
   const actualLineColour = useMemo(() => {
-    const actualColour = colour?.startsWith("#") ? colour : `#${colour}`;
-    return colour ? actualColour : `var(--line-${formattedLine.toLowerCase()})`;
-  }, [formattedLine]);
+    return formatHex(colour, true);
+  }, [colour]);
   const actualTextColour = useMemo(() => {
-    const actualTextColour = textColour?.startsWith("#")
-      ? textColour
-      : `#${textColour}`;
-    return textColour
-      ? actualTextColour
-      : `var(--line-${formattedLine.toLowerCase()}-text, #000000)`;
-  }, [formattedLine]);
+    return formatHex(textColour, true);
+  }, [textColour]);
 
   return (
     <span
@@ -50,4 +45,4 @@ const LineIcon: React.FC<LineIconProps> = ({
   );
 };
 
-export default LineIcon;
+export default RouteIcon;

@@ -7,8 +7,8 @@ import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { useLocation } from "react-router";
 
 import { type ConsolidatedCirculation } from "~/api/schema";
-import LineIcon from "~/components/LineIcon";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
+import RouteIcon from "~/components/RouteIcon";
 import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
 import { useBackButton, usePageTitle } from "~/contexts/PageTitleContext";
@@ -155,7 +155,7 @@ const ItinerarySummary = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <LineIcon
+                  <RouteIcon
                     line={leg.routeShortName || leg.routeName || leg.mode || ""}
                     mode="pill"
                     colour={leg.routeColor || undefined}
@@ -505,7 +505,7 @@ const ItineraryDetail = ({
                       <Footprints className="w-4 h-4" />
                     </div>
                   ) : (
-                    <LineIcon
+                    <RouteIcon
                       line={leg.routeShortName || leg.routeName || ""}
                       mode="rounded"
                       colour={leg.routeColor || undefined}

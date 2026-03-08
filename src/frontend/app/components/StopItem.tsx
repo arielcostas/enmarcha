@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router";
 import StopDataProvider, { type Stop } from "../data/StopDataProvider";
-import LineIcon from "./LineIcon";
+import RouteIcon from "./RouteIcon";
 
 interface StopItemProps {
   stop: Stop;
@@ -25,7 +25,7 @@ const StopItem: React.FC<StopItemProps> = ({ stop }) => {
         </div>
         <div className="flex flex-wrap gap-1 mt-1">
           {stop.lines?.map((lineObj) => (
-            <LineIcon
+            <RouteIcon
               key={lineObj.line}
               line={lineObj.line}
               colour={lineObj.colour}

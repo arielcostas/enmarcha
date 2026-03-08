@@ -1,7 +1,7 @@
 import { AlertTriangle, BusFront, LocateIcon } from "lucide-react";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import LineIcon from "~/components/LineIcon";
+import RouteIcon from "~/components/RouteIcon";
 import { type Arrival } from "../../api/schema";
 import "./ArrivalCard.css";
 
@@ -145,7 +145,7 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
       }`}
     >
       <div className="shrink-0 min-w-[7ch] mt-0.5">
-        <LineIcon
+        <RouteIcon
           line={route.shortName}
           colour={route.colour}
           textColour={route.textColour}

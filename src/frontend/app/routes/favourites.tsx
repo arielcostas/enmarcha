@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
-import LineIcon from "~/components/LineIcon";
+import RouteIcon from "~/components/RouteIcon";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import SpecialPlacesProvider, {
   type SpecialPlace,
@@ -288,7 +288,7 @@ function FavouriteStopItem({
           </div>
           <div className="flex flex-wrap gap-1 items-center">
             {stop.lines?.slice(0, 6).map((lineObj) => (
-              <LineIcon
+              <RouteIcon
                 key={lineObj.line}
                 line={lineObj.line}
                 colour={lineObj.colour}

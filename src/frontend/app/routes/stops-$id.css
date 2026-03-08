@@ -47,6 +47,7 @@
   flex-direction: column;
 
   padding-block: 1rem;
+  padding-inline: 0.75rem;
   box-sizing: border-box;
 
   gap: 1rem;
