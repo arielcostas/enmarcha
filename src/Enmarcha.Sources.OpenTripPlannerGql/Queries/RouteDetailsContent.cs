@@ -44,6 +44,8 @@ public class RouteDetailsContent : IGraphRequest<RouteDetailsContent.Args>
               tripsForDate(serviceDate: "{{args.ServiceDate}}") {
                 stoptimes {
                   scheduledDeparture
+                  pickupType
+                  dropoffType
                 }
               }
             }
@@ -108,5 +110,7 @@ public class RouteDetailsResponse : AbstractGraphResponse
     public class StoptimeItem
     {
         [JsonPropertyName("scheduledDeparture")] public int ScheduledDeparture { get; set; }
+        [JsonPropertyName("pickupType")] public string? PickupType { get; set; }
+        [JsonPropertyName("dropoffType")] public string? DropoffType { get; set; }
     }
 }

@@ -124,8 +124,21 @@ public class TransitController : ControllerBase
             var query = RouteDetailsContent.Query(new RouteDetailsContent.Args(id, serviceDate));
             var response = await SendOtpQueryAsync<RouteDetailsResponse>(query);
 
-            if (response?.Data?.Route == null)
+            if (response == null)
             {
+                return StatusCode(500, "Failed to connect to OTP.");
+            }
+
+            if (!response.IsSuccess)
+            {
+                var messages = string.Join("; ", response.Errors?.Select(e => e.Message) ?? []);
+                _logger.LogError("OTP returned errors: {Errors}", messages);
+                return StatusCode(500, $"OTP Error: {messages}");
+            }
+
+            if (response.Data?.Route == null)
+            {
+                _logger.LogWarning("Route details not found for {Id} on {ServiceDate}", id, serviceDate);
                 return NotFound();
             }
 

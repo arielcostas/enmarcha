@@ -108,7 +108,9 @@ public class OtpService
                     .Select(t => t.Stoptimes.ElementAtOrDefault(i)?.ScheduledDeparture ?? -1)
                     .Where(d => d != -1)
                     .OrderBy(d => d)
-                    .ToList()
+                    .ToList(),
+                PickupType = pattern.TripsForDate.FirstOrDefault()?.Stoptimes.ElementAtOrDefault(i)?.PickupType,
+                DropOffType = pattern.TripsForDate.FirstOrDefault()?.Stoptimes.ElementAtOrDefault(i)?.DropoffType
             }).ToList()
         };
     }

@@ -107,6 +107,8 @@ export const PatternStopSchema = z.object({
   lat: z.number(),
   lon: z.number(),
   scheduledDepartures: z.array(z.number()),
+  pickupType: z.string().optional().nullable(),
+  dropOffType: z.string().optional().nullable(),
 });
 
 export const PatternSchema = z.object({

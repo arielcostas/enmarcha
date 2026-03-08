@@ -43,4 +43,6 @@ public class PatternStopDto
     public double Lat { get; set; }
     public double Lon { get; set; }
     public List<int> ScheduledDepartures { get; set; } = [];
+    public string? PickupType { get; set; }
+    public string? DropOffType { get; set; }
 }

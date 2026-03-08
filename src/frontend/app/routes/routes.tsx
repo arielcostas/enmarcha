@@ -1,16 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { ChevronDown, ChevronRight, Star } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { fetchRoutes } from "~/api/transit";
 import RouteIcon from "~/components/RouteIcon";
 import { usePageTitle } from "~/contexts/PageTitleContext";
+import { useFavorites } from "~/hooks/useFavorites";
 import "../tailwind-full.css";
 
 export default function RoutesPage() {
   const { t } = useTranslation();
   usePageTitle(t("navbar.routes", "Rutas"));
   const [searchQuery, setSearchQuery] = useState("");
+  const { toggleFavorite: toggleFavoriteRoute, isFavorite: isFavoriteRoute } =
+    useFavorites("favouriteRoutes");
+  const { toggleFavorite: toggleFavoriteAgency, isFavorite: isFavoriteAgency } =
+    useFavorites("favouriteAgencies");
+
+  const [expandedAgencies, setExpandedAgencies] = useState<
+    Record<string, boolean>
+  >({});
+
+  const toggleAgencyExpanded = (agency: string) => {
+    setExpandedAgencies((prev) => ({ ...prev, [agency]: !prev[agency] }));
+  };
 
   const orderedAgencies = [
     "vitrasa",
@@ -26,21 +40,50 @@ export default function RoutesPage() {
     queryFn: () => fetchRoutes(orderedAgencies),
   });
 
-  const filteredRoutes = routes?.filter(
-    (route) =>
-      route.shortName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      route.longName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRoutes = useMemo(() => {
+    return routes?.filter(
+      (route) =>
+        route.shortName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        route.longName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [routes, searchQuery]);
 
-  const routesByAgency = filteredRoutes?.reduce(
-    (acc, route) => {
-      const agency = route.agencyName || t("routes.unknown_agency", "Otros");
-      if (!acc[agency]) acc[agency] = [];
-      acc[agency].push(route);
-      return acc;
-    },
-    {} as Record<string, typeof routes>
-  );
+  const routesByAgency = useMemo(() => {
+    return filteredRoutes?.reduce(
+      (acc, route) => {
+        const agency = route.agencyName || t("routes.unknown_agency", "Otros");
+        if (!acc[agency]) acc[agency] = [];
+        acc[agency].push(route);
+        return acc;
+      },
+      {} as Record<string, typeof routes>
+    );
+  }, [filteredRoutes, t]);
+
+  const sortedAgencyEntries = useMemo(() => {
+    if (!routesByAgency) return [];
+    return Object.entries(routesByAgency).sort(([a], [b]) => {
+      // First, sort by favorite status
+      const isFavA = isFavoriteAgency(a);
+      const isFavB = isFavoriteAgency(b);
+      if (isFavA && !isFavB) return -1;
+      if (!isFavA && isFavB) return 1;
+
+      // Then by fixed order
+      const indexA = orderedAgencies.indexOf(a.toLowerCase());
+      const indexB = orderedAgencies.indexOf(b.toLowerCase());
+      if (indexA === -1 && indexB === -1) {
+        return a.localeCompare(b);
+      }
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }, [routesByAgency, orderedAgencies, isFavoriteAgency]);
+
+  const favoriteRoutes = useMemo(() => {
+    return filteredRoutes?.filter((route) => isFavoriteRoute(route.id)) || [];
+  }, [filteredRoutes, isFavoriteRoute]);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -48,7 +91,7 @@ export default function RoutesPage() {
         <input
           type="text"
           placeholder={t("routes.search_placeholder", "Buscar rutas...")}
-          className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-text focus:outline-none focus:ring-2 focus:ring-primary shadow-sm placeholder-gray-500"
+          className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -60,47 +103,118 @@ export default function RoutesPage() {
         </div>
       )}
 
-      <div className="space-y-8">
-        {routesByAgency &&
-          Object.entries(routesByAgency)
-            .sort(([a], [b]) => {
-              const indexA = orderedAgencies.indexOf(a.toLowerCase());
-              const indexB = orderedAgencies.indexOf(b.toLowerCase());
-              if (indexA === -1 && indexB === -1) {
-                return a.localeCompare(b);
-              }
-              if (indexA === -1) return 1;
-              if (indexB === -1) return -1;
-              return indexA - indexB;
-            })
-            .map(([agency, agencyRoutes]) => (
-              <div key={agency}>
-                <h2 className="text-xl font-bold text-text mb-4 border-b border-border pb-2">
-                  {agency}
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-3">
+        {favoriteRoutes.length > 0 && !searchQuery && (
+          <div className="mb-2">
+            <h2 className="mb-3 flex items-center gap-2 border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted">
+              <Star size={16} className="fill-yellow-500 text-yellow-500" />
+              {t("routes.favorites", "Favoritas")}
+            </h2>
+            <div className="space-y-2">
+              {favoriteRoutes.map((route) => (
+                <div
+                  key={`fav-${route.id}`}
+                  className="rounded-xl border border-border bg-surface"
+                >
+                  <Link
+                    to={`/routes/${route.id}`}
+                    className="flex items-center gap-3 px-4 py-3"
+                  >
+                    <RouteIcon
+                      line={route.shortName ?? "?"}
+                      mode="pill"
+                      colour={route.color ?? undefined}
+                      textColour={route.textColor ?? undefined}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-sm font-medium text-text">
+                        {route.longName}
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {sortedAgencyEntries.map(([agency, agencyRoutes]) => {
+          const isFav = isFavoriteAgency(agency);
+          const isExpanded = searchQuery
+            ? true
+            : (expandedAgencies[agency] ?? false);
+
+          return (
+            <div
+              key={agency}
+              className="overflow-hidden rounded-xl border border-border bg-surface"
+            >
+              <div
+                className={`flex items-center justify-between px-4 py-3 select-none ${isExpanded ? "border-b border-border" : ""}`}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleAgencyExpanded(agency)}
+                  className="flex flex-1 items-center gap-3 text-left"
+                >
+                  <div className="text-muted">
+                    {isExpanded ? (
+                      <ChevronDown size={18} />
+                    ) : (
+                      <ChevronRight size={18} />
+                    )}
+                  </div>
+                  <h2 className="text-base font-semibold text-text">
+                    {agency}
+                  </h2>
+                  <span className="rounded-full bg-background px-2 py-0.5 text-xs text-muted">
+                    {agencyRoutes.length}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleFavoriteAgency(agency)}
+                  className={`rounded-full p-2 transition-colors ${
+                    isFav
+                      ? "text-yellow-500"
+                      : "text-muted hover:text-yellow-500"
+                  }`}
+                  aria-label={t(
+                    "routes.toggle_favorite_agency",
+                    "Alternar agencia favorita"
+                  )}
+                >
+                  <Star size={16} className={isFav ? "fill-current" : ""} />
+                </button>
+              </div>
+
+              {isExpanded && (
+                <div className="space-y-1 px-3 py-2">
                   {agencyRoutes.map((route) => (
-                    <Link
-                      key={route.id}
-                      to={`/routes/${route.id}`}
-                      className="flex items-center gap-3 p-4 bg-surface rounded-lg shadow hover:shadow-lg transition-shadow border border-border"
-                    >
-                      <RouteIcon
-                        line={route.shortName ?? "?"}
-                        mode="pill"
-                        colour={route.color ?? undefined}
-                        textColour={route.textColor ?? undefined}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm md:text-md font-semibold text-text">
-                          {route.longName}
-                        </p>
-                      </div>
-                    </Link>
+                    <div key={route.id} className="rounded-lg">
+                      <Link
+                        to={`/routes/${route.id}`}
+                        className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-background"
+                      >
+                        <RouteIcon
+                          line={route.shortName ?? "?"}
+                          mode="pill"
+                          colour={route.color ?? undefined}
+                          textColour={route.textColor ?? undefined}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-sm font-medium text-text">
+                            {route.longName}
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
                   ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

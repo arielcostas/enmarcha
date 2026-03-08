@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowDownCircle,
+  ArrowUpCircle,
   Bus,
   ChevronDown,
   Clock,
   LayoutGrid,
   List,
   Map as MapIcon,
+  Star,
   X,
 } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
@@ -21,12 +24,37 @@ import { fetchRouteDetails } from "~/api/transit";
 import { AppMap } from "~/components/shared/AppMap";
 import {
   useBackButton,
+  usePageRightNode,
   usePageTitle,
   usePageTitleNode,
 } from "~/contexts/PageTitleContext";
 import { useStopArrivals } from "~/hooks/useArrivals";
+import { useFavorites } from "~/hooks/useFavorites";
 import { formatHex } from "~/utils/colours";
 import "../tailwind-full.css";
+
+function FavoriteStar({ id }: { id?: string }) {
+  const { isFavorite, toggleFavorite } = useFavorites("favouriteRoutes");
+  const { t } = useTranslation();
+
+  if (!id) return null;
+
+  const isFav = isFavorite(id);
+
+  return (
+    <button
+      type="button"
+      onClick={() => toggleFavorite(id)}
+      className="p-2 rounded-full hover:bg-surface"
+      aria-label={t("routes.toggle_favorite", "Alternar favorita")}
+    >
+      <Star
+        size={20}
+        className={isFav ? "fill-yellow-500 text-yellow-500" : "text-muted"}
+      />
+    </button>
+  );
+}
 
 export default function RouteDetailsPage() {
   const { id } = useParams();
@@ -44,6 +72,8 @@ export default function RouteDetailsPage() {
   );
   const mapRef = useRef<MapRef>(null);
   const stopRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const { isFavorite, toggleFavorite } = useFavorites("favouriteRoutes");
 
   const formatDateKey = (value: Date) => {
     const year = value.getFullYear();
@@ -138,6 +168,9 @@ export default function RouteDetailsPage() {
 
   usePageTitleNode(titleNode);
 
+  const rightNode = useMemo(() => <FavoriteStar id={id} />, [id]);
+  usePageRightNode(rightNode);
+
   useBackButton({ to: "/routes" });
 
   const weekDays = useMemo(() => {
@@ -169,6 +202,43 @@ export default function RouteDetailsPage() {
     });
   }, [i18n.language, t]);
 
+  const activePatterns = useMemo(() => {
+    return route?.patterns.filter((p) => p.tripCount > 0) ?? [];
+  }, [route?.patterns]);
+
+  const patternsByDirection = useMemo(() => {
+    return activePatterns.reduce(
+      (acc, pattern) => {
+        const dir = pattern.directionId;
+        if (!acc[dir]) acc[dir] = [];
+        acc[dir].push(pattern);
+        return acc;
+      },
+      {} as Record<number, typeof route.patterns>
+    );
+  }, [activePatterns, route?.patterns]);
+
+  const selectedPattern = useMemo(() => {
+    if (!route) return null;
+
+    if (selectedPatternId) {
+      const found = activePatterns.find((p) => p.id === selectedPatternId);
+      if (found) return found;
+    }
+
+    // Try to find the most frequent pattern in direction 0 (outbound)
+    const outboundPatterns = (patternsByDirection[0] ?? []).sort(
+      (a, b) => b.tripCount - a.tripCount
+    );
+    if (outboundPatterns.length > 0) return outboundPatterns[0];
+
+    // Fallback to any pattern with trips
+    const anyPatterns = [...activePatterns].sort(
+      (a, b) => b.tripCount - a.tripCount
+    );
+    return anyPatterns[0] || route.patterns[0];
+  }, [activePatterns, patternsByDirection, selectedPatternId, route]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">
@@ -183,21 +253,6 @@ export default function RouteDetailsPage() {
     );
   }
 
-  const activePatterns = route.patterns.filter((p) => p.tripCount > 0);
-
-  const patternsByDirection = activePatterns.reduce(
-    (acc, pattern) => {
-      const dir = pattern.directionId;
-      if (!acc[dir]) acc[dir] = [];
-      acc[dir].push(pattern);
-      return acc;
-    },
-    {} as Record<number, typeof route.patterns>
-  );
-
-  const selectedPattern =
-    activePatterns.find((p) => p.id === selectedPatternId) || activePatterns[0];
-
   const selectedPatternLabel = selectedPattern
     ? selectedPattern.headsign || selectedPattern.name
     : t("routes.details", "Detalles de ruta");
@@ -209,6 +264,10 @@ export default function RouteDetailsPage() {
       string,
       { departure: number; patternId: string; tripId?: string | null }[]
     >();
+
+    if (selectedPattern?.tripCount === 0) {
+      return byStop;
+    }
 
     for (const pattern of sameDirectionPatterns) {
       for (const stop of pattern.stops) {
@@ -240,14 +299,14 @@ export default function RouteDetailsPage() {
 
   const layoutOptions = [
     {
-      id: "balanced",
-      label: t("routes.layout_balanced", "Equilibrada"),
-      icon: LayoutGrid,
-    },
-    {
       id: "map",
       label: t("routes.layout_map", "Mapa"),
       icon: MapIcon,
+    },
+    {
+      id: "balanced",
+      label: t("routes.layout_balanced", "Equilibrada"),
+      icon: LayoutGrid,
     },
     {
       id: "list",
@@ -380,11 +439,19 @@ export default function RouteDetailsPage() {
                   type="circle"
                   paint={{
                     "circle-radius": 6,
-                    "circle-color": "#ffffff",
+                    "circle-color": [
+                      "case",
+                      ["==", ["get", "id"], selectedStopId ?? ""],
+                      route.color ? formatHex(route.color) : "#3b82f6",
+                      "#ffffff",
+                    ],
                     "circle-stroke-width": 2,
-                    "circle-stroke-color": route.color
-                      ? formatHex(route.color)
-                      : "#3b82f6",
+                    "circle-stroke-color": [
+                      "case",
+                      ["==", ["get", "id"], selectedStopId ?? ""],
+                      "#ffffff",
+                      route.color ? formatHex(route.color) : "#3b82f6",
+                    ],
                   }}
                 />
               </Source>
@@ -595,6 +662,24 @@ export default function RouteDetailsPage() {
             <h3 className="text-base font-semibold mb-3 text-text">
               {t("routes.stops", "Paradas")}
             </h3>
+
+            {selectedPattern?.tripCount === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="bg-surface p-4 rounded-full mb-4 border border-border">
+                  <Clock size={32} className="text-muted" />
+                </div>
+                <h4 className="text-lg font-bold text-text mb-1">
+                  {t("routes.no_service_today", "Sin servicio hoy")}
+                </h4>
+                <p className="text-sm text-muted max-w-xs">
+                  {t(
+                    "routes.no_service_today_desc",
+                    "Este trayecto no tiene viajes programados para la fecha seleccionada."
+                  )}
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               {selectedPattern?.stops.map((stop, idx) => (
                 <div
@@ -620,14 +705,36 @@ export default function RouteDetailsPage() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-text text-sm">
+                    <p
+                      className={`font-semibold text-text text-sm ${selectedStopId === stop.id ? "text-primary" : ""}`}
+                    >
                       {stop.name}
                       {stop.code && (
-                        <span className="text-[11px] font-normal text-gray-500 ml-2">
+                        <span
+                          className={`text-[11px] font-normal ml-2 ${selectedStopId === stop.id ? "text-primary/70" : "text-gray-500"}`}
+                        >
                           {stop.code}
                         </span>
                       )}
                     </p>
+
+                    {(stop.pickupType === "NONE" ||
+                      stop.dropOffType === "NONE") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {stop.pickupType === "NONE" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                            <ArrowDownCircle size={10} />
+                            {t("routes.drop_off_only", "Solo bajada")}
+                          </span>
+                        )}
+                        {stop.dropOffType === "NONE" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                            <ArrowUpCircle size={10} />
+                            {t("routes.pickup_only", "Solo subida")}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                     {selectedStopId === stop.id && (
                       <Link
