@@ -16,32 +16,11 @@
 }
 
 .stop-sheet-content {
-  padding: 16px;
+  padding-inline: 1rem;
   display: flex;
   flex-direction: column;
   /* overflow: hidden; */
   touch-action: pan-y;
-}
-
-.stop-sheet-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.stop-sheet-title {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-color);
-  margin: 0;
-}
-
-.stop-sheet-id {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  color: var(--subtitle-color);
 }
 
 .stop-sheet-lines-container {
@@ -86,14 +65,6 @@
   flex: 1;
   min-height: 0;
   margin-block-start: 1.25rem;
-}
-
-.stop-sheet-subtitle {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--text-color);
-  margin: 0 0 12px 0;
 }
 
 .stop-sheet-no-estimates {
@@ -182,8 +153,7 @@
   flex-direction: column;
   gap: 0.75rem;
   margin: 0;
-  padding: 0.75rem 16px 1rem 16px;
-  border-top: 1px solid var(--border-color);
+  padding: 1rem 0.75rem;
   background-color: var(--background-color);
   z-index: 10;
 }
@@ -197,6 +167,7 @@
 
 .stop-sheet-actions {
   display: flex;
+  justify-content: end;
   gap: 0.75rem;
 }
 

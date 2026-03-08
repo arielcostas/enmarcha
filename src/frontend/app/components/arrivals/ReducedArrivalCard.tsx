@@ -138,13 +138,13 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
   return (
     <Tag
       onClick={isClickable ? onClick : undefined}
-      className={`w-full text-left flex-none flex items-center gap-3 min-h-12 rounded px-3 py-2.5 transition-all bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 ${
+      className={`w-full text-left flex-none flex items-center gap-3 min-h-12 rounded p-2 transition-all bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-gray-700 ${
         isClickable
           ? "hover:border-blue-400 dark:hover:border-blue-500 active:scale-[0.99] cursor-pointer"
           : ""
       }`}
     >
-      <div className="shrink-0 min-w-[7ch] mt-0.5">
+      <div className="shrink-0 min-w-[4ch] mt-0.5">
         <RouteIcon
           line={route.shortName}
           colour={route.colour}
@@ -216,9 +216,8 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
         `.trim()}
       >
         <div className="flex flex-col items-center leading-none">
-          <span className="text-lg font-bold leading-none">{etaValue}</span>
-          <span className="text-[0.55rem] uppercase tracking-wider mt-0.5 opacity-90">
-            {etaUnit}
+          <span className="text-lg font-bold leading-none">
+            {etaValue}&apos;
           </span>
         </div>
       </div>

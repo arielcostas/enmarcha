@@ -1,4 +1,3 @@
-import { RefreshCw } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Sheet } from "react-modal-sheet";
@@ -46,9 +45,20 @@ export const StopSummarySheet: React.FC<StopSheetProps> = ({
         <Sheet.Header />
         <Sheet.Content drag="y">
           <div className="stop-sheet-content">
-            <div className="stop-sheet-header">
-              <h2 className="stop-sheet-title">{stop.name}</h2>
-              <span className="stop-sheet-id">({stop.stopCode})</span>
+            <div className="flex flex-col gap-1.5 mb-4">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-snug m-0">
+                {stop.name}
+              </h2>
+              <div className="text-sm flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-mono uppercase">
+                <span className="px-1.5 py-0.5 rounded flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 leading-none">
+                  {stop.stopId.split(":")[0]}
+                </span>
+                <span>
+                  {stop.stopCode?.split(":")[1] ||
+                    stop.stopId.split(":")[1] ||
+                    stop.stopId}
+                </span>
+              </div>
             </div>
 
             <div className={`flex flex-wrap flex-row gap-2`}>
@@ -84,7 +94,7 @@ export const StopSummarySheet: React.FC<StopSheetProps> = ({
             ) : data ? (
               <>
                 <div className="stop-sheet-estimates">
-                  <h3 className="stop-sheet-subtitle">
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-2 mt-0">
                     {t("estimates.next_arrivals", "Next arrivals")}
                   </h3>
 
@@ -114,18 +124,6 @@ export const StopSummarySheet: React.FC<StopSheetProps> = ({
           )}
 
           <div className="stop-sheet-actions">
-            <button
-              className="stop-sheet-reload"
-              onClick={loadData}
-              disabled={loading}
-              title={t("estimates.reload", "Recargar estimaciones")}
-            >
-              <RefreshCw
-                className={`reload-icon ${loading ? "spinning" : ""}`}
-              />
-              {t("estimates.reload", "Recargar")}
-            </button>
-
             <Link
               to={`/stops/${stop.stopId}`}
               className="stop-sheet-view-all"

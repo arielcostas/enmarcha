@@ -102,7 +102,7 @@
   "map": {
     "popup_title": "Parada",
     "lines": "Líneas",
-    "view_all_estimates": "Ver todas las estimaciones",
+    "view_all_estimates": "Detalles",
     "select_nearby_stop": "Seleccionar parada"
   },
   "planner": {

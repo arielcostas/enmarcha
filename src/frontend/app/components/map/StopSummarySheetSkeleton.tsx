@@ -18,7 +18,7 @@ export const StopSummarySheetSkeleton: React.FC<StopSheetSkeletonProps> = ({
       highlightColor="var(--skeleton-highlight)"
     >
       <div className="stop-sheet-estimates">
-        <h3 className="stop-sheet-subtitle">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 mb-2 mt-0">
           {t("estimates.next_arrivals", "Next arrivals")}
         </h3>
 
