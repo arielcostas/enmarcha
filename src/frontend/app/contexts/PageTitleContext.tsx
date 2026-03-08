@@ -4,11 +4,13 @@ interface PageTitleContextProps {
   title: string;
   setTitle: (title: string) => void;
   titleNode?: React.ReactNode;
+  rightNode?: React.ReactNode;
   onBack?: () => void;
   backTo?: string;
   setOnBack: (callback?: () => void) => void;
   setBackTo: (to?: string) => void;
   setTitleNode: (node?: React.ReactNode) => void;
+  setRightNode: (node?: React.ReactNode) => void;
 }
 
 const PageTitleContext = createContext<PageTitleContextProps | undefined>(
@@ -20,6 +22,9 @@ export const PageTitleProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [title, setTitle] = useState("EnMarcha");
   const [titleNode, setTitleNodeState] = useState<React.ReactNode | undefined>(
+    undefined
+  );
+  const [rightNode, setRightNodeState] = useState<React.ReactNode | undefined>(
     undefined
   );
   const [onBack, setOnBackState] = useState<(() => void) | undefined>(
@@ -36,7 +41,11 @@ export const PageTitleProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const setTitleNode = (node?: React.ReactNode) => {
-    setTitleNodeState(node);
+    setTitleNodeState((prev) => (prev === node ? prev : node));
+  };
+
+  const setRightNode = (node?: React.ReactNode) => {
+    setRightNodeState((prev) => (prev === node ? prev : node));
   };
 
   return (
@@ -45,11 +54,13 @@ export const PageTitleProvider: React.FC<{ children: React.ReactNode }> = ({
         title,
         setTitle,
         titleNode,
+        rightNode,
         onBack,
         backTo,
         setOnBack,
         setBackTo,
         setTitleNode,
+        setRightNode,
       }}
     >
       {children}
@@ -75,7 +86,7 @@ export const usePageTitle = (title: string) => {
     document.title = `${title} - EnMarcha`;
 
     return () => {};
-  }, [title, setTitle]);
+  }, [title]);
 };
 
 export const useBackButton = (options?: {
@@ -84,15 +95,18 @@ export const useBackButton = (options?: {
 }) => {
   const { setOnBack, setBackTo } = usePageTitleContext();
 
+  const onBack = options?.onBack;
+  const to = options?.to;
+
   useEffect(() => {
-    setOnBack(options?.onBack);
-    setBackTo(options?.to);
+    setOnBack(onBack);
+    setBackTo(to);
 
     return () => {
       setOnBack(undefined);
       setBackTo(undefined);
     };
-  }, [options?.onBack, options?.to, setOnBack, setBackTo]);
+  }, [onBack, to]);
 };
 
 export const usePageTitleNode = (node?: React.ReactNode) => {
@@ -104,5 +118,17 @@ export const usePageTitleNode = (node?: React.ReactNode) => {
     return () => {
       setTitleNode(undefined);
     };
-  }, [node, setTitleNode]);
+  }, []); // Only set on mount/unmount to avoid loops with JSX
+};
+
+export const usePageRightNode = (node: React.ReactNode) => {
+  const { setRightNode } = usePageTitleContext();
+
+  useEffect(() => {
+    setRightNode(node);
+
+    return () => {
+      setRightNode(undefined);
+    };
+  }, []); // Only set on mount/unmount to avoid loops with JSX
 };

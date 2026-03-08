@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({
   onMenuClick,
   className = "",
 }) => {
-  const { onBack, backTo, titleNode } = usePageTitleContext();
+  const { onBack, backTo, titleNode, rightNode } = usePageTitleContext();
 
   return (
     <header className={`app-header ${className}`}>
@@ -41,7 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
         )}
         {titleNode ? titleNode : <h1 className="app-header__title">{title}</h1>}
       </div>
-      <div className="app-header__right">
+      <div className="app-header__right flex items-center gap-2">
+        {rightNode}
         <button
           className="app-header__menu-btn"
           onClick={onMenuClick}

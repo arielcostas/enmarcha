@@ -1,10 +1,4 @@
-import {
-  ChartNoAxesColumn,
-  CircleHelp,
-  Eye,
-  EyeClosed,
-  Star,
-} from "lucide-react";
+import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
@@ -21,8 +15,8 @@ import { PullToRefresh } from "~/components/PullToRefresh";
 import RouteIcon from "~/components/RouteIcon";
 import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
-import { StopUsageModal } from "~/components/stop/StopUsageModal";
-import { usePageTitle } from "~/contexts/PageTitleContext";
+import { StopUsageChart } from "~/components/stop/StopUsageChart";
+import { usePageRightNode, usePageTitle } from "~/contexts/PageTitleContext";
 import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";
@@ -58,7 +52,6 @@ export default function Estimates() {
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-  const [isUsageVisible, setIsUsageVisible] = useState(false);
   const [isReducedView, setIsReducedView] = useState(false);
   const [selectedArrivalId, setSelectedArrivalId] = useState<
     string | undefined
@@ -71,6 +64,30 @@ export default function Estimates() {
   }, [stopId, stopName]);
 
   usePageTitle(getStopDisplayName());
+
+  const toggleFavourite = useCallback(() => {
+    if (favourited) {
+      StopDataProvider.removeFavourite(stopId);
+      setFavourited(false);
+    } else {
+      StopDataProvider.addFavourite(stopId);
+      setFavourited(true);
+    }
+  }, [favourited, stopId]);
+
+  usePageRightNode(
+    <button
+      onClick={toggleFavourite}
+      className={`app-header__menu-btn p-2 rounded-full transition-colors ${
+        favourited
+          ? "text-[var(--star-color)]"
+          : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+      }`}
+      aria-label={t("stop.toggle_favourite", "Alternar favorito")}
+    >
+      <Star className={favourited ? "fill-current" : ""} size={24} />
+    </button>
+  );
 
   const parseError = (error: any): ErrorInfo => {
     if (!navigator.onLine) {
@@ -138,19 +155,9 @@ export default function Estimates() {
     setDataLoading(false);
   }, [stopId, loadData]);
 
-  const toggleFavourite = () => {
-    if (favourited) {
-      StopDataProvider.removeFavourite(stopId);
-      setFavourited(false);
-    } else {
-      StopDataProvider.addFavourite(stopId);
-      setFavourited(true);
-    }
-  };
-
   return (
     <PullToRefresh onRefresh={handleManualRefresh}>
-      <div className="page-container stops-page">
+      <div className="page-container stops-page flex-1">
         {apiRoutes.length > 0 && (
           <div className={`estimates-lines-container scrollable`}>
             {apiRoutes.map((line) => (
@@ -166,9 +173,7 @@ export default function Estimates() {
           </div>
         )}
 
-        {/*{stopData && <StopAlert stop={stopData} />}*/}
-
-        <div className="estimates-list-container">
+        <div className="estimates-list-container flex-1">
           {dataLoading ? (
             <>{/*TODO: New loading skeleton*/}</>
           ) : dataError ? (
@@ -182,54 +187,40 @@ export default function Estimates() {
             />
           ) : data ? (
             <>
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-4">
-                  <Star
-                    className={`cursor-pointer transition-colors ${
-                      favourited
-                        ? "fill-[var(--star-color)] text-[var(--star-color)]"
-                        : "text-muted"
-                    }`}
-                    onClick={toggleFavourite}
-                  />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="consolidated-circulation-caption text-xs font-bold uppercase tracking-wider text-muted m-0">
+                    {t("estimates.caption", "Estimaciones a las {{time}}", {
+                      time: dataDate?.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
+                    })}
+                  </div>
 
-                  {data.usage && data.usage.length > 0 && (
-                    <ChartNoAxesColumn
-                      className={`cursor-pointer transition-colors ${
-                        isUsageVisible ? "text-primary" : "text-muted"
-                      }`}
-                      onClick={() => setIsUsageVisible(!isUsageVisible)}
-                    />
-                  )}
-
-                  <CircleHelp
-                    className="text-muted cursor-pointer"
-                    onClick={() => setIsHelpModalOpen(true)}
-                  />
-                </div>
-
-                <div className="consolidated-circulation-caption">
-                  {t(
-                    "estimates.caption",
-                    "Estimaciones de llegadas a las {{time}}",
-                    {
-                      time: dataDate?.toLocaleTimeString(),
-                    }
-                  )}
-                </div>
-
-                <div>
-                  {isReducedView ? (
-                    <EyeClosed
-                      className="text-muted"
-                      onClick={() => setIsReducedView(false)}
-                    />
-                  ) : (
-                    <Eye
-                      className="text-muted"
-                      onClick={() => setIsReducedView(true)}
-                    />
-                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-muted"
+                      onClick={() => setIsHelpModalOpen(true)}
+                    >
+                      <CircleHelp className="w-5 h-5" />
+                    </button>
+                    {isReducedView ? (
+                      <button
+                        className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-muted"
+                        onClick={() => setIsReducedView(false)}
+                      >
+                        <EyeClosed className="w-5 h-5" />
+                      </button>
+                    ) : (
+                      <button
+                        className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-muted"
+                        onClick={() => setIsReducedView(true)}
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               <ArrivalList
@@ -240,6 +231,12 @@ export default function Estimates() {
                   setIsMapModalOpen(true);
                 }}
               />
+
+              {data.usage && data.usage.length > 0 && (
+                <div className="mt-8">
+                  <StopUsageChart usage={data.usage} />
+                </div>
+              )}
             </>
           ) : null}
         </div>
@@ -271,14 +268,6 @@ export default function Estimates() {
           isOpen={isHelpModalOpen}
           onClose={() => setIsHelpModalOpen(false)}
         />
-
-        {data?.usage && (
-          <StopUsageModal
-            isOpen={isUsageVisible}
-            onClose={() => setIsUsageVisible(false)}
-            usage={data.usage}
-          />
-        )}
       </div>
     </PullToRefresh>
   );

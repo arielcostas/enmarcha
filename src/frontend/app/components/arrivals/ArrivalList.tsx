@@ -17,7 +17,7 @@ export const ArrivalList: React.FC<ArrivalListProps> = ({
   const clickable = Boolean(onArrivalClick);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col flex-1 gap-3">
       {arrivals.length === 0 && (
         <div className="text-center text-muted mt-16">
           {/* TOOD i18n */}
