@@ -13,8 +13,8 @@ export default function RoutesPage() {
   const { t } = useTranslation();
   usePageTitle(t("navbar.routes", "Rutas"));
   const [searchQuery, setSearchQuery] = useState("");
-  const { toggleFavorite: toggleFavoriteRoute, isFavorite: isFavoriteRoute } =
-    useFavorites("favouriteRoutes");
+  const [isFavoritesExpanded, setIsFavoritesExpanded] = useState(true);
+  const { isFavorite: isFavoriteRoute } = useFavorites("favouriteRoutes");
   const { toggleFavorite: toggleFavoriteAgency, isFavorite: isFavoriteAgency } =
     useFavorites("favouriteAgencies");
 
@@ -105,36 +105,52 @@ export default function RoutesPage() {
 
       <div className="space-y-3">
         {favoriteRoutes.length > 0 && !searchQuery && (
-          <div className="mb-2">
-            <h2 className="mb-3 flex items-center gap-2 border-b border-border pb-2 text-sm font-semibold uppercase tracking-wide text-muted">
+          <div className="overflow-hidden rounded-xl border border-border bg-surface">
+            <button
+              type="button"
+              onClick={() => setIsFavoritesExpanded((prev) => !prev)}
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left ${isFavoritesExpanded ? "border-b border-border" : ""}`}
+            >
+              <div className="text-muted">
+                {isFavoritesExpanded ? (
+                  <ChevronDown size={18} />
+                ) : (
+                  <ChevronRight size={18} />
+                )}
+              </div>
               <Star size={16} className="fill-yellow-500 text-yellow-500" />
-              {t("routes.favorites", "Favoritas")}
-            </h2>
-            <div className="space-y-2">
-              {favoriteRoutes.map((route) => (
-                <div
-                  key={`fav-${route.id}`}
-                  className="rounded-xl border border-border bg-surface"
-                >
-                  <Link
-                    to={`/routes/${route.id}`}
-                    className="flex items-center gap-3 px-4 py-3"
-                  >
-                    <RouteIcon
-                      line={route.shortName ?? "?"}
-                      mode="pill"
-                      colour={route.color ?? undefined}
-                      textColour={route.textColor ?? undefined}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-sm font-medium text-text">
-                        {route.longName}
-                      </p>
-                    </div>
-                  </Link>
-                </div>
-              ))}
-            </div>
+              <h2 className="flex-1 text-base font-semibold text-text">
+                {t("routes.favorites", "Favoritas")}
+              </h2>
+              <span className="rounded-full bg-background px-2 py-0.5 text-xs text-muted">
+                {favoriteRoutes.length}
+              </span>
+            </button>
+
+            {isFavoritesExpanded && (
+              <div className="space-y-1 px-3 py-2">
+                {favoriteRoutes.map((route) => (
+                  <div key={`fav-${route.id}`} className="rounded-lg">
+                    <Link
+                      to={`/routes/${route.id}`}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-background"
+                    >
+                      <RouteIcon
+                        line={route.shortName ?? "?"}
+                        mode="pill"
+                        colour={route.color ?? "#6b7280"}
+                        textColour={route.textColor ?? "#ffffff"}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-medium text-text">
+                          {route.longName}
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -199,8 +215,8 @@ export default function RoutesPage() {
                         <RouteIcon
                           line={route.shortName ?? "?"}
                           mode="pill"
-                          colour={route.color ?? undefined}
-                          textColour={route.textColor ?? undefined}
+                          colour={route.color ?? "#6b7280"}
+                          textColour={route.textColor ?? "#ffffff"}
                         />
                         <div className="flex-1 min-w-0">
                           <p className="truncate text-sm font-medium text-text">
