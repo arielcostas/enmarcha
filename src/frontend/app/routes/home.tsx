@@ -1,11 +1,10 @@
-import { History } from "lucide-react";
+import { Clock, History, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { usePlanner } from "~/hooks/usePlanner";
-import StopGallery from "../components/StopGallery";
 import StopItem from "../components/StopItem";
 import StopDataProvider, { type Stop } from "../data/StopDataProvider";
 import "../tailwind-full.css";
@@ -246,8 +245,12 @@ export default function StopList() {
             {t("stoplist.search_results", "Resultados de la búsqueda")}
           </h2>
           <ul className="list-none p-0 m-0 flex flex-col gap-2 md:grid md:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
-            {searchResults.map((stop: Stop) => (
-              <StopItem key={stop.stopId} stop={stop} />
+            {searchResults.map((stop: Stop, index) => (
+              <StopItem
+                key={stop.stopId}
+                stop={stop}
+                showArrivals={index < 3}
+              />
             ))}
           </ul>
         </div>
@@ -259,24 +262,67 @@ export default function StopList() {
         </div>
       ) : (
         <>
-          {/* Favourites Gallery */}
-          {!loading && (
-            <StopGallery
-              stops={favouriteStops.sort((a, b) =>
-                a.stopId.localeCompare(b.stopId)
-              )}
-              title={t("stoplist.favourites")}
-              emptyMessage={t("stoplist.no_favourites")}
-            />
+          {/* Favourites List */}
+          {!loading && favouriteStops.length > 0 && (
+            <div className="w-full px-4 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-1 pl-1">
+                <Star className="text-yellow-500 w-4 h-4" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted m-0">
+                  {t("stoplist.favourites")}
+                </h3>
+              </div>
+              <ul className="list-none p-0 m-0 flex flex-col gap-2 md:grid md:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+                {favouriteStops
+                  .sort((a, b) => a.stopId.localeCompare(b.stopId))
+                  .map((stop, index) => (
+                    <StopItem
+                      key={stop.stopId}
+                      stop={stop}
+                      showArrivals={index < 3}
+                    />
+                  ))}
+              </ul>
+            </div>
           )}
 
-          {/* Recent Stops Gallery - only show if no favourites */}
           {!loading && favouriteStops.length === 0 && (
-            <StopGallery
-              stops={recentStops.slice(0, 5)}
-              title={t("stoplist.recents")}
-            />
+            <div className="w-full px-4 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-1 pl-1">
+                <Star className="text-yellow-500 w-4 h-4" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted m-0">
+                  {t("stoplist.favourites")}
+                </h3>
+              </div>
+              <div className="text-center bg-surface border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl p-4">
+                <p className="text-sm text-muted">
+                  {t("stoplist.no_favourites")}
+                </p>
+              </div>
+            </div>
           )}
+
+          {/* Recent Stops List - only show if no favourites */}
+          {!loading &&
+            favouriteStops.length === 0 &&
+            recentStops.length > 0 && (
+              <div className="w-full px-4 flex flex-col gap-2 mt-4">
+                <div className="flex items-center gap-2 mb-1 pl-1">
+                  <Clock className="text-blue-500 w-4 h-4" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted m-0">
+                    {t("stoplist.recents")}
+                  </h3>
+                </div>
+                <ul className="list-none p-0 m-0 flex flex-col gap-2 md:grid md:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+                  {recentStops.slice(0, 5).map((stop, index) => (
+                    <StopItem
+                      key={stop.stopId}
+                      stop={stop}
+                      showArrivals={index < 3}
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
 
           {/*<ServiceAlerts />*/}
         </>
