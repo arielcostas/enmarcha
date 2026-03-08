@@ -36,6 +36,8 @@ export default function Estimates() {
   const { t } = useTranslation();
   const params = useParams();
   const stopId = params.id ?? "";
+  const stopFeedId = stopId.split(":")[0] || stopId;
+  const fallbackStopCode = stopId.split(":")[1] || stopId;
   const [stopName, setStopName] = useState<string | undefined>(undefined);
   const [apiRoutes, setApiRoutes] = useState<RouteInfo[]>([]);
   const [apiLocation, setApiLocation] = useState<Position | undefined>(
@@ -80,7 +82,7 @@ export default function Estimates() {
       onClick={toggleFavourite}
       className={`app-header__menu-btn p-2 rounded-full transition-colors ${
         favourited
-          ? "text-[var(--star-color)]"
+          ? "text-(--star-color)"
           : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
       }`}
       aria-label={t("stop.toggle_favourite", "Alternar favorito")}
@@ -189,13 +191,21 @@ export default function Estimates() {
             <>
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <div className="consolidated-circulation-caption text-xs font-bold uppercase tracking-wider text-muted m-0">
-                    {t("estimates.caption", "Estimaciones a las {{time}}", {
-                      time: dataDate?.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }),
-                    })}
+                  <div className="flex flex-col gap-1">
+                    <div className="consolidated-circulation-caption m-0 text-xs font-bold uppercase tracking-wider text-muted">
+                      {t("estimates.caption", "Estimaciones a las {{time}}", {
+                        time: dataDate?.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }),
+                      })}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs font-mono uppercase text-muted">
+                      <span className="flex items-center justify-center rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold leading-none text-slate-700 dark:bg-slate-700 dark:text-slate-300">
+                        {stopFeedId}
+                      </span>
+                      <span>{data.stopCode || fallbackStopCode}</span>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
