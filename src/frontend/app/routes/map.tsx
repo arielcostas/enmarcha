@@ -1,6 +1,6 @@
-import { Check, MapPin, X } from "lucide-react";
+import { Check, MapPin, Navigation, X } from "lucide-react";
 import type { FilterSpecification } from "maplibre-gl";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Layer,
@@ -52,6 +52,81 @@ export default function StopMap() {
   } = usePlanner({ autoLoad: false });
 
   const [isConfirming, setIsConfirming] = useState(false);
+
+  // Context menu state (right-click / long-press)
+  interface ContextMenuState {
+    x: number;
+    y: number;
+    lat: number;
+    lng: number;
+  }
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [contextMenuLoading, setContextMenuLoading] = useState<
+    "origin" | "destination" | null
+  >(null);
+
+  const handleContextMenu = (e: MapLayerMouseEvent) => {
+    if (pickingMode) return;
+    e.preventDefault?.();
+    setContextMenu({
+      x: e.point.x,
+      y: e.point.y,
+      lat: e.lngLat.lat,
+      lng: e.lngLat.lng,
+    });
+  };
+
+  const closeContextMenu = () => setContextMenu(null);
+
+  const handleRouteFromHere = async () => {
+    if (!contextMenu) return;
+    setContextMenuLoading("origin");
+    try {
+      const result = await reverseGeocode(contextMenu.lat, contextMenu.lng);
+      const place = {
+        name:
+          result?.name ||
+          `${contextMenu.lat.toFixed(5)}, ${contextMenu.lng.toFixed(5)}`,
+        label: result?.label || "Map location",
+        lat: contextMenu.lat,
+        lon: contextMenu.lng,
+        layer: "map-pick",
+      };
+      setOrigin(place);
+      addRecentPlace(place);
+      closeContextMenu();
+      navigate("/planner");
+    } catch {
+      closeContextMenu();
+    } finally {
+      setContextMenuLoading(null);
+    }
+  };
+
+  const handleRouteToHere = async () => {
+    if (!contextMenu) return;
+    setContextMenuLoading("destination");
+    try {
+      const result = await reverseGeocode(contextMenu.lat, contextMenu.lng);
+      const place = {
+        name:
+          result?.name ||
+          `${contextMenu.lat.toFixed(5)}, ${contextMenu.lng.toFixed(5)}`,
+        label: result?.label || "Map location",
+        lat: contextMenu.lat,
+        lon: contextMenu.lng,
+        layer: "map-pick",
+      };
+      setDestination(place);
+      addRecentPlace(place);
+      closeContextMenu();
+      navigate("/planner");
+    } catch {
+      closeContextMenu();
+    } finally {
+      setContextMenuLoading(null);
+    }
+  };
 
   const handleConfirmPick = async () => {
     if (!mapRef.current || !pickingMode) return;
@@ -252,9 +327,13 @@ export default function StopMap() {
         showGeolocate={true}
         showTraffic={pickingMode ? false : undefined}
         interactiveLayerIds={["stops", "stops-label"]}
-        onClick={onMapClick}
+        onClick={(e) => {
+          closeContextMenu();
+          onMapClick(e);
+        }}
         onDragStart={onMapInteraction}
         onZoomStart={onMapInteraction}
+        onContextMenu={handleContextMenu}
         attributionControl={{ compact: false }}
       >
         <Source
@@ -440,6 +519,54 @@ export default function StopMap() {
           </div>
         )}
       </AppMap>
+
+      {contextMenu && (
+        <>
+          {/* Dismiss backdrop */}
+          <div
+            className="absolute inset-0 z-30"
+            onClick={closeContextMenu}
+          />
+          {/* Context menu */}
+          <div
+            className="absolute z-40 min-w-[180px] rounded-xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+            style={{
+              left: Math.min(contextMenu.x, window.innerWidth - 200),
+              top: Math.min(contextMenu.y, window.innerHeight - 120),
+            }}
+          >
+            <button
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              onClick={handleRouteFromHere}
+              disabled={contextMenuLoading !== null}
+            >
+              {contextMenuLoading === "origin" ? (
+                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Navigation className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
+              )}
+              <span className="font-medium">
+                {t("map.route_from_here", "Ruta desde aquí")}
+              </span>
+            </button>
+            <div className="h-px bg-slate-100 dark:bg-slate-800" />
+            <button
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              onClick={handleRouteToHere}
+              disabled={contextMenuLoading !== null}
+            >
+              {contextMenuLoading === "destination" ? (
+                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <MapPin className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
+              )}
+              <span className="font-medium">
+                {t("map.route_to_here", "Ruta hasta aquí")}
+              </span>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

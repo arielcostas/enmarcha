@@ -103,7 +103,9 @@
     "popup_title": "Stop",
     "lines": "Lines",
     "view_all_estimates": "View all estimates",
-    "select_nearby_stop": "Select stop"
+    "select_nearby_stop": "Select stop",
+    "route_from_here": "Route from here",
+    "route_to_here": "Route to here"
   },
   "planner": {
     "where_to": "Where do you want to go?",

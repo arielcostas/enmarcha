@@ -13,6 +13,7 @@ import { AppMap } from "~/components/shared/AppMap";
 import { APP_CONSTANTS } from "~/config/constants";
 import { useBackButton, usePageTitle } from "~/contexts/PageTitleContext";
 import { type Itinerary } from "~/data/PlannerApi";
+import { useGeolocation } from "~/hooks/useGeolocation";
 import { usePlanner } from "~/hooks/usePlanner";
 import "../tailwind-full.css";
 
@@ -721,6 +722,7 @@ export default function PlannerPage() {
     setOrigin,
     setDestination,
   } = usePlanner();
+  const { userLocation } = useGeolocation();
   const [selectedItinerary, setSelectedItinerary] = useState<Itinerary | null>(
     null
   );
@@ -816,27 +818,16 @@ export default function PlannerPage() {
               onClick={() => {
                 clearRoute();
                 setDestination(null);
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    async (pos) => {
-                      const initial = {
-                        name: t("planner.current_location"),
-                        label: "GPS",
-                        lat: pos.coords.latitude,
-                        lon: pos.coords.longitude,
-                        layer: "current-location",
-                      } as any;
-                      setOrigin(initial);
-                    },
-                    () => {
-                      // If geolocation fails, just keep origin empty
-                    },
-                    {
-                      enableHighAccuracy: true,
-                      timeout: 10000,
-                      maximumAge: 60 * 60 * 1000, // 1 hour in milliseconds
-                    }
-                  );
+                if (userLocation) {
+                  setOrigin({
+                    name: t("planner.current_location"),
+                    label: "GPS",
+                    lat: userLocation.latitude,
+                    lon: userLocation.longitude,
+                    layer: "current-location",
+                  });
+                } else {
+                  setOrigin(null);
                 }
               }}
               className="text-sm text-red-500"

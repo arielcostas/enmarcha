@@ -103,7 +103,9 @@
     "popup_title": "Parada",
     "lines": "Líneas",
     "view_all_estimates": "Detalles",
-    "select_nearby_stop": "Seleccionar parada"
+    "select_nearby_stop": "Seleccionar parada",
+    "route_from_here": "Ruta desde aquí",
+    "route_to_here": "Ruta hasta aquí"
   },
   "planner": {
     "where_to": "¿A donde quieres ir?",

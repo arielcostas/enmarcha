@@ -44,6 +44,7 @@ interface AppMapProps {
   onRotateStart?: () => void;
   onPitchStart?: () => void;
   onLoad?: () => void;
+  onContextMenu?: (e: MapLayerMouseEvent) => void;
 }
 
 export const AppMap = forwardRef<MapRef, AppMapProps>(
@@ -72,6 +73,7 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
       onRotateStart,
       onPitchStart,
       onLoad,
+      onContextMenu,
     },
     ref
   ) => {
@@ -79,6 +81,8 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
       theme,
       mapState,
       updateMapState,
+      setUserLocation,
+      setLocationPermission,
       showTraffic: settingsShowTraffic,
       showCameras: settingsShowCameras,
       mapPositionMode,
@@ -200,6 +204,7 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
         onRotateStart={onRotateStart}
         onPitchStart={onPitchStart}
         onLoad={onLoad}
+        onContextMenu={onContextMenu}
       >
         {showNavigation && <NavigationControl position="bottom-right" />}
         {showGeolocate && (
@@ -207,6 +212,11 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
             position="bottom-right"
             trackUserLocation={true}
             positionOptions={{ enableHighAccuracy: false }}
+            onGeolocate={(e) => {
+              const { latitude, longitude } = e.coords;
+              setUserLocation([latitude, longitude]);
+              setLocationPermission(true);
+            }}
           />
         )}
         {children}
