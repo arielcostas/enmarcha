@@ -153,7 +153,11 @@
     "fare": "{{amount}} €",
     "free": "Gratuito",
     "urban_traffic_warning": "Posible restricción de tráfico",
-    "urban_traffic_warning_desc": "Las dos paradas de este tramo están en {{municipality}}, que dispone de transporte urbano propio. Es probable que no puedas utilizar los servicios de la Xunta en este trayecto."
+    "urban_traffic_warning_desc": "Las dos paradas de este tramo están en {{municipality}}, que dispone de transporte urbano propio. Es probable que no puedas utilizar los servicios de la Xunta en este trayecto.",
+    "next_arrivals": "Próximas llegadas",
+    "next_arrival": "Próximo",
+    "intermediate_stops_one": "1 parada",
+    "intermediate_stops": "{{count}} paradas"
   },
   "common": {
     "loading": "Cargando...",

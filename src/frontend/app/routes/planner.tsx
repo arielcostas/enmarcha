@@ -1,4 +1,12 @@
-import { AlertTriangle, Coins, CreditCard, Footprints } from "lucide-react";
+import {
+  AlertTriangle,
+  Coins,
+  CreditCard,
+  Footprints,
+  LayoutGrid,
+  List,
+  Map as MapIcon,
+} from "lucide-react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -6,7 +14,7 @@ import { useTranslation } from "react-i18next";
 import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { useLocation } from "react-router";
 
-import { type ConsolidatedCirculation } from "~/api/schema";
+import { type Arrival } from "~/api/schema";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import RouteIcon from "~/components/RouteIcon";
 import { AppMap } from "~/components/shared/AppMap";
@@ -167,8 +175,8 @@ const ItinerarySummary = ({
                         leg.routeShortName || leg.routeName || leg.mode || ""
                       }
                       mode="pill"
-                      colour={leg.routeColor || undefined}
-                      textColour={leg.routeTextColor || undefined}
+                      colour={leg.routeColor || ""}
+                      textColour={leg.routeTextColor || ""}
                     />
                   </div>
                 )}
@@ -216,9 +224,43 @@ const ItineraryDetail = ({
   useBackButton({ onBack: onClose });
   const mapRef = useRef<MapRef>(null);
   const { destination: userDestination } = usePlanner();
-  const [nextArrivals, setNextArrivals] = useState<
-    Record<string, ConsolidatedCirculation[]>
-  >({});
+  const [nextArrivals, setNextArrivals] = useState<Record<string, Arrival[]>>(
+    {}
+  );
+  const [selectedLegIndex, setSelectedLegIndex] = useState<number | null>(null);
+  const [layoutMode, setLayoutMode] = useState<"balanced" | "map" | "list">(
+    "balanced"
+  );
+
+  const focusLegOnMap = (leg: Itinerary["legs"][number]) => {
+    if (!mapRef.current) return;
+
+    const bounds = new maplibregl.LngLatBounds();
+    leg.geometry?.coordinates?.forEach((coord) =>
+      bounds.extend([coord[0], coord[1]])
+    );
+
+    if (leg.from?.lon && leg.from?.lat) {
+      bounds.extend([leg.from.lon, leg.from.lat]);
+    }
+
+    if (leg.to?.lon && leg.to?.lat) {
+      bounds.extend([leg.to.lon, leg.to.lat]);
+    }
+
+    if (!bounds.isEmpty()) {
+      mapRef.current.fitBounds(bounds, { padding: 90, duration: 800 });
+      return;
+    }
+
+    if (leg.from?.lon && leg.from?.lat) {
+      mapRef.current.flyTo({
+        center: [leg.from.lon, leg.from.lat],
+        zoom: 15,
+        duration: 800,
+      });
+    }
+  };
 
   const routeGeoJson = {
     type: "FeatureCollection",
@@ -291,11 +333,40 @@ const ItineraryDetail = ({
     return { type: "FeatureCollection", features };
   }, [itinerary]);
 
-  // Get origin and destination coordinates
-  const visibleLegs = itinerary.legs.filter((leg) => !shouldSkipWalkLeg(leg));
-
   const origin = itinerary.legs[0]?.from;
   const destination = itinerary.legs[itinerary.legs.length - 1]?.to;
+
+  const mapHeightClass =
+    layoutMode === "map"
+      ? "h-[78%]"
+      : layoutMode === "list"
+        ? "h-[35%]"
+        : "h-[50%]";
+
+  const detailHeightClass =
+    layoutMode === "map"
+      ? "h-[22%]"
+      : layoutMode === "list"
+        ? "h-[65%]"
+        : "h-[50%]";
+
+  const layoutOptions = [
+    {
+      id: "map",
+      label: t("routes.layout_map", "Mapa"),
+      icon: MapIcon,
+    },
+    {
+      id: "balanced",
+      label: t("routes.layout_balanced", "Equilibrada"),
+      icon: LayoutGrid,
+    },
+    {
+      id: "list",
+      label: t("routes.layout_list", "Paradas"),
+      icon: List,
+    },
+  ] as const;
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -336,22 +407,29 @@ const ItineraryDetail = ({
   // Fetch next arrivals for bus legs
   useEffect(() => {
     const fetchArrivals = async () => {
-      const arrivalsByStop: Record<string, ConsolidatedCirculation[]> = {};
+      const arrivalsByStop: Record<string, Arrival[]> = {};
 
       for (const leg of itinerary.legs) {
         if (leg.mode !== "WALK" && leg.from?.stopId) {
-          const stopKey = leg.from.name || leg.from.stopId;
+          const stopKey = leg.from.stopId;
           if (!arrivalsByStop[stopKey]) {
             try {
               //TODO: Allow multiple stops one request
               const resp = await fetch(
-                `/api/stops/arrivals?id=${encodeURIComponent(leg.from.stopId)}`,
+                `/api/stops/arrivals?id=${encodeURIComponent(leg.from.stopId)}&reduced=true`,
                 { headers: { Accept: "application/json" } }
               );
 
               if (resp.ok) {
-                arrivalsByStop[stopKey] =
-                  (await resp.json()) satisfies ConsolidatedCirculation[];
+                const payload = await resp.json();
+                const normalizedArrivals: Arrival[] = Array.isArray(
+                  payload?.arrivals
+                )
+                  ? payload.arrivals
+                  : Array.isArray(payload)
+                    ? payload
+                    : [];
+                arrivalsByStop[stopKey] = normalizedArrivals;
               }
             } catch (err) {
               console.warn(
@@ -372,7 +450,7 @@ const ItineraryDetail = ({
   return (
     <div className="flex flex-col md:flex-row h-full">
       {/* Map Section */}
-      <div className="relative h-2/3 md:h-full md:flex-1">
+      <div className={`${mapHeightClass} relative md:h-full md:flex-1`}>
         <AppMap
           ref={mapRef}
           initialViewState={{
@@ -475,7 +553,7 @@ const ItineraryDetail = ({
               ]}
               layout={{
                 "text-field": ["get", "index"],
-                "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+                "text-font": ["Noto Sans Bold"],
                 "text-size": [
                   "interpolate",
                   ["linear"],
@@ -495,219 +573,328 @@ const ItineraryDetail = ({
             />
           </Source>
         </AppMap>
+
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded-full border border-border bg-background/90 p-1 shadow-sm backdrop-blur">
+          {layoutOptions.map((option) => {
+            const Icon = option.icon;
+            const isActive = layoutMode === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setLayoutMode(option.id)}
+                className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                  isActive
+                    ? "bg-primary text-white"
+                    : "text-muted hover:text-text"
+                }`}
+                aria-label={option.label}
+                title={option.label}
+              >
+                <Icon size={16} />
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Details Panel */}
-      <div className="h-1/3 md:h-full md:w-96 lg:w-lg overflow-y-auto bg-white dark:bg-slate-900 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700">
+      <div
+        className={`${detailHeightClass} md:h-full md:w-96 lg:w-lg overflow-y-auto bg-white dark:bg-slate-900 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700`}
+      >
         <div className="px-4 py-4">
           <h2 className="text-xl font-bold mb-4 text-slate-900 dark:text-slate-100">
             {t("planner.itinerary_details")}
           </h2>
 
           <div>
-            {visibleLegs.map((leg, idx) => (
-              <div key={idx} className="flex gap-3">
-                <div className="flex flex-col items-center w-20 shrink-0">
-                  {leg.mode === "WALK" ? (
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm"
-                      style={{ backgroundColor: "#e5e7eb", color: "#374151" }}
-                    >
-                      <Footprints className="w-4 h-4" />
-                    </div>
-                  ) : (
-                    <RouteIcon
-                      line={leg.routeShortName || leg.routeName || ""}
-                      mode="rounded"
-                      colour={leg.routeColor || undefined}
-                      textColour={leg.routeTextColor || undefined}
-                    />
-                  )}
-                  {idx < visibleLegs.length - 1 && (
-                    <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-600 my-1"></div>
-                  )}
-                </div>
-                <div className="flex-1 pb-4">
-                  <div className="font-bold flex items-center gap-2">
+            {itinerary.legs.map((leg, idx) => {
+              const currentLine = leg.routeShortName || leg.routeName;
+              const previousLeg = idx > 0 ? itinerary.legs[idx - 1] : null;
+              const previousLine =
+                previousLeg?.mode !== "WALK"
+                  ? previousLeg?.routeShortName || previousLeg?.routeName
+                  : null;
+
+              const linesToShow = [currentLine];
+              if (
+                previousLine &&
+                previousLeg?.to?.stopId === leg.from?.stopId
+              ) {
+                linesToShow.push(previousLine);
+              }
+
+              const linesToShowLower = linesToShow
+                .filter(Boolean)
+                .map((l) => l!.trim().toLowerCase());
+              const arrivalsForLeg =
+                leg.mode !== "WALK" && leg.from?.stopId
+                  ? (Array.isArray(nextArrivals[leg.from.stopId])
+                      ? nextArrivals[leg.from.stopId]
+                      : []
+                    )
+                      .filter(
+                        (arrival) =>
+                          linesToShowLower.length === 0 ||
+                          linesToShowLower.includes(
+                            arrival.route.shortName.trim().toLowerCase()
+                          )
+                      )
+                      .map((arrival) => ({
+                        arrival,
+                        minutes: arrival.estimate.minutes,
+                        delay: arrival.delay,
+                      }))
+                      .slice(0, 4)
+                  : [];
+
+              const legDestinationLabel = (() => {
+                if (leg.mode !== "WALK") {
+                  return (
+                    leg.to?.name || t("planner.unknown_stop", "Unknown stop")
+                  );
+                }
+
+                const enteredDest = userDestination?.name || "";
+                const finalDest =
+                  enteredDest ||
+                  itinerary.legs[itinerary.legs.length - 1]?.to?.name ||
+                  "";
+                const raw = leg.to?.name || finalDest || "";
+                const cleaned = raw.trim();
+                const placeholder = cleaned.toLowerCase();
+
+                if (
+                  placeholder === "destination" ||
+                  placeholder === "destino" ||
+                  placeholder === "destinación" ||
+                  placeholder === "destinatario"
+                ) {
+                  return enteredDest || finalDest;
+                }
+
+                return cleaned || finalDest;
+              })();
+
+              return (
+                <div key={idx} className="flex gap-3 mb-3">
+                  <div className="flex flex-col items-center w-12 shrink-0 pt-1">
                     {leg.mode === "WALK" ? (
-                      t("planner.walk")
-                    ) : (
-                      <div className="flex flex-col">
-                        <span className="text-[10px] uppercase text-muted font-bold leading-none mb-1">
-                          {t("planner.direction")}
-                        </span>
-                        <span className="leading-tight">
-                          {leg.headsign ||
-                            leg.routeLongName ||
-                            leg.routeName ||
-                            ""}
-                        </span>
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-sm"
+                        style={{ backgroundColor: "#e5e7eb", color: "#374151" }}
+                      >
+                        <Footprints className="w-4 h-4" />
                       </div>
+                    ) : (
+                      <RouteIcon
+                        line={leg.routeShortName || leg.routeName || ""}
+                        mode="rounded"
+                        colour={leg.routeColor || ""}
+                        textColour={leg.routeTextColor || ""}
+                      />
+                    )}
+                    {idx < itinerary.legs.length - 1 && (
+                      <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-600 my-1 min-h-6"></div>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400 flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                    <span>
-                      {new Date(leg.startTime).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Europe/Madrid",
-                      })}{" "}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {formatDuration(
-                        Math.round(
-                          (new Date(leg.endTime).getTime() -
-                            new Date(leg.startTime).getTime()) /
-                            60000
-                        ),
-                        t
-                      )}
-                    </span>
-                    <span>•</span>
-                    <span>{formatDistance(leg.distanceMeters)}</span>
-                    {leg.agencyName && (
-                      <>
-                        <span>•</span>
-                        <span className="italic">{leg.agencyName}</span>
-                      </>
-                    )}
-                  </div>
-                  {leg.mode !== "WALK" &&
-                    leg.from?.stopId &&
-                    nextArrivals[leg.from.name || leg.from.stopId] && (
-                      <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                        <div className="font-semibold mb-1">
-                          {t("planner.next_arrivals", "Next arrivals")}:
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedLegIndex(idx);
+                      focusLegOnMap(leg);
+                    }}
+                    className={`flex-1 rounded-xl border p-3 text-left transition-colors ${
+                      selectedLegIndex === idx
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-surface hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="font-bold flex items-center gap-2">
+                      {leg.mode === "WALK" ? (
+                        t("planner.walk")
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase text-muted font-bold leading-none mb-1">
+                            {t("planner.direction")}
+                          </span>
+                          <span className="leading-tight">
+                            {leg.headsign ||
+                              leg.routeLongName ||
+                              leg.routeName ||
+                              ""}
+                          </span>
                         </div>
-                        {(() => {
-                          const currentLine =
-                            leg.routeShortName || leg.routeName;
-                          const previousLeg =
-                            idx > 0 ? visibleLegs[idx - 1] : null;
-                          const previousLine =
-                            previousLeg?.mode !== "WALK"
-                              ? previousLeg?.routeShortName ||
-                                previousLeg?.routeName
-                              : null;
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                      <span>
+                        {new Date(leg.startTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "Europe/Madrid",
+                        })}{" "}
+                      </span>
+                      <span>•</span>
+                      <span>
+                        {formatDuration(
+                          Math.round(
+                            (new Date(leg.endTime).getTime() -
+                              new Date(leg.startTime).getTime()) /
+                              60000
+                          ),
+                          t
+                        )}
+                      </span>
+                      <span>•</span>
+                      <span>{formatDistance(leg.distanceMeters)}</span>
+                      {leg.agencyName && (
+                        <>
+                          <span>•</span>
+                          <span className="italic">{leg.agencyName}</span>
+                        </>
+                      )}
+                    </div>
+                    {leg.mode !== "WALK" && arrivalsForLeg.length > 0 && (
+                      <div className="mt-2">
+                        <div className="text-[10px] uppercase tracking-wide text-muted mb-1">
+                          {t("planner.next_arrivals", "Next arrivals")}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-2.5 py-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
+                            {t("planner.next_arrival", "Next")}
+                          </span>
+                          <span className="inline-flex min-w-16 items-center justify-center rounded-xl bg-green-600 px-3 py-1.5 text-base font-bold leading-none text-white">
+                            {arrivalsForLeg[0].minutes}′
+                            {arrivalsForLeg[0].delay?.minutes
+                              ? arrivalsForLeg[0].delay.minutes > 0
+                                ? ` (R${Math.abs(arrivalsForLeg[0].delay.minutes)})`
+                                : ` (A${Math.abs(arrivalsForLeg[0].delay.minutes)})`
+                              : ""}
+                          </span>
+                        </div>
 
-                          const linesToShow = [currentLine];
-                          if (
-                            previousLine &&
-                            previousLeg?.to?.stopId === leg.from?.stopId
-                          ) {
-                            linesToShow.push(previousLine);
-                          }
-
-                          return nextArrivals[leg.from.stopId]
-                            ?.filter((circ) => linesToShow.includes(circ.line))
-                            .slice(0, 3)
-                            .map((circ, idx) => {
-                              const minutes =
-                                circ.realTime?.minutes ??
-                                circ.schedule?.minutes;
-                              if (minutes === undefined) return null;
-                              return (
-                                <div
-                                  key={idx}
-                                  className="flex items-center gap-2 py-0.5"
-                                >
-                                  <span className="font-semibold">
-                                    {circ.line}
+                        {arrivalsForLeg.length > 1 && (
+                          <div className="mt-2 flex flex-wrap justify-end gap-1">
+                            {arrivalsForLeg
+                              .slice(1)
+                              .map(
+                                ({ arrival, minutes, delay }, arrivalIdx) => (
+                                  <span
+                                    key={`${arrival.tripId}-${arrivalIdx}`}
+                                    className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded"
+                                  >
+                                    {minutes}′
+                                    {delay?.minutes
+                                      ? delay.minutes > 0
+                                        ? ` (R${Math.abs(delay.minutes)})`
+                                        : ` (A${Math.abs(delay.minutes)})`
+                                      : ""}
                                   </span>
-                                  <span className="text-gray-500 dark:text-gray-500">
-                                    →
-                                  </span>
-                                  <span className="flex-1 truncate">
-                                    {circ.route}
-                                  </span>
-                                  <span className="font-semibold text-primary-600 dark:text-primary-400">
-                                    {formatDuration(minutes, t)}
-                                    {circ.realTime && " 🟢"}
-                                  </span>
-                                </div>
-                              );
-                            });
-                        })()}
+                                )
+                              )}
+                          </div>
+                        )}
                       </div>
                     )}
-                  <div className="text-sm mt-1">
-                    {leg.mode === "WALK" ? (
-                      <span>
-                        {t("planner.walk_to", {
-                          distance: Math.round(leg.distanceMeters) + "m",
-                          destination: (() => {
-                            const enteredDest = userDestination?.name || "";
-                            const finalDest =
-                              enteredDest ||
-                              itinerary.legs[itinerary.legs.length - 1]?.to
-                                ?.name ||
-                              "";
-                            const raw = leg.to?.name || finalDest || "";
-                            const cleaned = raw.trim();
-                            const placeholder = cleaned.toLowerCase();
-                            // If OTP provided a generic placeholder, use the user's entered destination
-                            if (
-                              placeholder === "destination" ||
-                              placeholder === "destino" ||
-                              placeholder === "destinación" ||
-                              placeholder === "destinatario"
-                            ) {
-                              return enteredDest || finalDest;
-                            }
-                            return cleaned || finalDest;
-                          })(),
-                        })}
-                      </span>
-                    ) : (
-                      <>
+                    <div className="text-sm mt-2">
+                      {leg.mode === "WALK" ? (
                         <span>
-                          {t("planner.from_to", {
-                            from: leg.from?.name,
-                            to: leg.to?.name,
+                          {t("planner.walk_to", {
+                            distance: Math.round(leg.distanceMeters) + "m",
+                            destination: legDestinationLabel,
                           })}
                         </span>
-                        {leg.intermediateStops &&
-                          leg.intermediateStops.length > 0 && (
-                            <details className="mt-2">
-                              <summary className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-800 dark:hover:text-gray-200">
-                                {leg.intermediateStops.length}{" "}
-                                {leg.intermediateStops.length === 1
-                                  ? "stop"
-                                  : "stops"}
-                              </summary>
-                              <ul className="mt-1 ml-4 text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
-                                {leg.intermediateStops.map((stop, idx) => (
-                                  <li key={idx}>• {stop.name}</li>
-                                ))}
-                              </ul>
-                            </details>
-                          )}
-                        {(() => {
-                          const municipality = getUrbanMunicipalityWarning(leg);
-                          if (!municipality) return null;
-                          return (
-                            <div className="mt-2 flex items-start gap-2 rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-200">
-                              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400" />
-                              <div>
-                                <div className="font-semibold">
-                                  {t("planner.urban_traffic_warning")}
-                                </div>
-                                <div>
-                                  {t("planner.urban_traffic_warning_desc", {
-                                    municipality,
+                      ) : (
+                        <>
+                          <span>
+                            {t("planner.from_to", {
+                              from: leg.from?.name,
+                              to: leg.to?.name,
+                            })}
+                          </span>
+
+                          {leg.intermediateStops &&
+                            leg.intermediateStops.length > 0 && (
+                              <details className="mt-2">
+                                <summary className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-800 dark:hover:text-gray-200">
+                                  {t("planner.intermediate_stops", {
+                                    count: leg.intermediateStops.length,
                                   })}
+                                </summary>
+                                <ul className="mt-1 text-xs space-y-0.5">
+                                  {/* Boarding stop */}
+                                  <li className="flex items-center gap-1.5 py-0.5 px-1.5 rounded bg-primary/8 font-semibold text-primary">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0" />
+                                    <span className="flex-1">
+                                      {leg.from?.name}
+                                    </span>
+                                    {leg.from?.stopCode && (
+                                      <span className="text-[10px] text-primary/60 shrink-0">
+                                        {leg.from.stopCode}
+                                      </span>
+                                    )}
+                                  </li>
+                                  {/* Intermediate stops */}
+                                  {leg.intermediateStops.map((stop, sIdx) => (
+                                    <li
+                                      key={sIdx}
+                                      className="flex items-center gap-1.5 py-0.5 px-1.5 text-gray-500 dark:text-gray-400"
+                                    >
+                                      <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500 inline-block shrink-0 ml-0.5" />
+                                      <span className="flex-1">
+                                        {stop.name}
+                                      </span>
+                                      {stop.stopCode && (
+                                        <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
+                                          {stop.stopCode}
+                                        </span>
+                                      )}
+                                    </li>
+                                  ))}
+                                  {/* Alighting stop */}
+                                  <li className="flex items-center gap-1.5 py-0.5 px-1.5 rounded bg-primary/8 font-semibold text-primary">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0" />
+                                    <span className="flex-1">
+                                      {leg.to?.name}
+                                    </span>
+                                    {leg.to?.stopCode && (
+                                      <span className="text-[10px] text-primary/60 shrink-0">
+                                        {leg.to.stopCode}
+                                      </span>
+                                    )}
+                                  </li>
+                                </ul>
+                              </details>
+                            )}
+
+                          {(() => {
+                            const municipality =
+                              getUrbanMunicipalityWarning(leg);
+                            if (!municipality) return null;
+                            return (
+                              <div className="mt-2 flex items-start gap-2 rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-200">
+                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400" />
+                                <div>
+                                  <div className="font-semibold">
+                                    {t("planner.urban_traffic_warning")}
+                                  </div>
+                                  <div>
+                                    {t("planner.urban_traffic_warning_desc", {
+                                      municipality,
+                                    })}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          );
-                        })()}
-                      </>
-                    )}
-                  </div>
+                            );
+                          })()}
+                        </>
+                      )}
+                    </div>
+                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
