@@ -134,7 +134,7 @@ public class TileController : ControllerBase
             features.Add(feature);
         });
 
-        foreach (var feature in features.OrderBy(f => f.Attributes["transitKind"] as string switch
+        foreach (var feature in features.OrderBy(f => (f.Attributes["transitKind"] as string) switch
         {
             "bus" => 3,
             "train" => 2,

@@ -19,7 +19,7 @@ import {
   Source,
   type MapRef,
 } from "react-map-gl/maplibre";
-import { Link, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { fetchRouteDetails } from "~/api/transit";
 import { AppMap } from "~/components/shared/AppMap";
 import {
@@ -28,7 +28,7 @@ import {
   usePageTitle,
   usePageTitleNode,
 } from "~/contexts/PageTitleContext";
-import { useStopArrivals } from "~/hooks/useArrivals";
+import { useStopEstimates } from "~/hooks/useArrivals";
 import { useFavorites } from "~/hooks/useFavorites";
 import { formatHex } from "~/utils/colours";
 import "../tailwind-full.css";
@@ -59,9 +59,9 @@ function FavoriteStar({ id }: { id?: string }) {
 export default function RouteDetailsPage() {
   const { id } = useParams();
   const { t, i18n } = useTranslation();
-  const [selectedPatternId, setSelectedPatternId] = useState<string | null>(
-    null
-  );
+  const navigate = useNavigate();
+  const location = useLocation();
+  const selectedPatternId = location.hash ? location.hash.slice(1) : null;
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [layoutMode, setLayoutMode] = useState<"balanced" | "map" | "list">(
     "balanced"
@@ -103,34 +103,13 @@ export default function RouteDetailsPage() {
     queryFn: () => fetchRouteDetails(id!, selectedDateKey),
     enabled: !!id,
   });
-  const { data: selectedStopRealtime, isLoading: isRealtimeLoading } =
-    useStopArrivals(
+  const { data: selectedStopEstimates, isLoading: isRealtimeLoading } =
+    useStopEstimates(
       selectedStopId ?? "",
-      true,
-      Boolean(selectedStopId) && isTodaySelectedDate
+      id ?? "",
+      undefined,
+      Boolean(selectedStopId) && Boolean(id) && isTodaySelectedDate
     );
-  const filteredRealtimeArrivals = useMemo(() => {
-    const arrivals = selectedStopRealtime?.arrivals ?? [];
-    if (arrivals.length === 0) {
-      return [];
-    }
-
-    const routeId = id?.trim();
-    const routeShortName = route?.shortName?.trim().toLowerCase();
-
-    return arrivals.filter((arrival) => {
-      const arrivalGtfsId = arrival.route.gtfsId?.trim();
-      if (routeId && arrivalGtfsId) {
-        return arrivalGtfsId === routeId;
-      }
-
-      if (routeShortName) {
-        return arrival.route.shortName.trim().toLowerCase() === routeShortName;
-      }
-
-      return true;
-    });
-  }, [selectedStopRealtime?.arrivals, id, route?.shortName]);
 
   usePageTitle(
     route?.shortName
@@ -589,7 +568,10 @@ export default function RouteDetailsPage() {
                                 key={pattern.id}
                                 type="button"
                                 onClick={() => {
-                                  setSelectedPatternId(pattern.id);
+                                  navigate(
+                                    { hash: "#" + pattern.id },
+                                    { replace: true }
+                                  );
                                   setSelectedStopId(null);
                                   setIsPatternPickerOpen(false);
                                 }}
@@ -748,33 +730,31 @@ export default function RouteDetailsPage() {
                     {selectedStopId === stop.id &&
                       (departuresByStop.get(stop.id)?.length ?? 0) > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {(
-                            departuresByStop
-                              .get(stop.id)
-                              ?.filter((item) =>
-                                isTodaySelectedDate
-                                  ? item.departure >=
-                                    nowSeconds - ONE_HOUR_SECONDS
-                                  : true
-                              ) ?? []
-                          ).map((item, i) => (
-                            <span
-                              key={`${item.patternId}-${item.departure}-${i}`}
-                              className={`text-[11px] px-2 py-0.5 rounded ${
-                                item.patternId === selectedPattern?.id
-                                  ? "bg-gray-100 dark:bg-gray-900"
-                                  : "bg-gray-50 dark:bg-gray-900 text-gray-400 font-light"
-                              }`}
-                            >
-                              {Math.floor(item.departure / 3600)
-                                .toString()
-                                .padStart(2, "0")}
-                              :
-                              {Math.floor((item.departure % 3600) / 60)
-                                .toString()
-                                .padStart(2, "0")}
-                            </span>
-                          ))}
+                          {(departuresByStop.get(stop.id) ?? []).map(
+                            (item, i) => {
+                              const isPast =
+                                isTodaySelectedDate &&
+                                item.departure < nowSeconds;
+                              return (
+                                <span
+                                  key={`${item.patternId}-${item.departure}-${i}`}
+                                  className={`text-[11px] px-2 py-0.5 rounded ${
+                                    item.patternId === selectedPattern?.id
+                                      ? "bg-gray-100 dark:bg-gray-900"
+                                      : "bg-gray-50 dark:bg-gray-900 text-gray-400 font-light"
+                                  } ${isPast ? "line-through opacity-50" : ""}`}
+                                >
+                                  {Math.floor(item.departure / 3600)
+                                    .toString()
+                                    .padStart(2, "0")}
+                                  :
+                                  {Math.floor((item.departure % 3600) / 60)
+                                    .toString()
+                                    .padStart(2, "0")}
+                                </span>
+                              );
+                            }
+                          )}
                         </div>
                       )}
 
@@ -787,7 +767,8 @@ export default function RouteDetailsPage() {
                           <div className="text-[11px] text-muted">
                             {t("routes.loading_realtime", "Cargando...")}
                           </div>
-                        ) : filteredRealtimeArrivals.length === 0 ? (
+                        ) : (selectedStopEstimates?.arrivals.length ?? 0) ===
+                          0 ? (
                           <div className="text-[11px] text-muted">
                             {t(
                               "routes.realtime_no_route_estimates",
@@ -796,37 +777,67 @@ export default function RouteDetailsPage() {
                           </div>
                         ) : (
                           <>
-                            <div className="flex items-center justify-between gap-2 rounded-lg border border-green-500/30 bg-green-500/10 px-2.5 py-2">
-                              <span className="text-[11px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-300">
-                                {t("routes.next_arrival", "Próximo")}
-                              </span>
-                              <span className="inline-flex min-w-16 items-center justify-center rounded-xl bg-green-600 px-3 py-1.5 text-base font-bold leading-none text-white">
-                                {filteredRealtimeArrivals[0].estimate.minutes}′
-                                {filteredRealtimeArrivals[0].delay?.minutes
-                                  ? formatDelayMinutes(
-                                      filteredRealtimeArrivals[0].delay.minutes
-                                    )
-                                  : ""}
-                              </span>
-                            </div>
+                            {(() => {
+                              const firstArrival =
+                                selectedStopEstimates!.arrivals[0];
+                              const isFirstSelectedPattern =
+                                firstArrival.patternId === selectedPattern?.id;
+                              return (
+                                <div
+                                  className={`flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2 ${isFirstSelectedPattern ? "border-green-500/30 bg-green-500/10" : "border-emerald-500/20 bg-emerald-500/5 opacity-50"}`}
+                                >
+                                  <span
+                                    className={`text-[11px] font-semibold uppercase tracking-wide ${isFirstSelectedPattern ? "text-green-700 dark:text-green-300" : "text-emerald-700 dark:text-emerald-400"}`}
+                                  >
+                                    {t("routes.next_arrival", "Próximo")}
+                                  </span>
+                                  <span
+                                    className={`inline-flex min-w-16 items-center justify-center rounded-xl px-3 py-1.5 text-base font-bold leading-none text-white ${isFirstSelectedPattern ? "bg-green-600" : "bg-emerald-600"}`}
+                                  >
+                                    {firstArrival.estimate.minutes}′
+                                    {firstArrival.delay?.minutes
+                                      ? formatDelayMinutes(
+                                          firstArrival.delay.minutes
+                                        )
+                                      : ""}
+                                  </span>
+                                </div>
+                              );
+                            })()}
 
-                            {filteredRealtimeArrivals.length > 1 && (
+                            {selectedStopEstimates!.arrivals.length > 1 && (
                               <div className="mt-2 flex flex-wrap justify-end gap-1">
-                                {filteredRealtimeArrivals
+                                {selectedStopEstimates!.arrivals
                                   .slice(1)
-                                  .map((arrival, i) => (
-                                    <span
-                                      key={`${arrival.tripId}-${i}`}
-                                      className="text-[11px] px-2 py-0.5 bg-primary/10 text-primary rounded"
-                                    >
-                                      {arrival.estimate.minutes}′
-                                      {arrival.delay?.minutes
-                                        ? formatDelayMinutes(
-                                            arrival.delay.minutes
-                                          )
-                                        : ""}
-                                    </span>
-                                  ))}
+                                  .map((arrival, i) => {
+                                    const isSelectedPattern =
+                                      arrival.patternId === selectedPattern?.id;
+                                    return (
+                                      <span
+                                        key={`${arrival.tripId}-${i}`}
+                                        className={`text-[11px] px-2 py-0.5 rounded ${
+                                          isSelectedPattern
+                                            ? "bg-gray-100 dark:bg-gray-900"
+                                            : "bg-gray-50 dark:bg-gray-900 text-gray-400 font-light"
+                                        }`}
+                                        title={
+                                          isSelectedPattern
+                                            ? undefined
+                                            : t(
+                                                "routes.other_pattern",
+                                                "Otro trayecto"
+                                              )
+                                        }
+                                      >
+                                        {arrival.estimate.minutes}′
+                                        {arrival.delay?.minutes
+                                          ? formatDelayMinutes(
+                                              arrival.delay.minutes
+                                            )
+                                          : ""}
+                                      </span>
+                                    );
+                                  })}
                               </div>
                             )}
                           </>

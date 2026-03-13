@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { Layer, Source, type MapRef } from "react-map-gl/maplibre";
 import { useLocation } from "react-router";
 
-import { type ConsolidatedCirculation } from "~/api/schema";
+import { fetchEstimates } from "~/api/arrivals";
+import { type StopEstimatesResponse } from "~/api/schema";
 import { PlannerOverlay } from "~/components/PlannerOverlay";
 import RouteIcon from "~/components/RouteIcon";
 import { AppMap } from "~/components/shared/AppMap";
@@ -208,7 +209,7 @@ const ItineraryDetail = ({
   const mapRef = useRef<MapRef>(null);
   const { destination: userDestination } = usePlanner();
   const [nextArrivals, setNextArrivals] = useState<
-    Record<string, ConsolidatedCirculation[]>
+    Record<string, StopEstimatesResponse>
   >({});
 
   const routeGeoJson = {
@@ -324,27 +325,27 @@ const ItineraryDetail = ({
 
   // Fetch next arrivals for bus legs
   useEffect(() => {
-    const fetchArrivals = async () => {
-      const arrivalsByStop: Record<string, ConsolidatedCirculation[]> = {};
+    const fetchArrivalsForLegs = async () => {
+      const arrivalsByLeg: Record<string, StopEstimatesResponse> = {};
 
       for (const leg of itinerary.legs) {
-        if (leg.mode !== "WALK" && leg.from?.stopId) {
-          const stopKey = leg.from.name || leg.from.stopId;
-          if (!arrivalsByStop[stopKey]) {
+        if (
+          leg.mode !== "WALK" &&
+          leg.from?.stopId &&
+          leg.to?.stopId &&
+          leg.routeId
+        ) {
+          const legKey = `${leg.from.stopId}::${leg.to.stopId}`;
+          if (!arrivalsByLeg[legKey]) {
             try {
-              //TODO: Allow multiple stops one request
-              const resp = await fetch(
-                `/api/stops/arrivals?id=${encodeURIComponent(leg.from.stopId)}`,
-                { headers: { Accept: "application/json" } }
+              arrivalsByLeg[legKey] = await fetchEstimates(
+                leg.from.stopId,
+                leg.routeId,
+                leg.to.stopId
               );
-
-              if (resp.ok) {
-                arrivalsByStop[stopKey] =
-                  (await resp.json()) satisfies ConsolidatedCirculation[];
-              }
             } catch (err) {
               console.warn(
-                `Failed to fetch arrivals for ${leg.from.stopId}:`,
+                `Failed to fetch estimates for leg ${leg.from.stopId} -> ${leg.to.stopId}:`,
                 err
               );
             }
@@ -352,10 +353,10 @@ const ItineraryDetail = ({
         }
       }
 
-      setNextArrivals(arrivalsByStop);
+      setNextArrivals(arrivalsByLeg);
     };
 
-    fetchArrivals();
+    fetchArrivalsForLegs();
   }, [itinerary]);
 
   return (
@@ -564,60 +565,45 @@ const ItineraryDetail = ({
                   </div>
                   {leg.mode !== "WALK" &&
                     leg.from?.stopId &&
-                    nextArrivals[leg.from.name || leg.from.stopId] && (
+                    leg.to?.stopId &&
+                    nextArrivals[`${leg.from.stopId}::${leg.to.stopId}`] && (
                       <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
                         <div className="font-semibold mb-1">
                           {t("planner.next_arrivals", "Next arrivals")}:
                         </div>
-                        {(() => {
-                          const currentLine =
-                            leg.routeShortName || leg.routeName;
-                          const previousLeg =
-                            idx > 0 ? itinerary.legs[idx - 1] : null;
-                          const previousLine =
-                            previousLeg?.mode !== "WALK"
-                              ? previousLeg?.routeShortName ||
-                                previousLeg?.routeName
-                              : null;
-
-                          const linesToShow = [currentLine];
-                          if (
-                            previousLine &&
-                            previousLeg?.to?.stopId === leg.from?.stopId
-                          ) {
-                            linesToShow.push(previousLine);
-                          }
-
-                          return nextArrivals[leg.from.stopId]
-                            ?.filter((circ) => linesToShow.includes(circ.line))
-                            .slice(0, 3)
-                            .map((circ, idx) => {
-                              const minutes =
-                                circ.realTime?.minutes ??
-                                circ.schedule?.minutes;
-                              if (minutes === undefined) return null;
-                              return (
-                                <div
-                                  key={idx}
-                                  className="flex items-center gap-2 py-0.5"
-                                >
-                                  <span className="font-semibold">
-                                    {circ.line}
+                        {nextArrivals[
+                          `${leg.from.stopId}::${leg.to.stopId}`
+                        ].arrivals
+                          .slice(0, 3)
+                          .map((arrival, i) => (
+                            <div
+                              key={`${arrival.tripId}-${i}`}
+                              className="flex items-center gap-2 py-0.5"
+                            >
+                              <span className="font-semibold text-primary-600 dark:text-primary-400">
+                                {formatDuration(arrival.estimate.minutes, t)}
+                              </span>
+                              {arrival.estimate.precision !== "scheduled" && (
+                                <span className="text-green-600 dark:text-green-400">
+                                  🟢
+                                </span>
+                              )}
+                              {arrival.delay?.minutes !== undefined &&
+                                arrival.delay.minutes !== 0 && (
+                                  <span
+                                    className={
+                                      arrival.delay.minutes > 0
+                                        ? "text-red-500"
+                                        : "text-green-500"
+                                    }
+                                  >
+                                    {arrival.delay.minutes > 0
+                                      ? `+${arrival.delay.minutes}′`
+                                      : `${arrival.delay.minutes}′`}
                                   </span>
-                                  <span className="text-gray-500 dark:text-gray-500">
-                                    →
-                                  </span>
-                                  <span className="flex-1 truncate">
-                                    {circ.route}
-                                  </span>
-                                  <span className="font-semibold text-primary-600 dark:text-primary-400">
-                                    {formatDuration(minutes, t)}
-                                    {circ.realTime && " 🟢"}
-                                  </span>
-                                </div>
-                              );
-                            });
-                        })()}
+                                )}
+                            </div>
+                          ))}
                       </div>
                     )}
                   <div className="text-sm mt-1">

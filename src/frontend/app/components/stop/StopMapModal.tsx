@@ -15,14 +15,13 @@ import "./StopMapModal.css";
 export interface Position {
   latitude: number;
   longitude: number;
-  orientationDegrees: number;
-  shapeIndex?: number;
+  orientationDegrees?: number | null;
+  shapeIndex?: number | null | undefined;
 }
 
 export interface ConsolidatedCirculationForMap {
   id: string;
   currentPosition?: Position;
-  stopShapeIndex?: number;
   colour: string;
   textColour: string;
   shape?: any;

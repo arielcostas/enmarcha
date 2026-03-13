@@ -20,6 +20,12 @@ public class ArrivalsContext
     /// </summary>
     public bool IsReduced { get; set; }
 
+    /// <summary>
+    /// Nano mode: skip all enrichment except real-time estimates.
+    /// Processors that populate shapes, marquee, next stops, and usage should no-op when true.
+    /// </summary>
+    public bool IsNano { get; set; }
+
     public Position? StopLocation { get; set; }
 
     public required List<Arrival> Arrivals { get; set; }

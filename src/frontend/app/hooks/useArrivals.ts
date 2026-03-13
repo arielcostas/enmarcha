@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchArrivals } from "../api/arrivals";
+import { fetchArrivals, fetchEstimates } from "../api/arrivals";
 
 export const useStopArrivals = (
   stopId: string,
@@ -10,7 +10,22 @@ export const useStopArrivals = (
     queryKey: ["arrivals", stopId, reduced],
     queryFn: () => fetchArrivals(stopId, reduced),
     enabled: !!stopId && enabled,
-    refetchInterval: 15000, // Refresh every 15 seconds
-    retry: false, // Disable retries to see errors immediately
+    refetchInterval: 15000,
+    retry: false,
+  });
+};
+
+export const useStopEstimates = (
+  stopId: string,
+  routeId: string,
+  viaStopId?: string,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: ["estimates", stopId, routeId, viaStopId],
+    queryFn: () => fetchEstimates(stopId, routeId, viaStopId),
+    enabled: !!stopId && !!routeId && enabled,
+    refetchInterval: 15000,
+    retry: false,
   });
 };

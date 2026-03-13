@@ -13,7 +13,7 @@ public class ShapeProcessor : IArrivalsProcessor
 
     public Task ProcessAsync(ArrivalsContext context)
     {
-        if (context.IsReduced)
+        if (context.IsReduced || context.IsNano)
         {
             return Task.CompletedTask;
         }

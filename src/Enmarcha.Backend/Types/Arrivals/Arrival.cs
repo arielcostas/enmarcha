@@ -20,10 +20,11 @@ public class Arrival
 
     [JsonPropertyName("currentPosition")] public Position? CurrentPosition { get; set; }
 
-    [JsonPropertyName("stopShapeIndex")] public int? StopShapeIndex { get; set; }
 
     [JsonPropertyName("vehicleInformation")]
     public VehicleBadge? VehicleInformation { get; set; }
+
+    [JsonPropertyName("patternId")] public string? PatternId { get; set; }
 
     [System.Text.Json.Serialization.JsonIgnore]
     public List<string> NextStops { get; set; } = [];

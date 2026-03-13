@@ -64,8 +64,14 @@ export const ArrivalSchema = z.object({
   shift: ShiftBadgeSchema.optional().nullable(),
   shape: z.any().optional().nullable(),
   currentPosition: PositionSchema.optional().nullable(),
-  stopShapeIndex: z.number().optional().nullable(),
   vehicleInformation: VehicleInformationSchema.optional().nullable(),
+});
+
+export const ArrivalEstimateSchema = z.object({
+  tripId: z.string(),
+  patternId: z.string().optional().nullable(),
+  estimate: ArrivalDetailsSchema,
+  delay: DelayBadgeSchema.optional().nullable(),
 });
 
 export const StopArrivalsResponseSchema = z.object({
@@ -77,6 +83,10 @@ export const StopArrivalsResponseSchema = z.object({
   usage: z.array(BusStopUsagePointSchema).optional().nullable(),
 });
 
+export const StopEstimatesResponseSchema = z.object({
+  arrivals: z.array(ArrivalEstimateSchema),
+});
+
 export type RouteInfo = z.infer<typeof RouteInfoSchema>;
 export type HeadsignInfo = z.infer<typeof HeadsignInfoSchema>;
 export type ArrivalPrecision = z.infer<typeof ArrivalPrecisionSchema>;
@@ -85,8 +95,10 @@ export type DelayBadge = z.infer<typeof DelayBadgeSchema>;
 export type ShiftBadge = z.infer<typeof ShiftBadgeSchema>;
 export type Position = z.infer<typeof PositionSchema>;
 export type Arrival = z.infer<typeof ArrivalSchema>;
+export type ArrivalEstimate = z.infer<typeof ArrivalEstimateSchema>;
 export type BusStopUsagePoint = z.infer<typeof BusStopUsagePointSchema>;
 export type StopArrivalsResponse = z.infer<typeof StopArrivalsResponseSchema>;
+export type StopEstimatesResponse = z.infer<typeof StopEstimatesResponseSchema>;
 
 // Transit Routes
 export const RouteSchema = z.object({

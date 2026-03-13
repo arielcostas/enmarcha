@@ -213,7 +213,6 @@ public class CtagShuttleRealTimeProcessor : AbstractRealTimeProcessor
                 }
 
                 activeArrival.CurrentPosition = shuttleWgs84;
-                activeArrival.StopShapeIndex = stopPointIndex;
 
                 _logger.LogInformation(
                     "Updated active trip {TripId}: {Minutes} min (was {Scheduled} min, delay: {Delay} min, distance: {Distance:F1}m)",

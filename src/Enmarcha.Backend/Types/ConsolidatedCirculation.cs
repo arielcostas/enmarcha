@@ -36,3 +36,15 @@ public class Position
     public int OrientationDegrees { get; set; }
     public int ShapeIndex { get; set; }
 }
+
+public class Epsg25829
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+}
+
+public class Shape
+{
+    public string ShapeId { get; set; }
+    public List<Epsg25829> Points { get; set; }
+}

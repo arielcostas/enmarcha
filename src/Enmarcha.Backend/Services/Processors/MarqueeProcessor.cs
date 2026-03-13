@@ -11,6 +11,8 @@ public class MarqueeProcessor : IArrivalsProcessor
 
     public Task ProcessAsync(ArrivalsContext context)
     {
+        if (context.IsNano) return Task.CompletedTask;
+
         var feedId = context.StopId.Split(':')[0];
 
         foreach (var arrival in context.Arrivals)

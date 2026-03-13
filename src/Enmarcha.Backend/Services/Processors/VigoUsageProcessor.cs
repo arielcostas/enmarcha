@@ -25,7 +25,7 @@ public class VigoUsageProcessor : IArrivalsProcessor
 
     public async Task ProcessAsync(ArrivalsContext context)
     {
-        if (!context.StopId.StartsWith("vitrasa:") || context.IsReduced) return;
+        if (!context.StopId.StartsWith("vitrasa:") || context.IsReduced || context.IsNano) return;
 
         var normalizedCode = _feedService.NormalizeStopCode("vitrasa", context.StopCode);
 

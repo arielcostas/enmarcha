@@ -274,7 +274,6 @@ export default function Estimates() {
             circulations={(data?.arrivals ?? []).map((a) => ({
               id: getArrivalId(a),
               currentPosition: a.currentPosition ?? undefined,
-              stopShapeIndex: a.stopShapeIndex ?? undefined,
               colour: formatHex(a.route.colour),
               textColour: formatHex(a.route.textColour),
               shape: a.shape,

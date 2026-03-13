@@ -54,110 +54,19 @@ public partial class ArrivalsController : ControllerBase
         activity?.SetTag("stop.id", id);
         activity?.SetTag("reduced", reduced);
 
-        var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
-        var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
-        var todayLocal = nowLocal.Date;
-
-        var requestContent = ArrivalsAtStopContent.Query(
-            new ArrivalsAtStopContent.Args(id, reduced)
-        );
-
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
-        request.Content = JsonContent.Create(new GraphClientRequest
-        {
-            Query = requestContent
-        });
-
-        var response = await _httpClient.SendAsync(request);
-        var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<ArrivalsAtStopResponse>>();
-
-        if (responseBody is not { IsSuccess: true } || responseBody.Data?.Stop == null)
-        {
-            activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, "Error fetching stop data from OTP");
-            LogErrorFetchingStopData(response.StatusCode, await response.Content.ReadAsStringAsync());
-            return StatusCode(500, "Error fetching stop data");
-        }
-
-        var stop = responseBody.Data.Stop;
-        _logger.LogInformation("Fetched {Count} arrivals for stop {StopName} ({StopId})", stop.Arrivals.Count, stop.Name, id);
-        activity?.SetTag("arrivals.count", stop.Arrivals.Count);
-
-        List<Arrival> arrivals = [];
-        foreach (var item in stop.Arrivals)
-        {
-            // Discard trip without pickup at stop
-            if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None))
-            {
-                continue;
-            }
-
-            // Discard on last stop
-            if (item.Trip.ArrivalStoptime.Stop.GtfsId == id)
-            {
-                continue;
-            }
-
-            // Calculate departure time using the service day in the feed's timezone (Europe/Madrid)
-            // This ensures we treat ScheduledDepartureSeconds as relative to the local midnight of the service day
-            var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
-            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
-
-            var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
-            //var isRunning = departureTime < nowLocal;
-
-            Arrival arrival = new()
-            {
-                TripId = item.Trip.GtfsId,
-                Route = new RouteInfo
-                {
-                    GtfsId = item.Trip.Route.GtfsId,
-                    ShortName = item.Trip.RouteShortName,
-                    Colour = item.Trip.Route.Color ?? "FFFFFF",
-                    TextColour = item.Trip.Route.TextColor ?? "000000"
-                },
-                Headsign = new HeadsignInfo
-                {
-                    Destination = item.Trip.TripHeadsign ?? item.Headsign,
-                },
-                Estimate = new ArrivalDetails
-                {
-                    Minutes = minutesToArrive,
-                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
-                },
-                RawOtpTrip = item
-            };
-
-            arrivals.Add(arrival);
-        }
-
-        var context = new ArrivalsContext
-        {
-            StopId = id,
-            StopCode = stop.Code,
-            IsReduced = reduced,
-            Arrivals = arrivals,
-            NowLocal = nowLocal,
-            StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon }
-        };
-
-        await _pipeline.ExecuteAsync(context);
+        var result = await FetchAndProcessArrivalsAsync(id, reduced, nano: false);
+        if (result is null) return StatusCode(500, "Error fetching stop data");
+        var (stop, context) = result.Value;
 
         var feedId = id.Split(':')[0];
-
-        // Time after an arrival's time to still include it in the response. This is useful without real-time data, for delayed buses.
         var timeThreshold = GetThresholdForFeed(id);
-
         var (fallbackColor, fallbackTextColor) = _feedService.GetFallbackColourForFeed(feedId);
 
         return Ok(new StopArrivalsResponse
         {
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
             StopName = _feedService.NormalizeStopName(feedId, stop.Name),
-            StopLocation = new Position
-            {
-                Latitude = stop.Lat,
-                Longitude = stop.Lon
-            },
+            StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon },
             Routes = [.. _feedService.ConsolidateRoutes(feedId,
                 stop.Routes
                     .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
@@ -170,10 +79,134 @@ public partial class ArrivalsController : ControllerBase
                             ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
                             r.TextColor
                     }))],
-            Arrivals = [.. arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)],
+            Arrivals = [.. context.Arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)],
             Usage = context.Usage
         });
+    }
 
+    [HttpGet("estimates")]
+    public async Task<IActionResult> GetEstimates(
+        [FromQuery] string stop,
+        [FromQuery] string route,
+        [FromQuery] string? via
+    )
+    {
+        if (string.IsNullOrWhiteSpace(stop) || string.IsNullOrWhiteSpace(route))
+            return BadRequest("'stop' and 'route' are required.");
+
+        using var activity = Telemetry.Source.StartActivity("GetEstimates");
+        activity?.SetTag("stop.id", stop);
+        activity?.SetTag("route.id", route);
+        activity?.SetTag("via.id", via);
+
+        var result = await FetchAndProcessArrivalsAsync(stop, reduced: false, nano: true);
+        if (result is null) return StatusCode(500, "Error fetching stop data");
+        var (_, context) = result.Value;
+
+        // Annotate each arrival with its OTP pattern ID
+        foreach (var arrival in context.Arrivals)
+        {
+            if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
+                arrival.PatternId = otpArrival.Trip.Pattern?.Id;
+        }
+
+        // Filter by route GTFS ID
+        var timeThreshold = GetThresholdForFeed(stop);
+        var filtered = context.Arrivals
+            .Where(a => a.Route.GtfsId == route && a.Estimate.Minutes >= timeThreshold)
+            .ToList();
+
+        // Optionally filter by via stop: keep only trips whose remaining stoptimes include the via stop
+        if (!string.IsNullOrWhiteSpace(via))
+        {
+            filtered = filtered.Where(a =>
+            {
+                if (a.RawOtpTrip is not ArrivalsAtStopResponse.Arrival otpArrival) return false;
+                var stoptimes = otpArrival.Trip.Stoptimes;
+                var originIdx = stoptimes.FindIndex(s => s.Stop.GtfsId == stop);
+                var searchFrom = originIdx >= 0 ? originIdx + 1 : 0;
+                return stoptimes.Skip(searchFrom).Any(s => s.Stop.GtfsId == via);
+            }).ToList();
+        }
+
+        var estimates = filtered.Select(a => new ArrivalEstimate
+        {
+            TripId = a.TripId,
+            PatternId = a.PatternId,
+            Estimate = a.Estimate,
+            Delay = a.Delay
+        }).ToList();
+
+        return Ok(new StopEstimatesResponse { Arrivals = estimates });
+    }
+
+    private async Task<(ArrivalsAtStopResponse.StopItem Stop, ArrivalsContext Context)?> FetchAndProcessArrivalsAsync(
+        string id, bool reduced, bool nano)
+    {
+        var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
+
+        var requestContent = ArrivalsAtStopContent.Query(new ArrivalsAtStopContent.Args(id, reduced || nano));
+
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
+        request.Content = JsonContent.Create(new GraphClientRequest { Query = requestContent });
+
+        var response = await _httpClient.SendAsync(request);
+        var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<ArrivalsAtStopResponse>>();
+
+        if (responseBody is not { IsSuccess: true } || responseBody.Data?.Stop == null)
+        {
+            LogErrorFetchingStopData(response.StatusCode, await response.Content.ReadAsStringAsync());
+            return null;
+        }
+
+        var stop = responseBody.Data.Stop;
+        _logger.LogInformation("Fetched {Count} arrivals for stop {StopName} ({StopId})", stop.Arrivals.Count, stop.Name, id);
+
+        List<Arrival> arrivals = [];
+        foreach (var item in stop.Arrivals)
+        {
+            if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
+            if (item.Trip.ArrivalStoptime.Stop.GtfsId == id) continue;
+
+            var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
+            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
+            var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
+
+            arrivals.Add(new Arrival
+            {
+                TripId = item.Trip.GtfsId,
+                Route = new RouteInfo
+                {
+                    GtfsId = item.Trip.Route.GtfsId,
+                    ShortName = item.Trip.RouteShortName,
+                    Colour = item.Trip.Route.Color ?? "FFFFFF",
+                    TextColour = item.Trip.Route.TextColor ?? "000000"
+                },
+                Headsign = new HeadsignInfo { Destination = item.Trip.TripHeadsign ?? item.Headsign },
+                Estimate = new ArrivalDetails
+                {
+                    Minutes = minutesToArrive,
+                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
+                },
+                RawOtpTrip = item
+            });
+        }
+
+        var context = new ArrivalsContext
+        {
+            StopId = id,
+            StopCode = stop.Code,
+            IsReduced = reduced,
+            IsNano = nano,
+            Arrivals = arrivals,
+            NowLocal = nowLocal,
+            StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon }
+        };
+
+        await _pipeline.ExecuteAsync(context);
+
+        return (stop, context);
     }
 
     private static int GetThresholdForFeed(string id)

@@ -160,7 +160,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     if (stopLocation != null)
                     {
                         Position? currentPosition = null;
-                        int? stopShapeIndex = null;
 
                         if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
                             otpArrival.Trip.Geometry?.Points != null)
@@ -176,7 +175,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                             var result = _shapeService.GetBusPosition(shape, stopLocation, meters);
 
                             currentPosition = result.BusPosition;
-                            stopShapeIndex = result.StopIndex;
 
                             // Populate Shape GeoJSON
                             if (!context.IsReduced && currentPosition != null)
@@ -228,7 +226,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         if (currentPosition != null)
                         {
                             arrival.CurrentPosition = currentPosition;
-                            arrival.StopShapeIndex = stopShapeIndex;
                         }
                     }
 

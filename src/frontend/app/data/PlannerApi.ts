@@ -31,6 +31,8 @@ export interface Itinerary {
 export interface Leg {
   mode?: string;
   feedId?: string;
+  routeId?: string;
+  tripId?: string;
   routeName?: string;
   routeShortName?: string;
   routeLongName?: string;

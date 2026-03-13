@@ -95,7 +95,6 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 if (stopLocation != null)
                 {
                     Position? currentPosition = null;
-                    int? stopShapeIndex = null;
 
                     if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
                         otpArrival.Trip.Geometry?.Points != null)
@@ -111,7 +110,6 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                         var result = _shapeService.GetBusPosition(shape, stopLocation, meters);
 
                         currentPosition = result.BusPosition;
-                        stopShapeIndex = result.StopIndex;
 
                         if (currentPosition != null)
                         {
@@ -168,7 +166,6 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                     if (currentPosition != null)
                     {
                         arrival.CurrentPosition = currentPosition;
-                        arrival.StopShapeIndex = stopShapeIndex;
                     }
                 }
 

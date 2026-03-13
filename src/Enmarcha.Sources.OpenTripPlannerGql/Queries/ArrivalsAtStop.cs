@@ -53,8 +53,12 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                             }}
                         }}
                         {geometryField}
+                        pattern {{
+                            id
+                        }}
                         stoptimes {{
                             stop {{
+                                gtfsId
                                 name
                                 lat
                                 lon
@@ -125,7 +129,14 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
 
         [JsonPropertyName("tripGeometry")] public GeometryDetails? Geometry { get; set; }
 
+        [JsonPropertyName("pattern")] public PatternRef? Pattern { get; set; }
+
         [JsonPropertyName("stoptimes")] public List<StoptimeDetails> Stoptimes { get; set; } = [];
+    }
+
+    public class PatternRef
+    {
+        [JsonPropertyName("id")] public required string Id { get; set; }
     }
 
     public class GeometryDetails
@@ -141,6 +152,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
 
     public class StopDetails
     {
+        [JsonPropertyName("gtfsId")] public string? GtfsId { get; set; }
         [JsonPropertyName("name")] public required string Name { get; set; }
         [JsonPropertyName("lat")] public double Lat { get; set; }
         [JsonPropertyName("lon")] public double Lon { get; set; }
