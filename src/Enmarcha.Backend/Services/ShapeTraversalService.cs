@@ -41,7 +41,22 @@ public class ShapeTraversalService
 
         foreach (var point in points)
         {
-            var transformed = inverseTransform.Transform(new[] { point.Longitude, point.Latitude });
+            double[]? transformed = null;
+            try
+            {
+                transformed = inverseTransform.Transform(new[] { point.Longitude, point.Latitude });
+            }
+            catch (Exception)
+            {
+                _logger.LogError("Exception while transforming point from {Lat},{Lon}", point.Latitude, point.Longitude);
+                continue;
+            }
+
+            if (transformed is null)
+            {
+                _logger.LogError("Transformed point from {Lat},{Lon} is null", point.Latitude, point.Longitude);
+                continue;
+            }
             shape.Points.Add(new Epsg25829 { X = transformed[0], Y = transformed[1] });
         }
         return shape;

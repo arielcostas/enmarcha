@@ -46,5 +46,5 @@ public class Epsg25829
 public class Shape
 {
     public string ShapeId { get; set; }
-    public List<Epsg25829> Points { get; set; }
+    public List<Epsg25829> Points { get; set; } = [];
 }
