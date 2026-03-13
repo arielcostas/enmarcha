@@ -117,6 +117,8 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
     );
   }, [setUserLocation, setLocationPermission, startWatching]);
 
+  const hasPermissionRef = useRef(mapState.hasLocationPermission);
+
   // On mount: subscribe to permission changes and auto-start watching if already granted
   useEffect(() => {
     if (typeof window === "undefined" || !("geolocation" in navigator)) return;
@@ -149,11 +151,11 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
             setLocationPermission(false);
           }
           permissionStatus.addEventListener("change", onPermChange);
-        } else if (mapState.hasLocationPermission) {
+        } else if (hasPermissionRef.current) {
           startWatching();
         }
       } catch {
-        if (mapState.hasLocationPermission) {
+        if (hasPermissionRef.current) {
           startWatching();
         }
       }
@@ -168,8 +170,7 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
       }
       permissionStatus?.removeEventListener("change", onPermChange);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startWatching, setLocationPermission]);
 
   return (
     <MapContext.Provider

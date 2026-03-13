@@ -12,7 +12,10 @@ function lngLatToCoords(
   loc: LngLatLike
 ): { latitude: number; longitude: number } {
   if (Array.isArray(loc)) {
-    // Stored as [lat, lng] per codebase convention
+    // This codebase stores location as [latitude, longitude] (not the standard
+    // MapLibre [lng, lat] GeoJSON order). See MapContext.tsx where arrays are
+    // set as [position.coords.latitude, position.coords.longitude], and AppMap.tsx
+    // where getLatitude(center) returns center[0].
     return { latitude: loc[0], longitude: loc[1] };
   }
   if ("lat" in loc) {
