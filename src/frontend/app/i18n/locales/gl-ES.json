@@ -105,7 +105,9 @@
     "view_all_estimates": "Ver todas as estimacións",
     "select_nearby_stop": "Seleccionar parada",
     "route_from_here": "Ruta desde aquí",
-    "route_to_here": "Ruta ata aquí"
+    "route_to_here": "Ruta ata aquí",
+    "search_placeholder": "Buscar un lugar…",
+    "plan_trip": "Planificar ruta"
   },
   "planner": {
     "where_to": "Onde queres ir?",

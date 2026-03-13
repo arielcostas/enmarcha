@@ -105,7 +105,9 @@
     "view_all_estimates": "View all estimates",
     "select_nearby_stop": "Select stop",
     "route_from_here": "Route from here",
-    "route_to_here": "Route to here"
+    "route_to_here": "Route to here",
+    "search_placeholder": "Search for a place…",
+    "plan_trip": "Plan a trip"
   },
   "planner": {
     "where_to": "Where do you want to go?",

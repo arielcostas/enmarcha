@@ -1,6 +1,6 @@
-import { Check, MapPin, Navigation, X } from "lucide-react";
+import { Check, MapPin, Navigation, Search, X } from "lucide-react";
 import type { FilterSpecification } from "maplibre-gl";
-import { useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Layer,
@@ -14,14 +14,175 @@ import {
   StopSummarySheet,
   type StopSheetProps,
 } from "~/components/map/StopSummarySheet";
-import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { AppMap } from "~/components/shared/AppMap";
 import { usePageTitle } from "~/contexts/PageTitleContext";
-import { reverseGeocode } from "~/data/PlannerApi";
+import { reverseGeocode, searchPlaces, type PlannerSearchResult } from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";
 import "./map.css";
+
+// Module-level: keeps search query + results alive across SPA navigation
+const mapSearchState: { query: string; results: PlannerSearchResult[] } = {
+  query: "",
+  results: [],
+};
+
+interface MapSearchBarProps {
+  mapRef: React.RefObject<MapRef | null>;
+}
+
+function MapSearchBar({ mapRef }: MapSearchBarProps) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [query, setQuery] = useState(mapSearchState.query);
+  const [results, setResults] = useState<PlannerSearchResult[]>(
+    mapSearchState.results
+  );
+  const [showResults, setShowResults] = useState(
+    mapSearchState.results.length > 0
+  );
+  const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Close dropdown when clicking/tapping outside the search container
+  useEffect(() => {
+    const onPointerDown = (e: PointerEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
+      ) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+
+  const handleQueryChange = (q: string) => {
+    setQuery(q);
+    mapSearchState.query = q;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (q.trim().length < 2) {
+      // Hide stale results when the query is cleared or too short
+      setResults([]);
+      mapSearchState.results = [];
+      setShowResults(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await searchPlaces(q.trim());
+        setResults(res);
+        mapSearchState.results = res;
+        setShowResults(true);
+      } catch {
+        // keep old results on network error
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+  };
+
+  const handleSelect = (place: PlannerSearchResult) => {
+    const map = mapRef.current;
+    if (map) {
+      map.flyTo({ center: [place.lon, place.lat], zoom: 15, duration: 800 });
+    }
+    // Keep results visible so user can pick another without retyping
+  };
+
+  const handleClear = () => {
+    setQuery("");
+    mapSearchState.query = "";
+    setResults([]);
+    mapSearchState.results = [];
+    setShowResults(false);
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div className="absolute top-4 left-0 right-0 z-20 flex justify-center px-4 pointer-events-none">
+      <div
+        ref={containerRef}
+        className="pointer-events-auto w-full max-w-md flex flex-col gap-1"
+      >
+        {/* Search input */}
+        <div className="flex items-center gap-2 bg-white/95 dark:bg-slate-900/90 backdrop-blur rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 px-3">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            className="flex-1 py-3 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none"
+            placeholder={t("map.search_placeholder", "Buscar un lugar…")}
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onFocus={() => {
+              if (results.length > 0) setShowResults(true);
+            }}
+          />
+          {loading ? (
+            <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin shrink-0" />
+          ) : query ? (
+            <button
+              onPointerDown={(e) => {
+                // Prevent input blur before clear fires
+                e.preventDefault();
+                handleClear();
+              }}
+              className="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              aria-label={t("planner.clear", "Clear")}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          ) : null}
+        </div>
+
+        {/* Results dropdown */}
+        {showResults && results.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+              {results.map((place, i) => (
+                <button
+                  key={`${place.lat}-${place.lon}-${i}`}
+                  className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm"
+                  onClick={() => handleSelect(place)}
+                >
+                  <MapPin className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <div className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                      {place.name}
+                    </div>
+                    {place.label && place.label !== place.name && (
+                      <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                        {place.label}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Plan a trip – always visible */}
+        <button
+          onClick={() => navigate("/planner")}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-sm text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+        >
+          <Navigation className="w-4 h-4 shrink-0" />
+          {t("map.plan_trip", "Planificar ruta")}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // Componente principal del mapa
 export default function StopMap() {
@@ -43,7 +204,6 @@ export default function StopMap() {
   const mapRef = useRef<MapRef>(null);
 
   const {
-    searchRoute,
     pickingMode,
     setPickingMode,
     setOrigin,
@@ -151,16 +311,11 @@ export default function StopMap() {
       }
       addRecentPlace(finalResult);
       setPickingMode(null);
+      navigate("/planner");
     } catch (err) {
       console.error("Failed to reverse geocode:", err);
     } finally {
       setIsConfirming(false);
-    }
-  };
-
-  const onMapInteraction = () => {
-    if (!pickingMode) {
-      window.dispatchEvent(new CustomEvent("plannerOverlay:collapse"));
     }
   };
 
@@ -258,16 +413,7 @@ export default function StopMap() {
 
   return (
     <div className="relative h-full">
-      {!pickingMode && (
-        <PlannerOverlay
-          onSearch={(o, d, time, arriveBy) => searchRoute(o, d, time, arriveBy)}
-          onNavigateToPlanner={() => navigate("/planner")}
-          clearPickerOnOpen={true}
-          showLastDestinationWhenCollapsed={false}
-          cardBackground="bg-white/95 dark:bg-slate-900/90"
-          autoLoad={false}
-        />
-      )}
+      {!pickingMode && <MapSearchBar mapRef={mapRef} />}
 
       {pickingMode && (
         <div className="absolute top-4 left-0 right-0 z-20 flex justify-center px-4 pointer-events-none">
@@ -331,8 +477,6 @@ export default function StopMap() {
           closeContextMenu();
           onMapClick(e);
         }}
-        onDragStart={onMapInteraction}
-        onZoomStart={onMapInteraction}
         onContextMenu={handleContextMenu}
         attributionControl={{ compact: false }}
       >

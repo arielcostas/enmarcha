@@ -163,20 +163,23 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
     const viewState = useMemo(() => {
       if (initialViewState) return initialViewState;
 
-      if (mapPositionMode === "gps" && mapState.userLocation) {
-        return {
-          latitude: getLatitude(mapState.userLocation),
-          longitude: getLongitude(mapState.userLocation),
-          zoom: 16,
-        };
-      }
-
+      // Prefer the last saved position for this path so navigation doesn't
+      // reset the map viewport. GPS mode is only used as a fallback when the
+      // user has never visited this path before.
       const pathState = mapState.paths[path];
       if (pathState) {
         return {
           latitude: getLatitude(pathState.center),
           longitude: getLongitude(pathState.center),
           zoom: pathState.zoom,
+        };
+      }
+
+      if (mapPositionMode === "gps" && mapState.userLocation) {
+        return {
+          latitude: getLatitude(mapState.userLocation),
+          longitude: getLongitude(mapState.userLocation),
+          zoom: 16,
         };
       }
 
@@ -210,7 +213,6 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
         {showGeolocate && (
           <GeolocateControl
             position="bottom-right"
-            trackUserLocation={true}
             positionOptions={{ enableHighAccuracy: false }}
             onGeolocate={(e) => {
               const { latitude, longitude } = e.coords;
