@@ -1,5 +1,5 @@
 import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 import { fetchArrivals } from "~/api/arrivals";
@@ -21,6 +21,37 @@ import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";
 import "./stops-$id.css";
+
+function StopFavouriteButton({ stopId }: { stopId: string }) {
+  const { t } = useTranslation();
+  const [favourited, setFavourited] = useState(() =>
+    StopDataProvider.isFavourite(stopId)
+  );
+
+  const toggle = () => {
+    if (favourited) {
+      StopDataProvider.removeFavourite(stopId);
+      setFavourited(false);
+    } else {
+      StopDataProvider.addFavourite(stopId);
+      setFavourited(true);
+    }
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      className={`app-header__menu-btn p-2 rounded-full transition-colors ${
+        favourited
+          ? "text-(--star-color)"
+          : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+      }`}
+      aria-label={t("stop.toggle_favourite", "Alternar favorito")}
+    >
+      <Star className={favourited ? "fill-current" : ""} size={24} />
+    </button>
+  );
+}
 
 export const getArrivalId = (a: Arrival): string => {
   return a.tripId;
@@ -50,7 +81,6 @@ export default function Estimates() {
   const [dataLoading, setDataLoading] = useState(true);
   const [dataError, setDataError] = useState<ErrorInfo | null>(null);
 
-  const [favourited, setFavourited] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -67,29 +97,11 @@ export default function Estimates() {
 
   usePageTitle(getStopDisplayName());
 
-  const toggleFavourite = useCallback(() => {
-    if (favourited) {
-      StopDataProvider.removeFavourite(stopId);
-      setFavourited(false);
-    } else {
-      StopDataProvider.addFavourite(stopId);
-      setFavourited(true);
-    }
-  }, [favourited, stopId]);
-
-  usePageRightNode(
-    <button
-      onClick={toggleFavourite}
-      className={`app-header__menu-btn p-2 rounded-full transition-colors ${
-        favourited
-          ? "text-(--star-color)"
-          : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-      }`}
-      aria-label={t("stop.toggle_favourite", "Alternar favorito")}
-    >
-      <Star className={favourited ? "fill-current" : ""} size={24} />
-    </button>
+  const rightNode = useMemo(
+    () => <StopFavouriteButton stopId={stopId} />,
+    [stopId]
   );
+  usePageRightNode(rightNode);
 
   const parseError = (error: any): ErrorInfo => {
     if (!navigator.onLine) {
@@ -153,7 +165,6 @@ export default function Estimates() {
     loadData();
 
     StopDataProvider.pushRecent(stopId);
-    setFavourited(StopDataProvider.isFavourite(stopId));
     setDataLoading(false);
   }, [stopId, loadData]);
 
