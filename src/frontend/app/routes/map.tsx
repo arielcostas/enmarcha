@@ -1,6 +1,6 @@
 import { Check, MapPin, Navigation, Search, X } from "lucide-react";
 import type { FilterSpecification } from "maplibre-gl";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Layer,
@@ -16,7 +16,11 @@ import {
 } from "~/components/map/StopSummarySheet";
 import { AppMap } from "~/components/shared/AppMap";
 import { usePageTitle } from "~/contexts/PageTitleContext";
-import { reverseGeocode, searchPlaces, type PlannerSearchResult } from "~/data/PlannerApi";
+import {
+  reverseGeocode,
+  searchPlaces,
+  type PlannerSearchResult,
+} from "~/data/PlannerApi";
 import { usePlanner } from "~/hooks/usePlanner";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";
@@ -170,15 +174,6 @@ function MapSearchBar({ mapRef }: MapSearchBarProps) {
             </div>
           </div>
         )}
-
-        {/* Plan a trip – always visible */}
-        <button
-          onClick={() => navigate("/planner")}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/90 dark:bg-slate-900/80 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-sm text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
-        >
-          <Navigation className="w-4 h-4 shrink-0" />
-          {t("map.plan_trip", "Planificar ruta")}
-        </button>
       </div>
     </div>
   );
@@ -667,10 +662,7 @@ export default function StopMap() {
       {contextMenu && (
         <>
           {/* Dismiss backdrop */}
-          <div
-            className="absolute inset-0 z-30"
-            onClick={closeContextMenu}
-          />
+          <div className="absolute inset-0 z-30" onClick={closeContextMenu} />
           {/* Context menu */}
           <div
             className="absolute z-40 min-w-[180px] rounded-xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"

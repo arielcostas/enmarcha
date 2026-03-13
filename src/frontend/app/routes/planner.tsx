@@ -45,6 +45,14 @@ const haversineMeters = (a: [number, number], b: [number, number]) => {
   return 2 * R * Math.asin(Math.sqrt(h));
 };
 
+const shouldSkipWalkLeg = (leg: Itinerary["legs"][number]): boolean => {
+  if (leg.mode !== "WALK") return false;
+  const durationMinutes =
+    (new Date(leg.endTime).getTime() - new Date(leg.startTime).getTime()) /
+    60000;
+  return durationMinutes <= 2 || leg.distanceMeters < 50;
+};
+
 const sumWalkMetrics = (legs: Itinerary["legs"]) => {
   let meters = 0;
   let minutes = 0;
@@ -129,44 +137,44 @@ const ItinerarySummary = ({
       </div>
 
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
-        {itinerary.legs.map((leg, idx) => {
-          const isWalk = leg.mode === "WALK";
-          const legDurationMinutes = Math.max(
-            1,
-            Math.round(
-              (new Date(leg.endTime).getTime() -
-                new Date(leg.startTime).getTime()) /
-                60000
-            )
-          );
+        {itinerary.legs
+          .filter((leg) => !shouldSkipWalkLeg(leg))
+          .map((leg, idx) => {
+            const isWalk = leg.mode === "WALK";
+            const legDurationMinutes = Math.max(
+              1,
+              Math.round(
+                (new Date(leg.endTime).getTime() -
+                  new Date(leg.startTime).getTime()) /
+                  60000
+              )
+            );
 
-          const isFirstBusLeg =
-            !isWalk &&
-            itinerary.legs.findIndex((l) => l.mode !== "WALK") === idx;
-
-          return (
-            <React.Fragment key={idx}>
-              {idx > 0 && <span className="text-muted/50">›</span>}
-              {isWalk ? (
-                <div className="flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-sm text-text whitespace-nowrap border border-border">
-                  <Footprints className="w-4 h-4 text-muted" />
-                  <span className="font-semibold">
-                    {formatDuration(legDurationMinutes, t)}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <RouteIcon
-                    line={leg.routeShortName || leg.routeName || leg.mode || ""}
-                    mode="pill"
-                    colour={leg.routeColor || undefined}
-                    textColour={leg.routeTextColor || undefined}
-                  />
-                </div>
-              )}
-            </React.Fragment>
-          );
-        })}
+            return (
+              <React.Fragment key={idx}>
+                {idx > 0 && <span className="text-muted/50">›</span>}
+                {isWalk ? (
+                  <div className="flex items-center gap-2 rounded-full bg-surface px-3 py-1.5 text-sm text-text whitespace-nowrap border border-border">
+                    <Footprints className="w-4 h-4 text-muted" />
+                    <span className="font-semibold">
+                      {formatDuration(legDurationMinutes, t)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <RouteIcon
+                      line={
+                        leg.routeShortName || leg.routeName || leg.mode || ""
+                      }
+                      mode="pill"
+                      colour={leg.routeColor || undefined}
+                      textColour={leg.routeTextColor || undefined}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
       </div>
 
       <div className="flex items-center justify-between text-sm text-muted mt-1">
@@ -284,6 +292,8 @@ const ItineraryDetail = ({
   }, [itinerary]);
 
   // Get origin and destination coordinates
+  const visibleLegs = itinerary.legs.filter((leg) => !shouldSkipWalkLeg(leg));
+
   const origin = itinerary.legs[0]?.from;
   const destination = itinerary.legs[itinerary.legs.length - 1]?.to;
 
@@ -495,7 +505,7 @@ const ItineraryDetail = ({
           </h2>
 
           <div>
-            {itinerary.legs.map((leg, idx) => (
+            {visibleLegs.map((leg, idx) => (
               <div key={idx} className="flex gap-3">
                 <div className="flex flex-col items-center w-20 shrink-0">
                   {leg.mode === "WALK" ? (
@@ -513,7 +523,7 @@ const ItineraryDetail = ({
                       textColour={leg.routeTextColor || undefined}
                     />
                   )}
-                  {idx < itinerary.legs.length - 1 && (
+                  {idx < visibleLegs.length - 1 && (
                     <div className="w-0.5 flex-1 bg-gray-300 dark:bg-gray-600 my-1"></div>
                   )}
                 </div>
@@ -574,7 +584,7 @@ const ItineraryDetail = ({
                           const currentLine =
                             leg.routeShortName || leg.routeName;
                           const previousLeg =
-                            idx > 0 ? itinerary.legs[idx - 1] : null;
+                            idx > 0 ? visibleLegs[idx - 1] : null;
                           const previousLine =
                             previousLeg?.mode !== "WALK"
                               ? previousLeg?.routeShortName ||
