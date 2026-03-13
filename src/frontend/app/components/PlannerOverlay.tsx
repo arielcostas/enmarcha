@@ -15,6 +15,7 @@ import {
   type PlannerSearchResult,
 } from "~/data/PlannerApi";
 import StopDataProvider from "~/data/StopDataProvider";
+import { useGeolocation } from "~/hooks/useGeolocation";
 import { usePlanner } from "~/hooks/usePlanner";
 
 interface PlannerOverlayProps {
@@ -30,7 +31,6 @@ interface PlannerOverlayProps {
   clearPickerOnOpen?: boolean;
   showLastDestinationWhenCollapsed?: boolean;
   cardBackground?: string;
-  userLocation?: { latitude: number; longitude: number } | null;
   autoLoad?: boolean;
 }
 
@@ -42,11 +42,11 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
   clearPickerOnOpen = false,
   showLastDestinationWhenCollapsed = true,
   cardBackground,
-  userLocation,
   autoLoad = true,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { userLocation, requestLocation } = useGeolocation();
   const {
     origin,
     setOrigin,
@@ -173,22 +173,12 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
 
   const setOriginFromCurrentLocation = useCallback(
     (closePicker: boolean = true) => {
-      console.log(
-        "[PlannerOverlay] setOriginFromCurrentLocation called, closePicker:",
-        closePicker
-      );
       if (!navigator.geolocation) {
-        console.warn("[PlannerOverlay] Geolocation not available");
         return;
       }
       setLocationLoading(true);
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          console.log(
-            "[PlannerOverlay] Geolocation success:",
-            pos.coords.latitude,
-            pos.coords.longitude
-          );
           try {
             // Set immediately using raw coordinates; refine later if reverse geocode works.
             const initial: PlannerSearchResult = {
@@ -198,16 +188,16 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
               lon: pos.coords.longitude,
               layer: "current-location",
             };
-            console.log("[PlannerOverlay] Setting initial origin:", initial);
             setOrigin(initial);
             setOriginQuery(initial.name || "");
+            // Share location with global context so other consumers benefit
+            requestLocation();
 
             try {
               const rev = await reverseGeocode(
                 pos.coords.latitude,
                 pos.coords.longitude
               );
-              console.log("[PlannerOverlay] Reverse geocode result:", rev);
               if (rev) {
                 const refined: PlannerSearchResult = {
                   ...initial,
@@ -215,10 +205,6 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   label: rev.label || initial.label,
                   layer: "current-location",
                 };
-                console.log(
-                  "[PlannerOverlay] Setting refined origin:",
-                  refined
-                );
                 setOrigin(refined);
                 setOriginQuery(refined.name || "");
               }
@@ -238,7 +224,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
         { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
       );
     },
-    [setOrigin, t]
+    [setOrigin, t, requestLocation]
   );
 
   useEffect(() => {

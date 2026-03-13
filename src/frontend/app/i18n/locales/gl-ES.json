@@ -103,7 +103,11 @@
     "popup_title": "Parada",
     "lines": "Liñas",
     "view_all_estimates": "Ver todas as estimacións",
-    "select_nearby_stop": "Seleccionar parada"
+    "select_nearby_stop": "Seleccionar parada",
+    "route_from_here": "Ruta desde aquí",
+    "route_to_here": "Ruta ata aquí",
+    "search_placeholder": "Buscar un lugar…",
+    "plan_trip": "Planificar ruta"
   },
   "planner": {
     "where_to": "Onde queres ir?",
@@ -149,7 +153,11 @@
     "fare": "{{amount}} €",
     "free": "Gratuíto",
     "urban_traffic_warning": "Posible restrición de tráfico",
-    "urban_traffic_warning_desc": "As dúas paradas deste tramo están en {{municipality}}, que dispón de transporte urbano propio. É probable que non poidas utilizar os servizos da Xunta neste traxecto."
+    "urban_traffic_warning_desc": "As dúas paradas deste tramo están en {{municipality}}, que dispón de transporte urbano propio. É probable que non poidas utilizar os servizos da Xunta neste traxecto.",
+    "next_arrivals": "Próximas chegadas",
+    "next_arrival": "Próximo",
+    "intermediate_stops_one": "1 parada",
+    "intermediate_stops": "{{count}} paradas"
   },
   "common": {
     "loading": "Cargando...",

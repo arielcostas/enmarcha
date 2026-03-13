@@ -1,4 +1,4 @@
-import { Home, Map, Route } from "lucide-react";
+import { Home, Map, Navigation, Route } from "lucide-react";
 import type { LngLatLike } from "maplibre-gl";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -51,6 +51,11 @@ export default function NavBar({ orientation = "horizontal" }: NavBarProps) {
           }
         );
       },
+    },
+    {
+      name: t("navbar.planner", "Planificador"),
+      icon: Navigation,
+      path: "/planner",
     },
     {
       name: t("navbar.routes", "Rutas"),

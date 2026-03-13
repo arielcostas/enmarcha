@@ -103,7 +103,11 @@
     "popup_title": "Stop",
     "lines": "Lines",
     "view_all_estimates": "View all estimates",
-    "select_nearby_stop": "Select stop"
+    "select_nearby_stop": "Select stop",
+    "route_from_here": "Route from here",
+    "route_to_here": "Route to here",
+    "search_placeholder": "Search for a place…",
+    "plan_trip": "Plan a trip"
   },
   "planner": {
     "where_to": "Where do you want to go?",
@@ -149,7 +153,11 @@
     "fare": "€{{amount}}",
     "free": "Free",
     "urban_traffic_warning": "Possible transit restriction",
-    "urban_traffic_warning_desc": "Both stops on this leg are within {{municipality}}, which has its own urban transport. It's likely you are not allowed to do this trip with Xunta services."
+    "urban_traffic_warning_desc": "Both stops on this leg are within {{municipality}}, which has its own urban transport. It's likely you are not allowed to do this trip with Xunta services.",
+    "next_arrivals": "Next arrivals",
+    "next_arrival": "Next",
+    "intermediate_stops_one": "1 stop",
+    "intermediate_stops": "{{count}} stops"
   },
   "common": {
     "loading": "Loading...",

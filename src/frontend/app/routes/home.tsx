@@ -1,8 +1,7 @@
-import { Clock, History, Star } from "lucide-react";
+import { Clock, History, MapPin, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { PlannerOverlay } from "~/components/PlannerOverlay";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { usePlanner } from "~/hooks/usePlanner";
 import StopItem from "../components/StopItem";
@@ -13,84 +12,18 @@ export default function StopList() {
   const { t } = useTranslation();
   usePageTitle(t("navbar.stops", "Paradas"));
   const navigate = useNavigate();
-  const { history, searchRoute, loadRoute } = usePlanner({ autoLoad: false });
+  const { history, loadRoute } = usePlanner({ autoLoad: false });
   const [data, setData] = useState<Stop[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchResults, setSearchResults] = useState<Stop[] | null>(null);
   const [favouriteStops, setFavouriteStops] = useState<Stop[]>([]);
   const [recentStops, setRecentStops] = useState<Stop[]>([]);
-  const [userLocation, setUserLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const randomPlaceholder = useMemo(
     () => t("stoplist.search_placeholder"),
     [t]
   );
-
-  const requestUserLocation = useCallback(() => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-      },
-      (error) => {
-        console.warn("Unable to obtain user location", error);
-      },
-      {
-        enableHighAccuracy: false,
-        maximumAge: Infinity,
-        timeout: 10000,
-      }
-    );
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      return;
-    }
-
-    let permissionStatus: PermissionStatus | null = null;
-
-    const handlePermissionChange = () => {
-      if (permissionStatus?.state === "granted") {
-        requestUserLocation();
-      }
-    };
-
-    const checkPermission = async () => {
-      try {
-        if (navigator.permissions?.query) {
-          permissionStatus = await navigator.permissions.query({
-            name: "geolocation",
-          });
-          if (permissionStatus.state === "granted") {
-            requestUserLocation();
-          }
-          permissionStatus.addEventListener("change", handlePermissionChange);
-        } else {
-          requestUserLocation();
-        }
-      } catch (error) {
-        console.warn("Geolocation permission check failed", error);
-        requestUserLocation();
-      }
-    };
-
-    checkPermission();
-
-    return () => {
-      permissionStatus?.removeEventListener("change", handlePermissionChange);
-    };
-  }, [requestUserLocation]);
 
   // Load stops from network
   const loadStops = useCallback(async () => {
@@ -164,33 +97,16 @@ export default function StopList() {
     <div className="flex flex-col gap-4 py-4 pb-8">
       {/* Planner Section */}
       <div className="w-full px-4">
-        <details className="group bg-surface border border-slate-200 dark:border-slate-700 shadow-sm">
-          <summary className="list-none cursor-pointer focus:outline-none">
-            <div className="flex items-center justify-between p-3 rounded-xl group-open:mb-3 transition-all">
-              <div className="flex items-center gap-3">
-                <History className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                <span className="font-semibold text-text">
-                  {t("planner.where_to", "¿A dónde quieres ir?")}
-                </span>
-              </div>
-              <div className="text-muted group-open:rotate-180 transition-transform">
-                ↓
-              </div>
-            </div>
-          </summary>
-
-          <PlannerOverlay
-            inline
-            forceExpanded
-            cardBackground="bg-transparent"
-            userLocation={userLocation}
-            autoLoad={false}
-            onSearch={(origin, destination, time, arriveBy) => {
-              searchRoute(origin, destination, time, arriveBy);
-            }}
-            onNavigateToPlanner={() => navigate("/planner")}
-          />
-        </details>
+        <button
+          type="button"
+          onClick={() => navigate("/planner")}
+          className="w-full flex items-center gap-3 p-3 rounded-xl bg-surface border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
+        >
+          <MapPin className="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0" />
+          <span className="font-semibold text-text">
+            {t("planner.where_to", "¿A dónde quieres ir?")}
+          </span>
+        </button>
 
         {history.length > 0 && (
           <div className="mt-3 flex flex-col gap-2">
