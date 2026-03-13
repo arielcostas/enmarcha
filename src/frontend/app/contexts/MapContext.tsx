@@ -6,7 +6,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { APP_CONSTANTS } from "~/config/constants";
 
 interface MapState {
   paths: Record<string, { center: LngLatLike; zoom: number }>;
@@ -90,6 +89,11 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
           (error) => {
             console.error("Error getting location:", error);
             setLocationPermission(false);
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: Infinity,
+            timeout: 10000,
           }
         );
       }

@@ -47,7 +47,8 @@ export default function StopList() {
       },
       {
         enableHighAccuracy: false,
-        maximumAge: 5 * 60 * 1000,
+        maximumAge: Infinity,
+        timeout: 10000,
       }
     );
   }, []);
@@ -317,7 +318,7 @@ export default function StopList() {
                     <StopItem
                       key={stop.stopId}
                       stop={stop}
-                      showArrivals={index < 3}
+                      showArrivals={index < 5}
                     />
                   ))}
                 </ul>

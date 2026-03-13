@@ -831,7 +831,11 @@ export default function PlannerPage() {
                     () => {
                       // If geolocation fails, just keep origin empty
                     },
-                    { enableHighAccuracy: true, timeout: 10000 }
+                    {
+                      enableHighAccuracy: true,
+                      timeout: 10000,
+                      maximumAge: 60 * 60 * 1000, // 1 hour in milliseconds
+                    }
                   );
                 }
               }}

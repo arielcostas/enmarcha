@@ -6,21 +6,6 @@ import { usePlanner } from "~/hooks/usePlanner";
 import { useApp } from "../../AppContext";
 import styles from "./NavBar.module.css";
 
-// Helper: check if coordinates are within Vigo bounds
-function isWithinVigo(lngLat: LngLatLike): boolean {
-  let lng: number, lat: number;
-  if (Array.isArray(lngLat)) {
-    [lng, lat] = lngLat;
-  } else if ("lng" in lngLat && "lat" in lngLat) {
-    lng = lngLat.lng;
-    lat = lngLat.lat;
-  } else {
-    return false;
-  }
-  // Rough bounding box for Vigo
-  return lat >= 42.18 && lat <= 42.3 && lng >= -8.78 && lng <= -8.65;
-}
-
 interface NavBarProps {
   orientation?: "horizontal" | "vertical";
 }
@@ -56,9 +41,7 @@ export default function NavBar({ orientation = "horizontal" }: NavBarProps) {
           (position) => {
             const { latitude, longitude } = position.coords;
             const coords: LngLatLike = [latitude, longitude];
-            if (isWithinVigo(coords)) {
-              updateMapState(coords, 16);
-            }
+            updateMapState(coords, 16, "gps");
           },
           () => {},
           {
