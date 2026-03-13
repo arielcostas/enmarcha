@@ -46,6 +46,9 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                         }}
                         departureStoptime {{
                             scheduledDeparture
+                            stop {{
+                                gtfsId
+                            }}
                         }}
                         arrivalStoptime {{
                             stop {{
@@ -120,10 +123,10 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("tripHeadsign")] public string? TripHeadsign { get; set; }
 
         [JsonPropertyName("departureStoptime")]
-        public required DepartureStoptime DepartureStoptime { get; set; }
+        public required TerminusStoptime DepartureStoptime { get; set; }
 
         [JsonPropertyName("arrivalStoptime")]
-        public required ArrivalStoptime ArrivalStoptime { get; set; }
+        public required TerminusStoptime ArrivalStoptime { get; set; }
 
         [JsonPropertyName("route")] public required RouteDetails Route { get; set; }
 
@@ -158,18 +161,15 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("lon")] public double Lon { get; set; }
     }
 
-    public class DepartureStoptime
+    public class TerminusStoptime
     {
         [JsonPropertyName("scheduledDeparture")]
-        public int ScheduledDeparture { get; set; }
+        public int? ScheduledDeparture { get; set; }
+
+        [JsonPropertyName("stop")] public TerminusStoptimeStop Stop { get; set; }
     }
 
-    public class ArrivalStoptime
-    {
-        [JsonPropertyName("stop")] public ArrivalStoptimeStop Stop { get; set; }
-    }
-
-    public class ArrivalStoptimeStop
+    public class TerminusStoptimeStop
     {
         [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
     }

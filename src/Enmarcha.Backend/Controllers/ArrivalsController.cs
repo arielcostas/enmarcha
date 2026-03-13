@@ -167,7 +167,10 @@ public partial class ArrivalsController : ControllerBase
         foreach (var item in stop.Arrivals)
         {
             if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
-            if (item.Trip.ArrivalStoptime.Stop.GtfsId == id) continue;
+            if (
+                item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
+                item.Trip.DepartureStoptime.Stop.GtfsId != id
+            ) continue;
 
             var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
             var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
