@@ -66,5 +66,7 @@ public class ArrivalsPipeline
             using var processorActivity = Telemetry.Source.StartActivity($"Processor:{processor.GetType().Name}");
             await processor.ProcessAsync(context);
         }
+
+        context.Arrivals = context.Arrivals.Where(a => !a.Delete).ToList();
     }
 }

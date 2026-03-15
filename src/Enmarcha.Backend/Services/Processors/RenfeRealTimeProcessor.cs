@@ -51,6 +51,11 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 
                     contextArrival.Estimate.Minutes += delayMinutes;
                     contextArrival.Estimate.Precision = ArrivalPrecision.Confident;
+
+                    if (contextArrival.Estimate.Minutes < 0)
+                    {
+                        contextArrival.Delete = true;
+                    }
                 }
 
                 if (positions.TryGetValue(trainNumber, out var position))

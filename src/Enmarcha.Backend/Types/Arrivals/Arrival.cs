@@ -26,11 +26,13 @@ public class Arrival
 
     [JsonPropertyName("patternId")] public string? PatternId { get; set; }
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public List<string> NextStops { get; set; } = [];
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public object? RawOtpTrip { get; set; }
+
+    [JsonIgnore] public bool Delete { get; set; }
 }
 
 public class RouteInfo

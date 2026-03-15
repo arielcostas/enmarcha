@@ -217,10 +217,45 @@ public class FeedService
         return HiddenStops.Contains(stopId);
     }
 
-    public ShiftBadge? GetShiftBadge(string feedId, string tripId)
+    public static ShiftBadge? GetShiftBadge(string feedId, string tripId)
     {
-        if (feedId != "vitrasa") return null;
+        return feedId switch
+        {
+            "vitrasa" => GetVitrasaShiftBadge(tripId.Split(':', 2)[1]),
+            "tranvias" => GetTranviasShiftBadge(tripId.Split(':', 2)[1]),
+            _ => null
+        };
+    }
 
+    private static ShiftBadge? GetTranviasShiftBadge(string tripId)
+    {
+        // Example:  200032223 || 2301032230
+        var padded = tripId.PadLeft(10);
+
+        Console.WriteLine(padded[4..6]);
+
+        var dayOfWeek = padded[4..6] switch
+        {
+            "01" => "Lab",
+            "02" => "Sab",
+            "03" => "Dom",
+            "04" => "Fes",
+            "05" or "06" or "07" => "NoLec",
+            "08" => "Ex.UDC",
+            "09" => "Desc",
+            "10" => "Navid",
+            _ => ""
+        };
+
+        return new ShiftBadge
+        {
+            ShiftName = padded[..4].Trim(),
+            ShiftTrip = $"{dayOfWeek} {padded[6..]}",
+        };
+    }
+
+    private static ShiftBadge? GetVitrasaShiftBadge(string tripId)
+    {
         // Example: C1 04LN 02_001004_4
         var parts = tripId.Split('_');
         if (parts.Length < 2) return null;

@@ -26,8 +26,9 @@ public class FeedConfigProcessor : IArrivalsProcessor
             if (feedId == "vitrasa")
             {
                 FormatVitrasaLine(arrival);
-                arrival.Shift = _feedService.GetShiftBadge(feedId, arrival.TripId);
             }
+
+            arrival.Shift = FeedService.GetShiftBadge(feedId, arrival.TripId);
 
             if (string.IsNullOrEmpty(arrival.Route.Colour) || arrival.Route.Colour == "FFFFFF")
             {
