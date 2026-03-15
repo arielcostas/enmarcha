@@ -5,16 +5,16 @@ using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
 
 namespace Enmarcha.Backend.Services.Processors;
 
-public class SantiagoRealTimeProcessor : AbstractRealTimeProcessor
+public class TussaRealTimeProcessor : AbstractRealTimeProcessor
 {
     private readonly SantiagoRealtimeEstimatesProvider _realtime;
     private readonly FeedService _feedService;
-    private readonly ILogger<SantiagoRealTimeProcessor> _logger;
+    private readonly ILogger<TussaRealTimeProcessor> _logger;
 
-    public SantiagoRealTimeProcessor(
+    public TussaRealTimeProcessor(
         SantiagoRealtimeEstimatesProvider realtime,
         FeedService feedService,
-        ILogger<SantiagoRealTimeProcessor> logger)
+        ILogger<TussaRealTimeProcessor> logger)
     {
         _realtime = realtime;
         _feedService = feedService;

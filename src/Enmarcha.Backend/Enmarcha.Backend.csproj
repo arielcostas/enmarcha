@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="Costasdev.VigoTransitApi" />
-    <PackageReference Include="Google.Protobuf" />
     <PackageReference Include="ProjNet" />
 
     <PackageReference Include="NetTopologySuite" />
@@ -33,6 +32,7 @@
     <ProjectReference Include="..\Enmarcha.Sources.OpenTripPlannerGql\Enmarcha.Sources.OpenTripPlannerGql.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.TranviasCoruna\Enmarcha.Sources.TranviasCoruna.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.Tussa\Enmarcha.Sources.Tussa.csproj" />
+    <ProjectReference Include="..\Enmarcha.Sources.GtfsRealtime\Enmarcha.Sources.GtfsRealtime.csproj" />
   </ItemGroup>
 
   <ItemGroup>

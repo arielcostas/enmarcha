@@ -1,0 +1,72 @@
+using Enmarcha.Backend.Types;
+using Enmarcha.Backend.Types.Arrivals;
+using Enmarcha.Sources.GtfsRealtime;
+using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
+
+namespace Enmarcha.Backend.Services.Processors;
+
+public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
+{
+    private readonly GtfsRealtimeEstimatesProvider _realtime;
+    private readonly ILogger<RenfeRealTimeProcessor> _logger;
+
+    public RenfeRealTimeProcessor(
+        GtfsRealtimeEstimatesProvider realtime,
+        ILogger<RenfeRealTimeProcessor> logger
+    )
+    {
+        _realtime = realtime;
+        _logger = logger;
+    }
+
+    public override async Task ProcessAsync(ArrivalsContext context)
+    {
+        if (!context.StopId.StartsWith("renfe:")) return;
+
+        try
+        {
+            var delays = await _realtime.GetRenfeDelays();
+            var positions = await _realtime.GetRenfePositions();
+            System.Diagnostics.Activity.Current?.SetTag("realtime.count", delays.Count);
+
+            foreach (Arrival contextArrival in context.Arrivals)
+            {
+                var trainNumber = contextArrival.TripId.Split(":")[1][..5];
+
+                contextArrival.Headsign.Destination = trainNumber + " - " + contextArrival.Headsign.Destination;
+
+                if (delays.TryGetValue(trainNumber, out var delay))
+                {
+                    if (delay is null)
+                    {
+                        // TODO: Indicate train got cancelled
+                        continue;
+                    }
+
+                    var delayMinutes = delay.Value / 60;
+                    contextArrival.Delay = new DelayBadge()
+                    {
+                        Minutes = delayMinutes
+                    };
+
+                    contextArrival.Estimate.Minutes += delayMinutes;
+                    contextArrival.Estimate.Precision = ArrivalPrecision.Confident;
+                }
+
+                if (positions.TryGetValue(trainNumber, out var position))
+                {
+                    contextArrival.CurrentPosition = new Position
+                    {
+                        Latitude = position.Latitude,
+                        Longitude = position.Longitude,
+                        OrientationDegrees = 0 // TODO: Set the proper degrees
+                    };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching Renfe real-time data");
+        }
+    }
+}

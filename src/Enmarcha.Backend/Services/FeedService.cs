@@ -207,6 +207,7 @@ public class FeedService
         return feedId switch
         {
             "xunta" => string.Join(" > ", nextStops),
+            "renfe" => string.Join(" - ", nextStops),
             _ => string.Join(", ", nextStops.Take(4))
         };
     }

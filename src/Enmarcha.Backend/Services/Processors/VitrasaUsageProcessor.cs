@@ -4,17 +4,17 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Enmarcha.Backend.Services.Processors;
 
-public class VigoUsageProcessor : IArrivalsProcessor
+public class VitrasaUsageProcessor : IArrivalsProcessor
 {
     private readonly HttpClient _httpClient;
     private readonly IMemoryCache _cache;
-    private readonly ILogger<VigoUsageProcessor> _logger;
+    private readonly ILogger<VitrasaUsageProcessor> _logger;
     private readonly FeedService _feedService;
 
-    public VigoUsageProcessor(
+    public VitrasaUsageProcessor(
         HttpClient httpClient,
         IMemoryCache cache,
-        ILogger<VigoUsageProcessor> logger,
+        ILogger<VitrasaUsageProcessor> logger,
         FeedService feedService)
     {
         _httpClient = httpClient;
