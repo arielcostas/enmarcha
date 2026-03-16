@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using System.Text.Json.Serialization;
-using Enmarcha.Sources.OpenTripPlannerGql;
 
 namespace Enmarcha.Sources.OpenTripPlannerGql.Queries;
 
@@ -19,6 +18,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
             stop(id:""{args.Id}"") {{
                 code
                 name
+                desc
                 lat
                 lon
                 routes {{
@@ -63,6 +63,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                             stop {{
                                 gtfsId
                                 name
+                                desc
                                 lat
                                 lon
                             }}
@@ -85,6 +86,8 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("code")] public required string Code { get; set; }
 
         [JsonPropertyName("name")] public required string Name { get; set; }
+
+        [JsonPropertyName("desc")] public required string Description { get; set; }
 
         [JsonPropertyName("lat")] public double Lat { get; set; }
 
@@ -157,6 +160,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
     {
         [JsonPropertyName("gtfsId")] public string? GtfsId { get; set; }
         [JsonPropertyName("name")] public required string Name { get; set; }
+        [JsonPropertyName("desc")] public required string Description { get; set; }
         [JsonPropertyName("lat")] public double Lat { get; set; }
         [JsonPropertyName("lon")] public double Lon { get; set; }
     }

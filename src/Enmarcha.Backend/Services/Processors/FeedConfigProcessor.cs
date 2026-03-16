@@ -20,7 +20,7 @@ public class FeedConfigProcessor : IArrivalsProcessor
         foreach (var arrival in context.Arrivals)
         {
             arrival.Route.ShortName = _feedService.NormalizeRouteShortName(feedId, arrival.Route.ShortName);
-            arrival.Headsign.Destination = _feedService.NormalizeStopName(feedId, arrival.Headsign.Destination);
+            arrival.Headsign.Destination = FeedService.NormalizeStopName(feedId, arrival.Headsign.Destination);
 
             // Apply Vitrasa-specific line formatting
             if (feedId == "vitrasa")

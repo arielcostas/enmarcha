@@ -125,7 +125,7 @@ public class TileController : ControllerBase
                     { "feed", idParts[0] },
                     // The public identifier, usually feed:code or feed:id, recognisable by users and in other systems
                     { "code", $"{idParts[0]}:{codeWithinFeed}" },
-                    { "name", _feedService.NormalizeStopName(feedId, stop.Name) },
+                    { "name", FeedService.NormalizeStopName(feedId, stop.Name) },
                     { "icon", GetIconNameForFeed(feedId) },
                     { "transitKind", GetTransitKind(feedId) }
                 }

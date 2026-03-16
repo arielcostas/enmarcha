@@ -65,7 +65,7 @@ public partial class ArrivalsController : ControllerBase
         return Ok(new StopArrivalsResponse
         {
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
-            StopName = _feedService.NormalizeStopName(feedId, stop.Name),
+            StopName = FeedService.NormalizeStopName(feedId, stop.Name),
             StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon },
             Routes = [.. _feedService.ConsolidateRoutes(feedId,
                 stop.Routes
@@ -166,7 +166,7 @@ public partial class ArrivalsController : ControllerBase
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
-            if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
+            //if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
             if (
                 item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
                 item.Trip.DepartureStoptime.Stop.GtfsId != id
@@ -305,7 +305,7 @@ public partial class ArrivalsController : ControllerBase
                 var feedId = s.GtfsId.Split(':', 2)[0];
                 var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
                 var code = _feedService.NormalizeStopCode(feedId, s.Code ?? "");
-                var name = _feedService.NormalizeStopName(feedId, s.Name);
+                var name = FeedService.NormalizeStopName(feedId, s.Name);
 
                 return (dynamic)new
                 {

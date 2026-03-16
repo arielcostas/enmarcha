@@ -163,7 +163,7 @@ public partial class RoutePlannerController : ControllerBase
         var stops = allStopsRaw.Select(s =>
         {
             var feedId = s.GtfsId.Split(':')[0];
-            var name = _feedService.NormalizeStopName(feedId, s.Name);
+            var name = FeedService.NormalizeStopName(feedId, s.Name);
             var code = _feedService.NormalizeStopCode(feedId, s.Code ?? string.Empty);
 
             return new PlannerSearchResult

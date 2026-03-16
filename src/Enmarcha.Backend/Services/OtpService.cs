@@ -101,7 +101,7 @@ public class OtpService
             {
                 Id = s.GtfsId,
                 Code = _feedService.NormalizeStopCode(feedId, s.Code ?? string.Empty),
-                Name = _feedService.NormalizeStopName(feedId, s.Name),
+                Name = FeedService.NormalizeStopName(feedId, s.Name),
                 Lat = s.Lat,
                 Lon = s.Lon,
                 ScheduledDepartures = pattern.TripsForDate
@@ -180,7 +180,7 @@ public class OtpService
         var feedId = otpPlace.StopId?.Split(':')[0] ?? "unknown";
         return new PlannerPlace
         {
-            Name = _feedService.NormalizeStopName(feedId, otpPlace.Name!),
+            Name = FeedService.NormalizeStopName(feedId, otpPlace.Name!),
             Lat = otpPlace.Lat,
             Lon = otpPlace.Lon,
             StopId = otpPlace.StopId, // Use string directly
@@ -379,7 +379,7 @@ public class OtpService
         var feedId = pos.Stop?.GtfsId?.Split(':')[0] ?? "unknown";
         return new PlannerPlace
         {
-            Name = _feedService.NormalizeStopName(feedId, pos.Name),
+            Name = FeedService.NormalizeStopName(feedId, pos.Name),
             Lat = pos.Latitude,
             Lon = pos.Longitude,
             StopId = pos.Stop?.GtfsId,
@@ -393,7 +393,7 @@ public class OtpService
         var feedId = stop.GtfsId?.Split(':')[0] ?? "unknown";
         return new PlannerPlace
         {
-            Name = _feedService.NormalizeStopName(feedId, stop.Name),
+            Name = FeedService.NormalizeStopName(feedId, stop.Name),
             Lat = stop.Latitude,
             Lon = stop.Longitude,
             StopId = stop.GtfsId,

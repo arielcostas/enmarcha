@@ -148,7 +148,7 @@ public class FeedService
         return result;
     }
 
-    public string NormalizeStopName(string feedId, string name)
+    public static string NormalizeStopName(string feedId, string name)
     {
         if (feedId == "vitrasa")
         {
@@ -171,7 +171,7 @@ public class FeedService
         return Regex.Replace(normalized, @"[^a-z0-9]", "");
     }
 
-    public string GetStreetName(string originalName)
+    public static string GetStreetName(string originalName)
     {
         var name = RemoveQuotationMarks.Replace(originalName, "").Trim();
         var match = StreetNameRegex.Match(name);
@@ -187,29 +187,6 @@ public class FeedService
         }
 
         return streetName.Trim();
-    }
-
-    public string? GenerateMarquee(string feedId, List<string> nextStops)
-    {
-        if (nextStops.Count == 0) return null;
-
-        if (feedId is "vitrasa" or "tranvias" or "tussa" or "ourense")
-        {
-            var streets = nextStops
-                .Select(GetStreetName)
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct()
-                .ToList();
-
-            return string.Join(" - ", streets);
-        }
-
-        return feedId switch
-        {
-            "xunta" => string.Join(" > ", nextStops),
-            "renfe" => string.Join(" - ", nextStops),
-            _ => string.Join(", ", nextStops.Take(4))
-        };
     }
 
     public bool IsStopHidden(string stopId)

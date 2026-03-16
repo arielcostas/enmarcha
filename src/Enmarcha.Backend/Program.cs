@@ -133,7 +133,6 @@ builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
 
 builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, MarqueeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, FeedConfigProcessor>();
 builder.Services.AddScoped<ArrivalsPipeline>();
