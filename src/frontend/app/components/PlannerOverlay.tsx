@@ -534,7 +534,7 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                   <button
                     type="button"
                     className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors duration-200"
-                    onClick={() => setOriginFromCurrentLocation}
+                    onClick={() => setOriginFromCurrentLocation()}
                     disabled={locationLoading}
                   >
                     <div className="flex items-center gap-2">
@@ -550,8 +550,10 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
                         </div>
                       </div>
                     </div>
-                    <div className="text-lg text-slate-600 dark:text-slate-400">
-                      {locationLoading ? "…" : ""}
+                    <div className="flex items-center">
+                      {locationLoading && (
+                        <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                      )}
                     </div>
                   </button>
                 </li>

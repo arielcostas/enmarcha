@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 import Map, {
   GeolocateControl,
   NavigationControl,
@@ -15,7 +16,6 @@ import Map, {
   type MapRef,
   type StyleSpecification,
 } from "react-map-gl/maplibre";
-import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router";
 import { useApp } from "~/AppContext";
 import { APP_CONSTANTS } from "~/config/constants";
@@ -82,7 +82,6 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
       mapState,
       updateMapState,
       setUserLocation,
-      setLocationPermission,
       showTraffic: settingsShowTraffic,
       showCameras: settingsShowCameras,
       mapPositionMode,
@@ -213,11 +212,13 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
         {showGeolocate && (
           <GeolocateControl
             position="bottom-right"
-            positionOptions={{ enableHighAccuracy: false }}
+            positionOptions={{
+              maximumAge: 1000 * 60 * 60 * 4,
+              enableHighAccuracy: false,
+            }}
             onGeolocate={(e) => {
               const { latitude, longitude } = e.coords;
               setUserLocation([latitude, longitude]);
-              setLocationPermission(true);
             }}
           />
         )}

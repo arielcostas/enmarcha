@@ -1,16 +1,18 @@
-import { useCallback } from "react";
-import { useMap } from "../contexts/MapContext";
 import type { LngLatLike } from "maplibre-gl";
+import { useCallback, useState } from "react";
+import { useMap } from "../contexts/MapContext";
 
 export interface UseGeolocationResult {
   userLocation: { latitude: number; longitude: number } | null;
   hasLocationPermission: boolean;
+  isLoading: boolean;
   requestLocation: () => void;
 }
 
-function lngLatToCoords(
-  loc: LngLatLike
-): { latitude: number; longitude: number } {
+function lngLatToCoords(loc: LngLatLike): {
+  latitude: number;
+  longitude: number;
+} {
   if (Array.isArray(loc)) {
     // This codebase stores location as [latitude, longitude] (not the standard
     // MapLibre [lng, lat] GeoJSON order). See MapContext.tsx where arrays are
@@ -36,16 +38,20 @@ function lngLatToCoords(
  */
 export function useGeolocation(): UseGeolocationResult {
   const { mapState, setUserLocation, setLocationPermission } = useMap();
+  const [isLoading, setIsLoading] = useState(false);
 
   const requestLocation = useCallback(() => {
     if (typeof window === "undefined" || !("geolocation" in navigator)) return;
+    setIsLoading(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation([pos.coords.latitude, pos.coords.longitude]);
         setLocationPermission(true);
+        setIsLoading(false);
       },
       () => {
         setLocationPermission(false);
+        setIsLoading(false);
       },
       { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 }
     );
@@ -57,6 +63,7 @@ export function useGeolocation(): UseGeolocationResult {
   return {
     userLocation,
     hasLocationPermission: mapState.hasLocationPermission,
+    isLoading,
     requestLocation,
   };
 }

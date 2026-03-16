@@ -72,6 +72,7 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
   const setLocationPermission = useCallback(
     (hasLocationPermission: boolean) => {
       setMapState((prev) => {
+        if (prev.hasLocationPermission === hasLocationPermission) return prev;
         const newState = { ...prev, hasLocationPermission };
         localStorage.setItem("mapState", JSON.stringify(newState));
         return newState;
@@ -103,7 +104,6 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
       (position) => {
         const { latitude, longitude } = position.coords;
         setUserLocation([latitude, longitude]);
-        setLocationPermission(true);
       },
       (error) => {
         if (error.code === GeolocationPositionError.PERMISSION_DENIED) {
