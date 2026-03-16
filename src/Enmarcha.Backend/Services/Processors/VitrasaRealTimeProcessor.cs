@@ -269,6 +269,14 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
         {
             _logger.LogError(ex, "Error fetching Vitrasa real-time data for stop {StopId}", context.StopId);
         }
+
+        foreach (var arr in context.Arrivals)
+        {
+            if (arr.Estimate.Minutes < 1 && arr.Estimate.Precision == ArrivalPrecision.Scheduled)
+            {
+                arr.Delete = true; // Remove arrivals that are scheduled right now, since they are likely already departed
+            }
+        }
     }
 
     private static bool IsRouteMatch(string a, string b)
