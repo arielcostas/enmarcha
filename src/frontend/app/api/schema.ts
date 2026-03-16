@@ -65,6 +65,7 @@ export const ArrivalSchema = z.object({
   shape: z.any().optional().nullable(),
   currentPosition: PositionSchema.optional().nullable(),
   vehicleInformation: VehicleInformationSchema.optional().nullable(),
+  operator: z.string().nullable(),
 });
 
 export const ArrivalEstimateSchema = z.object({

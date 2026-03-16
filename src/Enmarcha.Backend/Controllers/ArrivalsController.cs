@@ -146,6 +146,8 @@ public partial class ArrivalsController : ControllerBase
         var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
         var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
 
+        var feedId = id.Split(':')[0];
+
         var requestContent = ArrivalsAtStopContent.Query(new ArrivalsAtStopContent.Args(id, reduced || nano));
 
         var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
@@ -192,6 +194,7 @@ public partial class ArrivalsController : ControllerBase
                     Minutes = minutesToArrive,
                     Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
                 },
+                Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
                 RawOtpTrip = item
             });
         }

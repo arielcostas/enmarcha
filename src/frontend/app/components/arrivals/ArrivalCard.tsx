@@ -59,8 +59,15 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
   onClick,
 }) => {
   const { t } = useTranslation();
-  const { route, headsign, estimate, delay, shift, vehicleInformation } =
-    arrival;
+  const {
+    route,
+    headsign,
+    estimate,
+    delay,
+    shift,
+    vehicleInformation,
+    operator,
+  } = arrival;
 
   const etaValue = estimate.minutes.toString();
   const etaUnit = t("estimates.minutes", "min");
@@ -211,11 +218,15 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
             >
               {headsign.destination}
             </span>
-            {headsign.marquee && (
-              <div className="mt-0.5 w-auto">
-                <AutoMarquee text={headsign.marquee} />
-              </div>
-            )}
+            <div className="mt-0.5 w-auto flex">
+              {operator && (
+                <span className="text-xs font-mono text-slate-700 dark:text-slate-200 font-medium shrink-0">
+                  {operator}
+                  {headsign.marquee && <>&nbsp;·&nbsp;</>}
+                </span>
+              )}
+              {headsign.marquee && <AutoMarquee text={headsign.marquee} />}
+            </div>
           </div>
         </div>
       </div>

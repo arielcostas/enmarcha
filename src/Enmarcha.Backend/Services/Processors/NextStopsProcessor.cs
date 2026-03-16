@@ -94,7 +94,7 @@ public class NextStopsProcessor : IArrivalsProcessor
                     if (!seenConcellos.Contains(concello))
                     {
                         seenConcellos.Add(concello);
-                        item += $" ({concello})";
+                        item = $"({concello}) {item}";
                     }
 
                     items.Add(item);

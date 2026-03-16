@@ -20,6 +20,9 @@ public class Arrival
 
     [JsonPropertyName("currentPosition")] public Position? CurrentPosition { get; set; }
 
+    [JsonPropertyName("operator")] public string? Operator { get; set; }
+    [JsonPropertyName("operation")] public VehicleOperation Operation { get; set; } = VehicleOperation.PickupDropoff;
+
 
     [JsonPropertyName("vehicleInformation")]
     public VehicleBadge? VehicleInformation { get; set; }
@@ -33,6 +36,16 @@ public class Arrival
     public object? RawOtpTrip { get; set; }
 
     [JsonIgnore] public bool Delete { get; set; }
+}
+
+public enum VehicleOperation
+{
+    [JsonStringEnumMemberName("pickup_dropoff")]
+    PickupDropoff = 0,
+    [JsonStringEnumMemberName("pickup_only")]
+    PickupOnly = 1,
+    [JsonStringEnumMemberName("dropoff_only")]
+    DropoffOnly = 2
 }
 
 public class RouteInfo

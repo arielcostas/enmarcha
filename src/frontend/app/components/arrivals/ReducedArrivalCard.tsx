@@ -15,8 +15,15 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
   onClick,
 }) => {
   const { t } = useTranslation();
-  const { route, headsign, estimate, delay, shift, vehicleInformation } =
-    arrival;
+  const {
+    route,
+    headsign,
+    estimate,
+    delay,
+    shift,
+    vehicleInformation,
+    operator,
+  } = arrival;
 
   const etaValue = estimate.minutes.toString();
   const etaUnit = t("estimates.minutes", "min");
@@ -40,6 +47,13 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
       tone?: string;
       kind?: "regular" | "gps" | "delay" | "warning" | "vehicle";
     }> = [];
+
+    if (operator) {
+      chips.push({
+        label: operator,
+        kind: "regular",
+      });
+    }
 
     // Badge/Shift info as a chip
     if (headsign.badge) {
@@ -130,7 +144,14 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
     }
 
     return chips;
-  }, [delay, shift, estimate.precision, headsign.badge, vehicleInformation]);
+  }, [
+    delay,
+    shift,
+    estimate.precision,
+    headsign.badge,
+    vehicleInformation,
+    operator,
+  ]);
 
   const isClickable = !!onClick && estimate.precision !== "past";
   const Tag = isClickable ? "button" : "div";

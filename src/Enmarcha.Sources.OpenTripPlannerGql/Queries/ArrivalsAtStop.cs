@@ -43,6 +43,9 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                             color
                             textColor
                             longName
+                            agency {{
+                                name
+                            }}
                         }}
                         departureStoptime {{
                             scheduledDeparture
@@ -190,6 +193,12 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("textColor")] public string? TextColor { get; set; }
 
         [JsonPropertyName("longName")] public string? LongName { get; set; }
+        [JsonPropertyName("agency")] public AgencyDetails? Agency { get; set; }
+    }
+
+    public class AgencyDetails
+    {
+        [JsonPropertyName("name")] public required string Name { get; set; }
     }
 
     public class PickupType
