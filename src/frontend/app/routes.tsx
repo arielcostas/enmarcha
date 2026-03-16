@@ -11,4 +11,5 @@ export default [
   route("/about", "routes/about.tsx"),
   route("/favourites", "routes/favourites.tsx"),
   route("/planner", "routes/planner.tsx"),
+  route("/politica-privacidad", "routes/privacy.tsx"),
 ] satisfies RouteConfig;

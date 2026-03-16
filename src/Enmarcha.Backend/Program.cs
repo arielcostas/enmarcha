@@ -46,7 +46,28 @@ builder.Services.AddOpenTelemetry()
         tracing
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Enmarcha.Backend"))
             .AddSource(Telemetry.Source.Name)
-            .AddAspNetCoreInstrumentation()
+            .AddAspNetCoreInstrumentation(options =>
+            {
+                options.EnrichWithHttpRequest = (activity, request) =>
+                {
+                    var ip = request.HttpContext.Connection.RemoteIpAddress;
+                    if (ip == null) return;
+                    string anonymised;
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        var bytes = ip.GetAddressBytes();
+                        bytes[3] = 0;
+                        anonymised = new System.Net.IPAddress(bytes).ToString();
+                    }
+                    else
+                    {
+                        var bytes = ip.GetAddressBytes();
+                        for (var i = 6; i < 16; i++) bytes[i] = 0;
+                        anonymised = new System.Net.IPAddress(bytes).ToString();
+                    }
+                    activity.SetTag("client.address", anonymised);
+                };
+            })
             .AddHttpClientInstrumentation(options =>
             {
                 options.EnrichWithHttpRequestMessage = (activity, req) =>

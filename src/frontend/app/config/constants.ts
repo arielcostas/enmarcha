@@ -1,7 +1,6 @@
 import type { LngLatLike } from "maplibre-gl";
 
 export const APP_CONSTANTS = {
-  id: "vigo",
   defaultCenter: {
     lat: 42.229188855975046,
     lng: -8.72246955783102,

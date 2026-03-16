@@ -3,15 +3,15 @@
   "sources": {
     "openmaptiles": {
       "type": "vector",
-      "url": "https://tiles.openfreemap.org/planet"
+      "url": "https://enmarcha.app/ofm/planet"
     },
     "vigo_traffic": {
       "type": "geojson",
       "data": "/api/traffic"
     }
   },
-  "sprite": "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",
-  "glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+  "sprite": "https://enmarcha.app/ofm/sprites/ofm_f384/ofm",
+  "glyphs": "https://enmarcha.app/ofm/fonts/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "background",

@@ -1,4 +1,4 @@
-import { Info, Settings, Star, X } from "lucide-react";
+import { Info, Settings, Shield, Star, X } from "lucide-react";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router";
@@ -44,6 +44,10 @@ export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose }) => {
           <Link to="/about" className="drawer__link">
             <Info size={20} />
             <span>{t("about.title", "Acerca de")}</span>
+          </Link>
+          <Link to="/politica-privacidad" className="drawer__link">
+            <Shield size={20} />
+            <span>{t("navbar.privacy", "Privacidad")}</span>
           </Link>
         </nav>
       </div>

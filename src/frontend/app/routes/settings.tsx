@@ -1,5 +1,7 @@
-import { Computer, Moon, Sun } from "lucide-react";
+import { Computer, Moon, Sun, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { useApp, type Theme } from "../AppContext";
 import "../tailwind-full.css";
@@ -7,6 +9,8 @@ import "../tailwind-full.css";
 export default function Settings() {
   const { t, i18n } = useTranslation();
   usePageTitle(t("navbar.settings", "Ajustes"));
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [cleared, setCleared] = useState(false);
   const {
     theme,
     setTheme,
@@ -191,6 +195,82 @@ export default function Settings() {
           <option value="gl-ES">Galego</option>
           <option value="en-GB">English</option>
         </select>
+      </section>
+
+      {/* Privacy / Clear data */}
+      <section className="mt-8 pt-8 border-t border-border">
+        <h2 className="text-xl font-semibold mb-4 text-text">
+          {t("settings.privacy_title", "Privacidad y datos")}
+        </h2>
+        {!showClearConfirm && !cleared && (
+          <button
+            onClick={() => setShowClearConfirm(true)}
+            className="flex items-center gap-2 px-4 py-3 rounded-lg border border-border
+              bg-surface text-text hover:bg-red-50 hover:border-red-300 hover:text-red-700
+              dark:hover:bg-red-950 dark:hover:border-red-700 dark:hover:text-red-400
+              transition-colors duration-200 focus:outline-none focus:ring focus:ring-red-300"
+          >
+            <Trash2 className="w-5 h-5" />
+            {t("settings.clear_data", "Borrar mis datos guardados")}
+          </button>
+        )}
+        {showClearConfirm && (
+          <div className="p-4 rounded-lg border border-red-300 bg-red-50 dark:bg-red-950 dark:border-red-700">
+            <p className="text-sm text-text mb-4">
+              {t(
+                "settings.clear_data_confirm",
+                "Se eliminarán tus paradas favoritas, nombres personalizados, paradas recientes, historial de rutas, lugares guardados y posición del mapa. Las preferencias de ajustes se conservarán."
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  const personalKeys = [
+                    "mapState",
+                    "specialPlace_home",
+                    "specialPlace_work",
+                    "recentPlaces",
+                    "planner_route_history",
+                    `favouriteStops`,
+                    `recentStops`,
+                    `customStopNames`,
+                    `stops_cache`,
+                  ];
+                  personalKeys.forEach((key) => localStorage.removeItem(key));
+                  setShowClearConfirm(false);
+                  setCleared(true);
+                }}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700
+                  transition-colors duration-200 focus:outline-none focus:ring focus:ring-red-300"
+              >
+                {t("settings.clear_data_confirm_btn", "Sí, borrar datos")}
+              </button>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                className="px-4 py-2 rounded-lg border border-border bg-surface text-text
+                  hover:bg-surface/50 transition-colors duration-200 focus:outline-none focus:ring focus:ring-primary/50"
+              >
+                {t("settings.cancel", "Cancelar")}
+              </button>
+            </div>
+          </div>
+        )}
+        {cleared && (
+          <p className="text-sm text-green-700 dark:text-green-400">
+            {t(
+              "settings.clear_data_done",
+              "Tus datos se han borrado correctamente."
+            )}
+          </p>
+        )}
+        <p className="mt-4 text-sm text-muted">
+          <Link
+            to="/politica-privacidad"
+            className="underline hover:text-text transition-colors"
+          >
+            {t("settings.privacy_policy_link", "Política de privacidad")}
+          </Link>
+        </p>
       </section>
     </div>
   );

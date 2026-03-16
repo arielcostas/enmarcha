@@ -25,15 +25,23 @@ interface MapContextProps {
 
 const MapContext = createContext<MapContextProps | undefined>(undefined);
 
+const LOCATION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export const MapProvider = ({ children }: { children: ReactNode }) => {
   const [mapState, setMapState] = useState<MapState>(() => {
     const savedMapState = localStorage.getItem("mapState");
     if (savedMapState) {
       try {
         const parsed = JSON.parse(savedMapState);
+        const locationAge = parsed.userLocationTimestamp
+          ? Date.now() - parsed.userLocationTimestamp
+          : Infinity;
         return {
           paths: parsed.paths || {},
-          userLocation: parsed.userLocation || null,
+          userLocation:
+            locationAge < LOCATION_TTL_MS
+              ? (parsed.userLocation ?? null)
+              : null,
           hasLocationPermission: parsed.hasLocationPermission || false,
         };
       } catch (e) {
@@ -51,7 +59,11 @@ export const MapProvider = ({ children }: { children: ReactNode }) => {
 
   const setUserLocation = useCallback((userLocation: LngLatLike | null) => {
     setMapState((prev) => {
-      const newState = { ...prev, userLocation };
+      const newState = {
+        ...prev,
+        userLocation,
+        userLocationTimestamp: userLocation ? Date.now() : null,
+      };
       localStorage.setItem("mapState", JSON.stringify(newState));
       return newState;
     });

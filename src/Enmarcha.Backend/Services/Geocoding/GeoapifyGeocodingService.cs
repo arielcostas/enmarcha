@@ -26,7 +26,7 @@ public class GeoapifyGeocodingService : IGeocodingService
         // Geoapify requires a User-Agent
         if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
         {
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Compatible; Enmarcha/0.1; https://enmarcha.app; ariel@costas.dev)");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Compatible; Enmarcha/0.1; https://enmarcha.app; contacto@enmarcha.app)");
         }
     }
 
@@ -76,8 +76,6 @@ public class GeoapifyGeocodingService : IGeocodingService
     public async Task<PlannerSearchResult?> GetReverseGeocodeAsync(double lat, double lon)
     {
         using var activity = Telemetry.Source.StartActivity("GeoapifyReverseGeocode");
-        activity?.SetTag("lat", lat);
-        activity?.SetTag("lon", lon);
 
         var cacheKey = $"nominatim_reverse_{lat:F5}_{lon:F5}";
         var cacheHit = _cache.TryGetValue(cacheKey, out PlannerSearchResult? cachedResult);

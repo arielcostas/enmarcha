@@ -1,5 +1,3 @@
-import { APP_CONSTANTS } from "~/config/constants";
-
 export interface Stop {
   stopId: string;
   stopCode?: string;
@@ -20,14 +18,14 @@ interface CacheEntry {
   timestamp: number;
 }
 
-const CACHE_KEY = `stops_cache_${APP_CONSTANTS.id}`;
+const CACHE_KEY = `stops_cache`;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 // In-memory cache for the current session
 const memoryCache: Record<string, Stop> = {};
 
 // Custom names loaded from localStorage per region
-const customNamesByRegion: Record<string, Record<string, string>> = {};
+let customNames: Record<string, string> = {};
 
 // Helper to normalize ID
 function normalizeId(id: number | string): string {
@@ -128,58 +126,38 @@ function getDisplayName(stop: Stop): string {
 
 function setCustomName(stopId: string | number, label: string) {
   const id = normalizeId(stopId);
-  if (!customNamesByRegion[APP_CONSTANTS.id]) {
-    const rawCustom = localStorage.getItem(
-      `customStopNames_${APP_CONSTANTS.id}`
-    );
-    customNamesByRegion[APP_CONSTANTS.id] = rawCustom
-      ? JSON.parse(rawCustom)
-      : {};
+  if (!customNames) {
+    const rawCustom = localStorage.getItem(`customStopNames`);
+    customNames = rawCustom ? JSON.parse(rawCustom) : {};
   }
-  customNamesByRegion[APP_CONSTANTS.id][id] = label;
-  localStorage.setItem(
-    `customStopNames_${APP_CONSTANTS.id}`,
-    JSON.stringify(customNamesByRegion[APP_CONSTANTS.id])
-  );
+  customNames[id] = label;
+  localStorage.setItem(`customStopNames`, JSON.stringify(customNames));
 }
 
 function removeCustomName(stopId: string | number) {
   const id = normalizeId(stopId);
-  if (!customNamesByRegion[APP_CONSTANTS.id]) {
-    const rawCustom = localStorage.getItem(
-      `customStopNames_${APP_CONSTANTS.id}`
-    );
-    customNamesByRegion[APP_CONSTANTS.id] = rawCustom
-      ? JSON.parse(rawCustom)
-      : {};
+  if (!customNames) {
+    const rawCustom = localStorage.getItem(`customStopNames`);
+    customNames = rawCustom ? JSON.parse(rawCustom) : {};
   }
-  if (customNamesByRegion[APP_CONSTANTS.id][id]) {
-    delete customNamesByRegion[APP_CONSTANTS.id][id];
-    localStorage.setItem(
-      `customStopNames_${APP_CONSTANTS.id}`,
-      JSON.stringify(customNamesByRegion[APP_CONSTANTS.id])
-    );
+  if (customNames[id]) {
+    delete customNames[id];
+    localStorage.setItem(`customStopNames`, JSON.stringify(customNames));
   }
 }
 
 function getCustomName(stopId: string | number): string | undefined {
   const id = normalizeId(stopId);
-  if (!customNamesByRegion[APP_CONSTANTS.id]) {
-    const rawCustom = localStorage.getItem(
-      `customStopNames_${APP_CONSTANTS.id}`
-    );
-    customNamesByRegion[APP_CONSTANTS.id] = rawCustom
-      ? JSON.parse(rawCustom)
-      : {};
+  if (!customNames) {
+    const rawCustom = localStorage.getItem(`customStopNames`);
+    customNames = rawCustom ? JSON.parse(rawCustom) : {};
   }
-  return customNamesByRegion[APP_CONSTANTS.id][id];
+  return customNames[id];
 }
 
 function addFavourite(stopId: string | number) {
   const id = normalizeId(stopId);
-  const rawFavouriteStops = localStorage.getItem(
-    `favouriteStops_${APP_CONSTANTS.id}`
-  );
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   let favouriteStops: string[] = [];
   if (rawFavouriteStops) {
     favouriteStops = (JSON.parse(rawFavouriteStops) as (number | string)[]).map(
@@ -189,18 +167,13 @@ function addFavourite(stopId: string | number) {
 
   if (!favouriteStops.includes(id)) {
     favouriteStops.push(id);
-    localStorage.setItem(
-      `favouriteStops_${APP_CONSTANTS.id}`,
-      JSON.stringify(favouriteStops)
-    );
+    localStorage.setItem(`favouriteStops`, JSON.stringify(favouriteStops));
   }
 }
 
 function removeFavourite(stopId: string | number) {
   const id = normalizeId(stopId);
-  const rawFavouriteStops = localStorage.getItem(
-    `favouriteStops_${APP_CONSTANTS.id}`
-  );
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   let favouriteStops: string[] = [];
   if (rawFavouriteStops) {
     favouriteStops = (JSON.parse(rawFavouriteStops) as (number | string)[]).map(
@@ -209,17 +182,12 @@ function removeFavourite(stopId: string | number) {
   }
 
   const newFavouriteStops = favouriteStops.filter((sid) => sid !== id);
-  localStorage.setItem(
-    `favouriteStops_${APP_CONSTANTS.id}`,
-    JSON.stringify(newFavouriteStops)
-  );
+  localStorage.setItem(`favouriteStops`, JSON.stringify(newFavouriteStops));
 }
 
 function isFavourite(stopId: string | number): boolean {
   const id = normalizeId(stopId);
-  const rawFavouriteStops = localStorage.getItem(
-    `favouriteStops_${APP_CONSTANTS.id}`
-  );
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   if (rawFavouriteStops) {
     const favouriteStops = (
       JSON.parse(rawFavouriteStops) as (number | string)[]
@@ -233,9 +201,7 @@ const RECENT_STOPS_LIMIT = 10;
 
 function pushRecent(stopId: string | number) {
   const id = normalizeId(stopId);
-  const rawRecentStops = localStorage.getItem(
-    `recentStops_${APP_CONSTANTS.id}`
-  );
+  const rawRecentStops = localStorage.getItem(`recentStops`);
   let recentStops: string[] = [];
   if (rawRecentStops) {
     recentStops = (JSON.parse(rawRecentStops) as (number | string)[]).map(
@@ -251,16 +217,11 @@ function pushRecent(stopId: string | number) {
     recentStops = recentStops.slice(0, RECENT_STOPS_LIMIT);
   }
 
-  localStorage.setItem(
-    `recentStops_${APP_CONSTANTS.id}`,
-    JSON.stringify(recentStops)
-  );
+  localStorage.setItem(`recentStops`, JSON.stringify(recentStops));
 }
 
 function getRecent(): string[] {
-  const rawRecentStops = localStorage.getItem(
-    `recentStops_${APP_CONSTANTS.id}`
-  );
+  const rawRecentStops = localStorage.getItem(`recentStops`);
   if (rawRecentStops) {
     return (JSON.parse(rawRecentStops) as (number | string)[]).map(normalizeId);
   }
@@ -268,9 +229,7 @@ function getRecent(): string[] {
 }
 
 function getFavouriteIds(): string[] {
-  const rawFavouriteStops = localStorage.getItem(
-    `favouriteStops_${APP_CONSTANTS.id}`
-  );
+  const rawFavouriteStops = localStorage.getItem(`favouriteStops`);
   if (rawFavouriteStops) {
     return (JSON.parse(rawFavouriteStops) as (number | string)[]).map(
       normalizeId
