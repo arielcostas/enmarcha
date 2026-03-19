@@ -12,6 +12,16 @@
 
   <ItemGroup>
     <PackageReference Include="Costasdev.VigoTransitApi" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" />
+    <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="ProjNet" />
 
     <PackageReference Include="NetTopologySuite" />
@@ -36,7 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Data\*.csv">
+    <None Update="Content\*.csv">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

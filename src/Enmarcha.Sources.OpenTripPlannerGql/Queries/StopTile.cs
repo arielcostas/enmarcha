@@ -3,19 +3,30 @@ using System.Text.Json.Serialization;
 
 namespace Enmarcha.Sources.OpenTripPlannerGql.Queries;
 
-public class StopTileRequestContent : IGraphRequest<StopTileRequestContent.Bbox>
+public class StopTileRequestContent : IGraphRequest<StopTileRequestContent.TileRequestParams>
 {
-    public record Bbox(double MinLon, double MinLat, double MaxLon, double MaxLat);
+    public record TileRequestParams(
+        double MinLon,
+        double MinLat,
+        double MaxLon,
+        double MaxLat,
+        string[]? Feeds = null
+    );
 
-    public static string Query(Bbox bbox)
+    public static string Query(TileRequestParams req)
     {
+        var feedsFilter = req.Feeds != null && req.Feeds.Length > 0
+            ? $"feeds: [{string.Join(", ", req.Feeds.Select(f => $"\"{f}\""))}]"
+            : string.Empty;
+
         return string.Create(CultureInfo.InvariantCulture, $@"
         query Query {{
             stopsByBbox(
-                minLat: {bbox.MinLat:F6}
-                minLon: {bbox.MinLon:F6}
-                maxLon: {bbox.MaxLon:F6}
-                maxLat: {bbox.MaxLat:F6}
+                minLat: {req.MinLat:F6}
+                minLon: {req.MinLon:F6}
+                maxLon: {req.MaxLon:F6}
+                maxLat: {req.MaxLat:F6}
+                {feedsFilter}
             ) {{
                 gtfsId
                 code

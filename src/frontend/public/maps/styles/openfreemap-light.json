@@ -4,10 +4,6 @@
     "openmaptiles": {
       "type": "vector",
       "url": "https://enmarcha.app/ofm/planet"
-    },
-    "vigo_traffic": {
-      "type": "geojson",
-      "data": "/api/traffic"
     }
   },
   "sprite": "https://enmarcha.app/ofm/sprites/ofm_f384/ofm",
@@ -6942,64 +6938,6 @@
         "text-halo-blur": 1,
         "text-halo-color": "#fff",
         "text-halo-width": 1
-      }
-    },
-    {
-      "id": "vigo_traffic",
-      "type": "line",
-      "source": "vigo_traffic",
-      "layout": {},
-      "paint": {
-        "line-opacity": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          0,
-          1,
-          14,
-          1,
-          16,
-          0.8,
-          18,
-          0.6,
-          22,
-          0.6
-        ],
-        "line-color": [
-          "match",
-          [
-            "get",
-            "style"
-          ],
-          "#CONGESTION",
-          "hsl(70.7 100% 38%)",
-          "#MUYDENSO",
-          "hsl(36.49 100% 50%)",
-          "#DENSO",
-          "hsl(47.61 100% 49%)",
-          "#FLUIDO",
-          "hsl(83.9 100% 40%)",
-          "#MUYFLUIDO",
-          "hsl(161.25 100% 42%)",
-          "hsl(0.0 0% 0%)"
-        ],
-        "line-width": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          14,
-          2,
-          18,
-          4
-        ]
       }
     }
   ]

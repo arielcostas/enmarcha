@@ -1,0 +1,27 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var name = User.Identity!.Name ?? User.FindFirst("name")?.Value ?? "Usuario";
+    var alertCount = (int)(ViewData["AlertCount"] ?? 0);
+}
+
+<h1 class="h3 mb-4">Hola, @name 👋</h1>
+
+<div class="row g-3">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card text-bg-warning shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-subtitle mb-1 text-dark opacity-75">Alertas de servicio</h6>
+                        <p class="display-5 fw-bold mb-0">@alertCount</p>
+                    </div>
+                    <i class="bi bi-exclamation-triangle-fill fs-1 opacity-25"></i>
+                </div>
+                <a href="/backoffice/alerts" class="btn btn-dark btn-sm mt-3">
+                    Gestionar <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

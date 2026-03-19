@@ -33,3 +33,13 @@ tasks:
     cmds:
       - dotnet format --verbosity diagnostic src/Enmarcha.Backend/Enmarcha.Backend.csproj
       - npx prettier --write "src/frontend/**/*.{ts,tsx,css}"
+
+  dbmigrate:
+    desc: Run database migrations.
+    cmds:
+      - dotnet ef migrations add --project src/Enmarcha.Backend/Enmarcha.Backend.csproj
+
+  dbupdate:
+    desc: Update database with latest migrations.
+    cmds:
+      - dotnet ef database update --project src/Enmarcha.Backend/Enmarcha.Backend.csproj

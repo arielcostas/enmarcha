@@ -1,0 +1,446 @@
+@model Enmarcha.Backend.ViewModels.AlertFormViewModel
+@using Enmarcha.Backend.Data.Models
+@using Enmarcha.Backend.Helpers
+@{
+    var isCreate = Model.Id is null;
+    ViewData["Title"] = isCreate ? "Nueva alerta" : "Editar alerta";
+    var formAction = isCreate
+        ? "/backoffice/alerts/create"
+        : $"/backoffice/alerts/{Model.Id}/edit";
+}
+
+@section Head {
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"/>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <style>
+        #stop-map {
+            height: 400px;
+            width: 100%;
+            border-radius: 0 0 0.375rem 0.375rem;
+        }
+
+        .selector-picker-tabs .nav-link {
+            border-radius: 0;
+            border-top: none;
+        }
+
+        .selector-item {
+            cursor: pointer;
+            transition: background .12s;
+        }
+
+        .selector-item:hover {
+            background: var(--bs-secondary-bg);
+        }
+
+        .selector-item.selected {
+            background: var(--bs-primary-bg-subtle);
+            border-color: var(--bs-primary) !important;
+        }
+
+        #route-list, #agency-list {
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        .route-badge {
+            min-width: 2.5rem;
+            text-align: center;
+        }
+    </style>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+    <a href="/backoffice/alerts" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Volver
+    </a>
+</div>
+
+<form action="@formAction" method="post" novalidate>
+    @Html.AntiForgeryToken()
+    @if (!isCreate)
+    {
+        <input type="hidden" asp-for="Id"/>
+    }
+
+    <div class="row g-4">
+        @* Textos *@
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-translate me-2"></i>Textos
+                </div>
+                <div class="card-body row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="HeaderEs" class="form-label"></label>
+                        <input asp-for="HeaderEs" class="form-control"/>
+                        <span asp-validation-for="HeaderEs" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DescriptionEs" class="form-label"></label>
+                        <textarea asp-for="DescriptionEs" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Causa / Efecto *@
+        <div class="col-md-6">
+            <label asp-for="Cause" class="form-label"></label>
+            <select asp-for="Cause" class="form-select"
+                    asp-items="@EnumExtensions.ToSelectList<AlertCause>()"></select>
+        </div>
+        <div class="col-md-6">
+            <label asp-for="Effect" class="form-label"></label>
+            <select asp-for="Effect" class="form-select"
+                    asp-items="@EnumExtensions.ToSelectList<AlertEffect>()"></select>
+        </div>
+
+        @* Fechas *@
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-calendar-range me-2"></i>Fechas
+                </div>
+                <div class="card-body row g-3">
+                    <div class="col-sm-6 col-lg-3">
+                        <label asp-for="PublishDate" class="form-label"></label>
+                        <input asp-for="PublishDate" type="datetime-local" class="form-control"/>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label asp-for="EventStartDate" class="form-label"></label>
+                        <input asp-for="EventStartDate" type="datetime-local" class="form-control"/>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label asp-for="EventEndDate" class="form-label"></label>
+                        <input asp-for="EventEndDate" type="datetime-local" class="form-control"/>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label asp-for="HiddenDate" class="form-label"></label>
+                        <input asp-for="HiddenDate" type="datetime-local" class="form-control"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Selectores *@
+        <div class="col-12">
+            <label class="form-label fw-semibold">Selectores</label>
+            <input type="hidden" asp-for="SelectorsRaw" id="selectors-hidden"/>
+
+            <div class="card-body pb-2">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="small text-muted">Seleccionados:</span>
+                    <div id="selector-badges" class="d-flex flex-wrap gap-1 flex-grow-1">
+                        <em class="text-muted small">Ninguno</em>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" type="button" data-bs-toggle="tab" data-bs-target="#tab-stops"
+                                id="tab-stops-btn">
+                            <i class="bi bi-geo-alt me-1"></i> Paradas
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#tab-routes"
+                                id="tab-routes-btn">
+                            <i class="bi bi-signpost me-1"></i> Líneas
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" type="button" data-bs-toggle="tab" data-bs-target="#tab-agencies"
+                                id="tab-agencies-btn">
+                            <i class="bi bi-building me-1"></i> Agencias
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div id="tab-stops" class="tab-pane fade show active p-0">
+                        <div id="stop-map"></div>
+                        <div id="map-status" class="px-3 py-1 small text-muted border-top"></div>
+                    </div>
+
+                    <div id="tab-routes" class="tab-pane fade p-3">
+                        <input type="text" id="route-search" class="form-control form-control-sm mb-2"
+                               placeholder="Buscar por nombre, línea o agencia…"/>
+                        <div id="route-list" class="d-flex flex-column gap-1"></div>
+                    </div>
+
+                    <div id="tab-agencies" class="tab-pane fade p-3">
+                        <div id="agency-list" class="d-flex flex-column gap-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-text mt-1">
+                También puedes escribir directamente: <code>stop#feedId:stopId</code> ·
+                <code>route#feedId:routeId</code> · <code>agency#feedId</code>
+            </div>
+        </div>
+
+        @* URLs *@
+        <div class="col-md-6">
+            <label asp-for="InfoUrlsRaw" class="form-label"></label>
+            <textarea asp-for="InfoUrlsRaw" class="form-control" rows="4"
+                      placeholder="https://ejemplo.com/aviso"></textarea>
+            <div class="form-text">Una URL por línea</div>
+        </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-lg me-1"></i>
+            @(isCreate ? "Crear alerta" : "Guardar cambios")
+        </button>
+        <a href="/backoffice/alerts" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>
+
+<script>
+    (function () {
+        'use strict';
+
+        // ── State ──────────────────────────────────────────────────────────────────
+        const selected = new Set(
+            document.getElementById('selectors-hidden').value
+                .split('\n').map(s => s.trim()).filter(Boolean)
+        );
+
+        function syncHidden() {
+            document.getElementById('selectors-hidden').value = [...selected].join('\n');
+        }
+
+        function toggle(raw) {
+            if (selected.has(raw)) selected.delete(raw);
+            else selected.add(raw);
+            syncHidden();
+            renderBadges();
+            updateMapHighlight();
+            refreshListItem(raw);
+        }
+
+        // ── Badges ─────────────────────────────────────────────────────────────────
+        function renderBadges() {
+            const el = document.getElementById('selector-badges');
+            el.innerHTML = '';
+            if (!selected.size) {
+                el.innerHTML = '<em class="text-muted small">Ninguno</em>';
+                return;
+            }
+            const colors = {stop: 'primary', route: 'success', agency: 'warning'};
+            for (const sel of [...selected].sort()) {
+                const type = sel.split('#')[0];
+                const span = document.createElement('span');
+                span.className = `badge bg-${colors[type] ?? 'secondary'} d-inline-flex align-items-center gap-1`;
+                span.style.cssText = 'cursor:default;font-size:.8em';
+                span.innerHTML =
+                    `<span>${escHtml(sel)}</span>` +
+                    `<button type="button" class="btn-close btn-close-white" style="font-size:.6em" aria-label="Quitar"></button>`;
+                span.querySelector('button').onclick = () => toggle(sel);
+                el.appendChild(span);
+            }
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ── Map ────────────────────────────────────────────────────────────────────
+        let stopMap = null;
+        const EMPTY_FC = {type: 'FeatureCollection', features: []};
+        let currentStops = EMPTY_FC;
+
+        function initMap() {
+            stopMap = new maplibregl.Map({
+                container: 'stop-map',
+                style: {
+                    "version": 8,
+                    "sprite": "https://enmarcha.app/ofm/sprites/ofm_f384/ofm",
+                    "glyphs": "https://enmarcha.app/ofm/fonts/{fontstack}/{range}.pbf",
+                    "sources": {
+                        "osm": {
+                            "type": "raster",
+                            "tiles": [
+                                "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+                                "https://b.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+                                "https://c.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+                            ],
+                            "tileSize": 256
+                        },
+                        "stops": {
+                            "type": "vector",
+                            "tiles": [
+                                window.location.origin + "/api/tiles/stops/{z}/{x}/{y}"
+                            ]
+                        }
+                    },
+                    "layers": [
+                        {
+                            "id": "osm-layer",
+                            "type": "raster",
+                            "source": "osm"
+                        }
+                    ]
+
+                },
+                center: [-8.722, 42.232],
+                zoom: 13
+            });
+
+            stopMap.on('load', () => {
+                stopMap.addLayer({
+                    id: 'stops-circle',
+                    type: 'circle',
+                    source: 'stops',
+                    "source-layer": 'stops',
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 6, 16, 9],
+                        'circle-color': '#6c757d',
+                        'circle-stroke-width': 1.5,
+                        'circle-stroke-color': '#fff'
+                    }
+                });
+
+                stopMap.addLayer({
+                    id: 'stops-label',
+                    type: 'symbol',
+                    source: 'stops',
+                    "source-layer": 'stops',
+                    minzoom: 15,
+                    layout: {
+                        'text-field': ['get', 'name'],
+                        'text-size': 11,
+                        'text-offset': [0, 1.2],
+                        'text-anchor': 'top'
+                    },
+                    paint: {'text-halo-width': 2, 'text-halo-color': '#fff'}
+                });
+
+                stopMap.on('click', 'stops-circle', e => {
+                    if (!e.features.length) return;
+                    toggle('stop#' + e.features[0].properties.id);
+                });
+                stopMap.on('mouseenter', 'stops-circle', () => {
+                    stopMap.getCanvas().style.cursor = 'pointer';
+                });
+                stopMap.on('mouseleave', 'stops-circle', () => {
+                    stopMap.getCanvas().style.cursor = '';
+                });
+            });
+        }
+
+        function updateMapHighlight() {
+            if (!stopMap?.isStyleLoaded()) return;
+            const sels = [...selected].filter(s => s.startsWith('stop#'));
+            stopMap.setPaintProperty('stops-circle', 'circle-color',
+                sels.length
+                    ? ['match', ['get', 'selector'], sels, '#0d6efd', '#6c757d']
+                    : '#6c757d'
+            );
+            stopMap.setPaintProperty('stops-circle', 'circle-radius', [
+                'interpolate', ['linear'], ['zoom'],
+                10, sels.length ? ['match', ['get', 'selector'], sels, 6, 3] : 3,
+                16, sels.length ? ['match', ['get', 'selector'], sels, 10, 7] : 7
+            ]);
+        }
+
+        // Resize map when its tab is shown (it may have been hidden on init)
+        document.getElementById('tab-stops-btn').addEventListener('shown.bs.tab', () => {
+            stopMap?.resize();
+        });
+
+        // ── Routes & Agencies ──────────────────────────────────────────────────────
+        let allRoutes = [], allAgencies = [];
+
+        async function loadTransitData() {
+            try {
+                const res = await fetch('/backoffice/api/selectors/transit');
+                const data = await res.json();
+                allRoutes = data.routes ?? [];
+                allAgencies = data.agencies ?? [];
+                renderRoutes(allRoutes);
+                renderAgencies(allAgencies);
+            } catch (err) {
+                console.error('Error fetching transit data:', err);
+                document.getElementById('route-list').innerHTML =
+                    '<p class="text-danger small">Error cargando líneas</p>';
+            }
+        }
+
+        document.getElementById('route-search').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            renderRoutes(allRoutes.filter(r =>
+                (r.shortName ?? '').toLowerCase().includes(q) ||
+                (r.longName ?? '').toLowerCase().includes(q) ||
+                (r.agencyName ?? '').toLowerCase().includes(q)
+            ));
+        });
+
+        function renderRoutes(routes) {
+            const el = document.getElementById('route-list');
+            el.innerHTML = '';
+            if (!routes.length) {
+                el.innerHTML = '<p class="text-muted small text-center py-3">Sin resultados</p>';
+                return;
+            }
+            for (const r of routes) el.appendChild(makeTransitItem(r.selector, () => {
+                const color = r.Color ?? '#808080';
+                const txt = contrastColor(color);
+                return `<span class="badge route-badge me-2" style="background:${color};color:${txt}">${escHtml(r.shortName ?? '?')}</span>` +
+                    `<span class="flex-grow-1 small">${escHtml(r.longName ?? '')}</span>` +
+                    `<span class="text-muted" style="font-size:.75em">${escHtml(r.agencyName ?? '')}</span>`;
+            }));
+        }
+
+        function renderAgencies(agencies) {
+            const el = document.getElementById('agency-list');
+            el.innerHTML = '';
+            if (!agencies.length) {
+                el.innerHTML = '<p class="text-muted small text-center py-3">Sin agencias</p>';
+                return;
+            }
+            for (const a of agencies) el.appendChild(makeTransitItem(a.selector, () =>
+                `<i class="bi bi-building me-2"></i><span class="flex-grow-1">${escHtml(a.name)}</span>` +
+                `<code class="text-muted small">${escHtml(a.feedId)}</code>`
+            ));
+        }
+
+        function makeTransitItem(selector, innerHtml) {
+            const div = document.createElement('div');
+            div.id = 'item-' + CSS.escape(selector);
+            div.dataset.selector = selector;
+            div.className = 'selector-item d-flex align-items-center p-2 rounded border ' +
+                (selected.has(selector) ? 'selected' : '');
+            div.innerHTML = innerHtml() +
+                `<i class="bi bi-check-lg ms-2 text-primary ${selected.has(selector) ? '' : 'invisible'}"></i>`;
+            div.onclick = () => toggle(selector);
+            return div;
+        }
+
+        function refreshListItem(selector) {
+            const el = document.getElementById('item-' + CSS.escape(selector));
+            if (!el) return;
+            el.classList.toggle('selected', selected.has(selector));
+            const check = el.querySelector('.bi-check-lg');
+            if (check) check.classList.toggle('invisible', !selected.has(selector));
+        }
+
+        function contrastColor(hex) {
+            const c = hex.replace('#', '');
+            const r = parseInt(c.slice(0, 2), 16), g = parseInt(c.slice(2, 4), 16), b = parseInt(c.slice(4, 6), 16);
+            return (r * 299 + g * 587 + b * 114) / 1000 > 128 ? '#000' : '#fff';
+        }
+
+        // ── Init ───────────────────────────────────────────────────────────────────
+        renderBadges();
+        initMap();
+        loadTransitData();
+    })();
+</script>
+

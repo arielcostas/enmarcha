@@ -24,7 +24,7 @@ public class OpenTripPlannerClient
     public async Task GetStopsInBbox(double minLat, double minLon, double maxLat, double maxLon)
     {
         var requestContent =
-            StopTileRequestContent.Query(new StopTileRequestContent.Bbox(minLon, minLat, maxLon, maxLat));
+            StopTileRequestContent.Query(new StopTileRequestContent.TileRequestParams(minLon, minLat, maxLon, maxLat));
 
         var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/gtfs/v1");
         request.Content = JsonContent.Create(new GraphClientRequest

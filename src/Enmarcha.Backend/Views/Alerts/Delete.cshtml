@@ -1,0 +1,41 @@
+@model Enmarcha.Backend.Data.Models.ServiceAlert
+@{
+    ViewData["Title"] = "Eliminar alerta";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white fw-semibold">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar eliminación
+            </div>
+            <div class="card-body">
+                <p class="mb-3">¿Estás seguro de que quieres eliminar la siguiente alerta?</p>
+                <dl class="row mb-3">
+                    <dt class="col-sm-4">ID</dt>
+                    <dd class="col-sm-8"><code class="text-muted">@Model.Id</code></dd>
+                    <dt class="col-sm-4">Título</dt>
+                    <dd class="col-sm-8">@Model.Header.Get("es")</dd>
+                    <dt class="col-sm-4">Evento</dt>
+                    <dd class="col-sm-8">
+                        @Model.EventStartDate.ToString("dd/MM/yyyy HH:mm")
+                        → @Model.EventEndDate.ToString("dd/MM/yyyy HH:mm")
+                    </dd>
+                </dl>
+                <p class="text-danger mb-4">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    <strong>Esta acción no se puede deshacer.</strong>
+                </p>
+                <div class="d-flex gap-2">
+                    <form action="/backoffice/alerts/@Model.Id/delete" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i> Eliminar
+                        </button>
+                    </form>
+                    <a href="/backoffice/alerts" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

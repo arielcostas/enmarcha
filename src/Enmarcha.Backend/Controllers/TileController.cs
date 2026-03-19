@@ -72,7 +72,7 @@ public class TileController : ControllerBase
         var latMinRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * (y + 1) / n)));
         var latMin = latMinRad * 180.0 / Math.PI;
 
-        var requestContent = StopTileRequestContent.Query(new StopTileRequestContent.Bbox(lonMin, latMin, lonMax, latMax));
+        var requestContent = StopTileRequestContent.Query(new StopTileRequestContent.TileRequestParams(lonMin, latMin, lonMax, latMax));
         var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
         request.Content = JsonContent.Create(new GraphClientRequest
         {

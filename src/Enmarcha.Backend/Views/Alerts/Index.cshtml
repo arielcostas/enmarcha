@@ -1,0 +1,81 @@
+@model List<Enmarcha.Backend.Data.Models.ServiceAlert>
+@using Enmarcha.Backend.Data.Models
+@using Enmarcha.Backend.Helpers
+@{
+    ViewData["Title"] = "Alertas de servicio";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Alertas de servicio
+    </h1>
+    <a href="/backoffice/alerts/create" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i> Nueva alerta
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-secondary d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle"></i>
+        No hay alertas registradas.
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Título</th>
+                        <th>Fase</th>
+                        <th>Causa</th>
+                        <th>Efecto</th>
+                        <th>Evento</th>
+                        <th style="width:1%"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var alert in Model)
+                    {
+                        var phase = alert.GetPhase();
+                        var (badgeClass, phaseLabel) = phase switch
+                        {
+                            AlertPhase.Draft      => ("bg-secondary", "Borrador"),
+                            AlertPhase.PreNotice  => ("bg-info text-dark", "Pre-aviso"),
+                            AlertPhase.Active     => ("bg-success", "Activa"),
+                            AlertPhase.Finished   => ("bg-warning text-dark", "Finalizada"),
+                            _                     => ("bg-dark", "Archivada")
+                        };
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@alert.Header.Get("es")</div>
+                                <div class="text-muted small font-monospace">@alert.Id[..Math.Min(8, alert.Id.Length)]…</div>
+                            </td>
+                            <td><span class="badge @badgeClass">@phaseLabel</span></td>
+                            <td class="small">@alert.Cause.GetDescription()</td>
+                            <td class="small">@alert.Effect.GetDescription()</td>
+                            <td class="small text-nowrap">
+                                @alert.EventStartDate.ToString("dd/MM/yy HH:mm")<br />
+                                <span class="text-muted">→ @alert.EventEndDate.ToString("dd/MM/yy HH:mm")</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a href="/backoffice/alerts/@alert.Id/edit"
+                                   class="btn btn-sm btn-outline-secondary"
+                                   title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="/backoffice/alerts/@alert.Id/delete"
+                                   class="btn btn-sm btn-outline-danger ms-1"
+                                   title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

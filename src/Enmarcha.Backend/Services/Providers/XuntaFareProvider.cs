@@ -20,7 +20,7 @@ public class XuntaFareProvider
 
     public XuntaFareProvider(IWebHostEnvironment env)
     {
-        var filePath = Path.Combine(env.ContentRootPath, "Data", "xunta_fares.csv");
+        var filePath = Path.Combine(env.ContentRootPath, "Content", "xunta_fares.csv");
 
         using var reader = new StreamReader(filePath);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);

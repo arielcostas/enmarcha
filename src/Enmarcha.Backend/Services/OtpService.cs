@@ -125,7 +125,7 @@ public class OtpService
 
         try
         {
-            var bbox = new StopTileRequestContent.Bbox(minLon, minLat, maxLon, maxLat);
+            var bbox = new StopTileRequestContent.TileRequestParams(minLon, minLat, maxLon, maxLat);
             var query = StopTileRequestContent.Query(bbox);
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");

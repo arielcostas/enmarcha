@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [reactRouter(), tsconfigPaths(), tailwindcss()],
   server: {
     proxy: {
-      "^/api": {
+      "^/(api|backoffice)": {
         target: "https://localhost:7240",
         secure: false,
       },

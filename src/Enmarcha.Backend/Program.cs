@@ -1,11 +1,15 @@
 using System.Text.Json.Serialization;
 using Enmarcha.Backend;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Enmarcha.Backend.Configuration;
+using Enmarcha.Backend.Data;
 using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Services.Geocoding;
 using Enmarcha.Backend.Services.Processors;
 using Enmarcha.Backend.Services.Providers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -130,7 +134,7 @@ builder.Services.AddOpenTelemetry()
     });
 
 builder.Services
-    .AddControllers()
+    .AddControllersWithViews()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -138,6 +142,59 @@ builder.Services
 
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("Database"),
+        o => o.UseNetTopologySuite()
+    )
+    .UseCamelCaseNamingConvention();
+});
+
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddEntityFrameworkStores<AppDbContext>();
+
+var auth0Domain = builder.Configuration["Auth0:Domain"] ?? "";
+var auth0ClientId = builder.Configuration["Auth0:ClientId"] ?? "";
+
+builder.Services.AddAuthentication()
+    .AddCookie("Backoffice", options =>
+    {
+        options.LoginPath = "/backoffice/auth/login";
+    })
+    .AddOpenIdConnect("Auth0", options =>
+    {
+        options.Authority = $"https://{auth0Domain}/";
+        options.ClientId = auth0ClientId;
+        options.ClientSecret = builder.Configuration["Auth0:ClientSecret"];
+        options.ResponseType = "code";
+        options.CallbackPath = "/backoffice/auth/callback";
+        options.SignInScheme = "Backoffice";
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+        options.SaveTokens = true;
+        options.Events = new OpenIdConnectEvents
+        {
+            OnRedirectToIdentityProviderForSignOut = context =>
+            {
+                var logoutUri = $"https://{auth0Domain}/v2/logout?client_id={Uri.EscapeDataString(auth0ClientId)}";
+                var returnTo = context.Properties.RedirectUri;
+                if (!string.IsNullOrEmpty(returnTo))
+                {
+                    var req = context.Request;
+                    if (!returnTo.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                        returnTo = $"{req.Scheme}://{req.Host}{req.PathBase}{returnTo}";
+                    logoutUri += $"&returnTo={Uri.EscapeDataString(returnTo)}";
+                }
+                context.Response.Redirect(logoutUri);
+                context.HandleResponse();
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 builder.Services.AddSingleton<XuntaFareProvider>();
 
@@ -161,6 +218,7 @@ builder.Services.AddScoped<ArrivalsPipeline>();
 // builder.Services.AddKeyedScoped<IGeocodingService, NominatimGeocodingService>("Nominatim");
 builder.Services.AddHttpClient<IGeocodingService, GeoapifyGeocodingService>();
 builder.Services.AddHttpClient<OtpService>();
+builder.Services.AddHttpClient<BackofficeSelectorService>();
 builder.Services.AddHttpClient<Enmarcha.Sources.TranviasCoruna.CorunaRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.Tussa.SantiagoRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.CtagShuttle.CtagShuttleRealtimeEstimatesProvider>();
@@ -168,6 +226,12 @@ builder.Services.AddHttpClient<Enmarcha.Sources.GtfsRealtime.GtfsRealtimeEstimat
 builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
 var app = builder.Build();
+
+app.UseStaticFiles();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapGroup("/api/identity").MapIdentityApi<IdentityUser>();
 
 app.Use(async (context, next) =>
 {

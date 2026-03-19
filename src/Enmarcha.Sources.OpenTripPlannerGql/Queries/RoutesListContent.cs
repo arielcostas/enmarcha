@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json.Serialization;
 
 namespace Enmarcha.Sources.OpenTripPlannerGql.Queries;
@@ -9,10 +8,12 @@ public class RoutesListContent : IGraphRequest<RoutesListContent.Args>
 
     public static string Query(Args args)
     {
-        var feedsStr = string.Join(", ", args.Feeds.Select(f => $"\"{f}\""));
-        return string.Create(CultureInfo.InvariantCulture, $$"""
+        var feedsArg = args.Feeds.Length > 0
+            ? $"(feeds: [{string.Join(", ", args.Feeds.Select(f => $"\"{f}\""))}])"
+            : "";
+        return $$"""
         query Query {
-          routes(feeds: [{{feedsStr}}]) {
+          routes{{feedsArg}} {
             gtfsId
             shortName
             longName
@@ -29,7 +30,7 @@ public class RoutesListContent : IGraphRequest<RoutesListContent.Args>
             }
           }
         }
-        """);
+        """;
     }
 }
 

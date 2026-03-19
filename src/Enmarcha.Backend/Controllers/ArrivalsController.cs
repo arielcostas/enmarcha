@@ -168,7 +168,7 @@ public partial class ArrivalsController : ControllerBase
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
-            //if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
+            if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
             if (
                 item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
                 item.Trip.DepartureStoptime.Stop.GtfsId != id
