@@ -31,6 +31,7 @@ public class StopTileRequestContent : IGraphRequest<StopTileRequestContent.TileR
                 gtfsId
                 code
                 name
+                desc
                 lat
                 lon
                 routes {{
@@ -60,6 +61,9 @@ public class StopTileResponse : AbstractGraphResponse
 
         [JsonPropertyName("name")]
         public required string Name { get; set; }
+
+        [JsonPropertyName("desc")]
+        public string? Desc { get; set; }
 
         [JsonPropertyName("lat")]
         public required double Lat { get; set; }

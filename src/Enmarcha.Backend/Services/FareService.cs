@@ -22,6 +22,9 @@ public class FareService
     private const decimal SantiagoCashFare = 1.00M;
     private const decimal SantiagoCardFare = 0.36M;
 
+    private const decimal OurenseCashFare = 0.85M;
+    private const decimal OurenseCardFare = 0.49M;
+
     public FareService(
         IOptions<AppConfiguration> config,
         XuntaFareProvider xuntaFareProvider,
@@ -70,6 +73,9 @@ public class FareService
                     break;
                 case "vitrasa":
                     total += VitrasaCashFare;
+                    break;
+                case "ourense":
+                    total += OurenseCashFare;
                     break;
                 case "xunta":
                     // TODO: Handle potentiall blow-ups
@@ -125,6 +131,11 @@ public class FareService
                     maxMinutes = 60;
                     maxUsages = 2;
                     initialFare = SantiagoCardFare;
+                    break;
+                case "ourense":
+                    maxMinutes = 60;
+                    maxUsages = 2;
+                    initialFare = OurenseCardFare;
                     break;
                 case "xunta":
                     if (leg.From?.ZoneId == null || leg.To?.ZoneId == null)
@@ -182,9 +193,7 @@ public class FareService
                 }
                 else
                 {
-                    // Free transfer for city systems or non-ATM Xunta (though non-ATM Xunta has maxUsages=1)
                     validTicket.UsedTimes++;
-                    _logger.LogDebug("Free transfer for {FeedId}", leg.FeedId);
                 }
             }
             else
@@ -199,7 +208,6 @@ public class FareService
                     StartZone = leg.FeedId == "xunta" ? leg.From!.ZoneId! : string.Empty,
                     TotalPaid = initialFare
                 });
-                _logger.LogDebug("New ticket for {FeedId}: {Cost}€", leg.FeedId, initialFare);
             }
         }
 

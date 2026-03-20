@@ -53,16 +53,45 @@ public partial class RoutePlannerController : ControllerBase
             return BadRequest("Query cannot be empty");
         }
 
-        var nominatimTask = _geocodingService.GetAutocompleteAsync(query);
-        var stopsTask = GetCachedStopsAsync();
+        DateTime startTime = DateTime.UtcNow;
+        var geocodingTask = _geocodingService.GetAutocompleteAsync(query).ContinueWith(t =>
+        {
+            var duration = DateTime.UtcNow - startTime;
+            Response.Headers.Append("Server-Timing", $"geocoding;dur={(int)duration.TotalMilliseconds}");
+            return t.Result;
+        });
+        var stopTask = SearchStops(query).ContinueWith(t =>
+        {
+            var duration = DateTime.UtcNow - startTime;
+            Response.Headers.Append("Server-Timing", $"stop_search;dur={(int)duration.TotalMilliseconds}");
+            return t.Result;
+        });
 
-        await Task.WhenAll(nominatimTask, stopsTask);
+        await Task.WhenAll(geocodingTask, stopTask);
 
-        var geocodingResults = await nominatimTask;
-        var allStops = await stopsTask;
+        var geocodingResults = await geocodingTask;
+        var stopResults = await stopTask;
+
+        // Merge results: geocoding first, then stops, deduplicating by coordinates (approx)
+        var finalResults = new List<PlannerSearchResult>(geocodingResults);
+
+        foreach (var res in stopResults)
+        {
+            if (!finalResults.Any(f => Math.Abs(f.Lat - res.Lat) < 0.0001 && Math.Abs(f.Lon - res.Lon) < 0.0001))
+            {
+                finalResults.Add(res);
+            }
+        }
+
+        return Ok(finalResults);
+    }
+
+    private async Task<List<PlannerSearchResult>> SearchStops(string query)
+    {
+        var stops = await GetCachedStopsAsync();
 
         // 1. Exact or prefix matches by stop code
-        var codeMatches = allStops
+        var codeMatches = stops
             .Where(s => s.StopCode != null && s.StopCode.StartsWith(query, StringComparison.OrdinalIgnoreCase))
             .OrderBy(s => s.StopCode?.Length) // Shorter codes (more exact matches) first
             .Take(5)
@@ -71,9 +100,13 @@ public partial class RoutePlannerController : ControllerBase
         // 2. Fuzzy search stops by label (Name + Code)
         var fuzzyResults = Process.ExtractSorted(
             query,
-            allStops.Select(s => s.Label ?? string.Empty),
+            stops.Select(s => s.Label ?? string.Empty),
             cutoff: 60
-        ).Take(6).Select(r => allStops[r.Index]).ToList();
+        )
+        .OrderByDescending(r => r.Score)
+        .Take(6)
+        .Select(r => stops[r.Index])
+        .ToList();
 
         // Merge stops, prioritizing code matches
         var stopResults = codeMatches.Concat(fuzzyResults)
@@ -82,18 +115,7 @@ public partial class RoutePlannerController : ControllerBase
             .Take(6)
             .ToList();
 
-        // Merge results: geocoding first, then stops, deduplicating by coordinates (approx)
-        var finalResults = new List<PlannerSearchResult>(geocodingResults);
-
-        foreach (var res in stopResults)
-        {
-            if (!finalResults.Any(f => Math.Abs(f.Lat - res.Lat) < 0.00001 && Math.Abs(f.Lon - res.Lon) < 0.00001))
-            {
-                finalResults.Add(res);
-            }
-        }
-
-        return Ok(finalResults);
+        return stopResults;
     }
 
     [HttpGet("reverse")]
@@ -169,7 +191,7 @@ public partial class RoutePlannerController : ControllerBase
             return new PlannerSearchResult
             {
                 Name = name,
-                Label = string.IsNullOrWhiteSpace(code) ? name : $"{name} ({code})",
+                Label = string.IsNullOrWhiteSpace(code) ? name : $"{name} ({feedId} {code}) -- {s.Desc}",
                 Lat = s.Lat,
                 Lon = s.Lon,
                 Layer = "stop",

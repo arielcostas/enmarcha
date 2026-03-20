@@ -53,9 +53,17 @@ public class GeoapifyGeocodingService : IGeocodingService
 
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<GeoapifyResult>(url + $"&apiKey={_config.GeoapifyApiKey}");
+            var httpResponse = await _httpClient.GetAsync(url + $"&apiKey={_config.GeoapifyApiKey}");
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                var body = await httpResponse.Content.ReadAsStringAsync();
+                _logger.LogWarning("Geoapify autocomplete returned {StatusCode} for query '{Query}': {Body}",
+                    (int)httpResponse.StatusCode, query, body);
+                activity?.SetTag("http.status_code", (int)httpResponse.StatusCode);
+                return [];
+            }
 
-
+            var response = await httpResponse.Content.ReadFromJsonAsync<GeoapifyResult>();
             var results = response?.results
                 .Where(x => !ForbiddenResultTypes.Contains(x.result_type))
                 .Select(MapToPlannerSearchResult)
@@ -69,7 +77,7 @@ public class GeoapifyGeocodingService : IGeocodingService
         {
             activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Error, ex.Message);
             _logger.LogError(ex, "Error fetching Geoapify autocomplete results from {Url}", url);
-            return new List<PlannerSearchResult>();
+            return [];
         }
     }
 
@@ -90,8 +98,17 @@ public class GeoapifyGeocodingService : IGeocodingService
             $"https://api.geoapify.com/v1/geocode/reverse?lat={lat.ToString(CultureInfo.InvariantCulture)}&lon={lon.ToString(CultureInfo.InvariantCulture)}&lang=gl&format=json";
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<GeoapifyResult>(url + $"&apiKey={_config.GeoapifyApiKey}");
+            var httpResponse = await _httpClient.GetAsync(url + $"&apiKey={_config.GeoapifyApiKey}");
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                var body = await httpResponse.Content.ReadAsStringAsync();
+                _logger.LogWarning("Geoapify reverse geocode returned {StatusCode} for ({Lat},{Lon}): {Body}",
+                    (int)httpResponse.StatusCode, lat, lon, body);
+                activity?.SetTag("http.status_code", (int)httpResponse.StatusCode);
+                return null;
+            }
 
+            var response = await httpResponse.Content.ReadFromJsonAsync<GeoapifyResult>();
             if (response == null) return null;
 
             var result = MapToPlannerSearchResult(response.results[0]);

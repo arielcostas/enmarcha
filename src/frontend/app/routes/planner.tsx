@@ -805,22 +805,24 @@ const ItineraryDetail = ({
                                     )}
                                   </li>
                                   {/* Intermediate stops */}
-                                  {leg.intermediateStops.map((stop, sIdx) => (
-                                    <li
-                                      key={sIdx}
-                                      className="flex items-center gap-1.5 py-0.5 px-1.5 text-gray-500 dark:text-gray-400"
-                                    >
-                                      <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500 inline-block shrink-0 ml-0.5" />
-                                      <span className="flex-1">
-                                        {stop.name}
-                                      </span>
-                                      {stop.stopCode && (
-                                        <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
-                                          {stop.stopCode}
+                                  {leg.intermediateStops
+                                    .slice(1, -1)
+                                    .map((stop, sIdx) => (
+                                      <li
+                                        key={sIdx}
+                                        className="flex items-center gap-1.5 py-0.5 px-1.5 text-gray-500 dark:text-gray-400"
+                                      >
+                                        <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500 inline-block shrink-0 ml-0.5" />
+                                        <span className="flex-1">
+                                          {stop.name}
                                         </span>
-                                      )}
-                                    </li>
-                                  ))}
+                                        {stop.stopCode && (
+                                          <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
+                                            {stop.stopCode}
+                                          </span>
+                                        )}
+                                      </li>
+                                    ))}
                                   {/* Alighting stop */}
                                   <li className="flex items-center gap-1.5 py-0.5 px-1.5 rounded bg-primary/8 font-semibold text-primary">
                                     <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block shrink-0" />

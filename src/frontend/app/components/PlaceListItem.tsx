@@ -1,8 +1,12 @@
-import { Building2, MapPin } from "lucide-react";
+import { Building2, BusFront, MapPin } from "lucide-react";
 import type { PlannerSearchResult } from "~/data/PlannerApi";
 
 function getIcon(layer?: string) {
   switch ((layer || "").toLowerCase()) {
+    case "stop":
+      return (
+        <BusFront className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+      );
     case "venue":
       return (
         <Building2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
