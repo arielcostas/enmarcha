@@ -85,6 +85,10 @@ jobs:
           dotnet-version: "9.0.x"
       - name: Build backend
         run: dotnet publish -c Release -r linux-arm64 --self-contained false src/Enmarcha.Backend/Enmarcha.Backend.csproj -o dist/backend
+      - name: Install dotnet-ef tool
+        run: dotnet tool install --global dotnet-ef
+      - name: Build EF migrations bundle
+        run: dotnet ef migrations bundle --project src/Enmarcha.Backend/Enmarcha.Backend.csproj -r linux-arm64 --self-contained -o dist/backend/efbundle
       - name: Archive Backend Artifact
         uses: actions/upload-artifact@v5
         with:
@@ -149,7 +153,11 @@ jobs:
 
       - name: Allow execution
         if: needs.detect-changes.outputs.backend == 'true'
-        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "chmod +x /opt/enmarcha/Enmarcha.Backend"
+        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "chmod +x /opt/enmarcha/Enmarcha.Backend /opt/enmarcha/efbundle"
+
+      - name: Apply database migrations
+        if: needs.detect-changes.outputs.backend == 'true'
+        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "ASPNETCORE_ENVIRONMENT=Production /opt/enmarcha/efbundle"
 
       - name: Start service
         if: needs.detect-changes.outputs.backend == 'true'
