@@ -35,6 +35,7 @@ export default function Favourites() {
     "tranvias",
     "tussa",
     "ourense",
+    "lugo",
     "feve",
     "shuttle",
   ];

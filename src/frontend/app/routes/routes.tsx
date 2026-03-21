@@ -31,6 +31,7 @@ export default function RoutesPage() {
     "tranvias",
     "tussa",
     "ourense",
+    "lugo",
     "feve",
     "shuttle",
   ];

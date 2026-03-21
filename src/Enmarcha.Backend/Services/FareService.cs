@@ -25,6 +25,9 @@ public class FareService
     private const decimal OurenseCashFare = 0.85M;
     private const decimal OurenseCardFare = 0.49M;
 
+    private const decimal LugoCashFare = 0.64M;
+    private const decimal LugoCardFare = 0.45M;
+
     public FareService(
         IOptions<AppConfiguration> config,
         XuntaFareProvider xuntaFareProvider,
@@ -76,6 +79,9 @@ public class FareService
                     break;
                 case "ourense":
                     total += OurenseCashFare;
+                    break;
+                case "lugo":
+                    total += LugoCashFare;
                     break;
                 case "xunta":
                     // TODO: Handle potentiall blow-ups
@@ -136,6 +142,12 @@ public class FareService
                     maxMinutes = 60;
                     maxUsages = 2;
                     initialFare = OurenseCardFare;
+                    break;
+                case "lugo":
+                    // IDK About card rules, so we set it to zero
+                    maxMinutes = 0;
+                    maxUsages = 0;
+                    initialFare = LugoCardFare;
                     break;
                 case "xunta":
                     if (leg.From?.ZoneId == null || leg.To?.ZoneId == null)

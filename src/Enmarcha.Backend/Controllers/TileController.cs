@@ -164,6 +164,7 @@ public class TileController : ControllerBase
             "tussa" => "stop-tussa",
             "tranvias" => "stop-tranvias",
             "ourense" => "stop-ourense",
+            "lugo" => "stop-lugo",
             "xunta" => "stop-xunta",
             "renfe" => "stop-renfe",
             "feve" => "stop-feve",

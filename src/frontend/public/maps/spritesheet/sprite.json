@@ -31,9 +31,17 @@
     "height": 32,
     "pixelRatio": 1
   },
+  "stop-lugo": {
+    "id": "stop-lugo",
+    "x": 128,
+    "y": 0,
+    "width": 32,
+    "height": 32,
+    "pixelRatio": 1
+  },
   "stop-xunta": {
     "id": "stop-xunta",
-    "x": 128,
+    "x": 160,
     "y": 0,
     "width": 32,
     "height": 32,
@@ -41,7 +49,7 @@
   },
   "stop-renfe": {
     "id": "stop-renfe",
-    "x": 160,
+    "x": 192,
     "y": 0,
     "width": 32,
     "height": 32,
@@ -49,7 +57,7 @@
   },
   "stop-feve": {
     "id": "stop-feve",
-    "x": 192,
+    "x": 224,
     "y": 0,
     "width": 32,
     "height": 32,
@@ -57,7 +65,7 @@
   },
   "stop-generic": {
     "id": "stop-generic",
-    "x": 224,
+    "x": 256,
     "y": 0,
     "width": 32,
     "height": 32,

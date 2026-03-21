@@ -30,7 +30,6 @@ public class FeedService
         { "Riós", "Ríos" },
         { "Avda. Beiramar Porto Pesqueiro Berbés", "Berbés" },
         { "Conde de Torrecedeira", "Torrecedeira" },
-
     };
 
     public (string Color, string TextColor) GetFallbackColourForFeed(string feed)
@@ -41,6 +40,7 @@ public class FeedService
             "tussa" => ("#508096", "#FFFFFF"),
             "tranvias" => ("#E61C29", "#FFFFFF"),
             "ourense" => ("#ffb319", "#000000"),
+            "lugo" => ("#FDC609", "#000000"),
             "xunta" => ("#007BC4", "#FFFFFF"),
             "renfe" => ("#870164", "#FFFFFF"),
             "feve" => ("#EE3D32", "#FFFFFF"),

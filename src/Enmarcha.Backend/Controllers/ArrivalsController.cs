@@ -219,9 +219,14 @@ public partial class ArrivalsController : ControllerBase
     {
         string feedId = id.Split(':', 2)[0];
 
-        if (feedId is "vitrasa" or "tranvias" or "tussa")
+        if (feedId is "vitrasa" or "tranvias")
         {
             return 0;
+        }
+
+        if (feedId is "tussa" or "ourense" or "lugo")
+        {
+            return -5;
         }
 
         return -30;

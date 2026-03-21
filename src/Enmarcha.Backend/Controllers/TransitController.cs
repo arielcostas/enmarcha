@@ -42,7 +42,7 @@ public class TransitController : ControllerBase
         using var activity = Telemetry.Source.StartActivity("GetRoutes");
         if (feeds.Length == 0)
         {
-            feeds = ["tussa", "vitrasa", "tranvias", "ourense", "feve", "shuttle"];
+            feeds = ["tussa", "vitrasa", "tranvias", "ourense", "lugo", "feve", "shuttle"];
         }
         activity?.SetTag("feeds", string.Join(",", feeds));
 

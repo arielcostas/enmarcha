@@ -586,6 +586,8 @@ export default function StopMap() {
               "#E61C29",
               "ourense",
               "#ffb319",
+              "lugo",
+              "#FDC609",
               "xunta",
               "#007BC4",
               "renfe",
@@ -599,9 +601,19 @@ export default function StopMap() {
               ["get", "feed"],
               "ourense",
               "#000000",
+              "lugo",
+              "#000000",
               "#FFF",
             ],
-            "text-halo-width": ["match", ["get", "feed"], "ourense", 1.5, 1],
+            "text-halo-width": [
+              "match",
+              ["get", "feed"],
+              "ourense",
+              1.5,
+              "lugo",
+              1.5,
+              1,
+            ],
           }}
         />
 

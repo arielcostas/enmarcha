@@ -49,12 +49,13 @@ public class SortingHelper
 
         var feed = routeId?.Split(':')[0];
 
-        if (feed is "vitrasa" or "tussa")
+        if (feed is "vitrasa" or "tussa" or "lugo")
         {
             int group = feed switch
             {
                 "vitrasa" => GetVitrasaRouteGroup(shortName),
                 "tussa" => GetTussaRouteGroup(shortName),
+                "lugo" => GetLugoRouteGroup(shortName),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
@@ -90,27 +91,39 @@ public class SortingHelper
     {
         // Circular: "C" followed by a digit
         if (shortName.Length > 1 && shortName[0] == 'C' && char.IsDigit(shortName[1]))
+        {
             return 0;
+        }
 
         // Hospital: starts with "H"
         if (shortName[0] == 'H')
+        {
             return 2;
+        }
 
         // Night: "N" followed by a digit
         if (shortName[0] == 'N' && shortName.Length > 1 && char.IsDigit(shortName[1]))
+        {
             return 3;
+        }
 
         // PSA shuttle lines
         if (shortName.StartsWith("PSA", StringComparison.OrdinalIgnoreCase))
+        {
             return 3;
+        }
 
         // University: "U" followed by a digit
         if (shortName[0] == 'U' && shortName.Length > 1 && char.IsDigit(shortName[1]))
+        {
             return 3;
+        }
 
         // Multi-letter codes with no digits (LZD, PTL)
         if (shortName.Length >= 2 && shortName.All(char.IsLetter))
+        {
             return 3;
+        }
 
         // Everything else is regular (numbered routes like 4A, 6, 10, single letters like A)
         return 1;
@@ -121,6 +134,45 @@ public class SortingHelper
         if (shortName[0] == 'C')
         {
             return 1;
+        }
+
+        return 0;
+    }
+
+    private static int GetLugoRouteGroup(string shortName)
+    {
+        if (char.IsLetter(shortName[0]))
+        {
+            return 50000;
+        }
+
+        // Sort something like 2,6,1.1,1.2,1.4,3.1,5.1,PAZO1,PAZO2,CDL
+        // 1.1, 1.2, 1.4, 2, 3.1, 5.1, 6, then PAZO1, PAZO2, then CDL
+        if (shortName.Contains('.'))
+        {
+            var parts = shortName.Split('.', 2);
+            if (int.TryParse(parts[0], out int main) && int.TryParse(parts[1], out int sub))
+            {
+                return main * 100 + sub; // 1.1 -> 101, 1.2 -> 102, etc.
+            }
+        }
+
+        string numericPart = string.Empty;
+        foreach (char c in shortName)
+        {
+            if (char.IsDigit(c))
+            {
+                numericPart += c;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (int.TryParse(numericPart, out int leadingNumber))
+        {
+            return leadingNumber * 100 + 50; // Sort by leading number if present, with a large multiplier to come after pure numbers
         }
 
         return 0;
