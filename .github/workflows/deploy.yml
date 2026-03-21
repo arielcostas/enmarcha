@@ -157,7 +157,7 @@ jobs:
 
       - name: Apply database migrations
         if: needs.detect-changes.outputs.backend == 'true'
-        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "ASPNETCORE_ENVIRONMENT=Production /opt/enmarcha/efbundle"
+        run: ssh ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "cd /opt/enmarcha && ASPNETCORE_ENVIRONMENT=Production ./efbundle"
 
       - name: Start service
         if: needs.detect-changes.outputs.backend == 'true'
