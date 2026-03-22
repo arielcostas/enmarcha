@@ -54,7 +54,7 @@ public class NextStopsProcessor : IArrivalsProcessor
     {
         if (nextStops.Count == 0) return null;
 
-        if (feedId is "vitrasa" or "tranvias" or "tussa" or "ourense")
+        if (feedId is "vitrasa" or "tranvias" or "tussa" or "ourense" or "lugo")
         {
             var streets = nextStops
                 .Select(FeedService.GetStreetName)

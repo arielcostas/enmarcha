@@ -32,7 +32,7 @@ public class StopsInfoContent : IGraphRequest<StopsInfoContent.Args>
 
 public class StopsInfoResponse : AbstractGraphResponse
 {
-    [JsonPropertyName("stops")] public List<StopItem>? Stops { get; set; }
+    [JsonPropertyName("stops")] public List<StopItem?>? Stops { get; set; }
 
     public class StopItem
     {

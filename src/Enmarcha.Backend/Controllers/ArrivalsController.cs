@@ -243,11 +243,13 @@ public partial class ArrivalsController : ControllerBase
         var stopIds = ids.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var requestContent = StopsInfoContent.Query(new StopsInfoContent.Args(stopIds));
 
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
-        request.Content = JsonContent.Create(new GraphClientRequest
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1")
         {
-            Query = requestContent
-        });
+            Content = JsonContent.Create(new GraphClientRequest
+            {
+                Query = requestContent
+            })
+        };
 
         var response = await _httpClient.SendAsync(request);
         var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<StopsInfoResponse>>();
@@ -257,11 +259,14 @@ public partial class ArrivalsController : ControllerBase
             return StatusCode(500, "Error fetching stops data");
         }
 
-        var result = responseBody.Data.Stops.ToDictionary(
-            s => s.GtfsId,
+        // TODO: Remove stops that are null, since that means the feed publisher deleted them.
+        var result = responseBody.Data.Stops
+            .Where(s => s != null)
+            .ToDictionary(
+            s => s!.GtfsId,
             s =>
             {
-                var feedId = s.GtfsId.Split(':', 2)[0];
+                var feedId = s!.GtfsId.Split(':', 2)[0];
                 var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
 
                 return new
