@@ -152,14 +152,6 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
         tone: "warning",
         kind: "warning",
       });
-    } else if (
-      estimate.precision === "confident" &&
-      arrival.currentPosition !== null
-    ) {
-      chips.push({
-        label: t("estimates.bus_gps_position"),
-        kind: "gps",
-      });
     }
 
     if (estimate.precision === "scheduled") {

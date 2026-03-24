@@ -122,7 +122,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 
                     var scheduledMinutes = arrival.Estimate.Minutes;
                     arrival.Estimate.Minutes = estimate.Minutes;
-                    arrival.Estimate.Precision = ArrivalPrecision.Confident;
 
                     // Calculate delay badge
                     var delayMinutes = estimate.Minutes - scheduledMinutes;

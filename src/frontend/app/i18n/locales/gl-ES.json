@@ -74,7 +74,6 @@
     "delay_positive": "Atraso de {{minutes}} min",
     "delay_negative": "Adelanto de {{minutes}} min",
     "previous_trip": "GPS estimado",
-    "bus_gps_position": "GPS fiable",
     "low_accuracy": "Baixa precisión",
     "no_realtime": "Sen tempo real"
   },

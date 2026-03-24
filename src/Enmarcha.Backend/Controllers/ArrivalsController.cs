@@ -178,6 +178,8 @@ public partial class ArrivalsController : ControllerBase
             var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
 
+            var nowInSecondsOfDay = (int)(nowLocal - nowLocal.Date).TotalSeconds;
+
             arrivals.Add(new Arrival
             {
                 TripId = item.Trip.GtfsId,
@@ -192,7 +194,8 @@ public partial class ArrivalsController : ControllerBase
                 Estimate = new ArrivalDetails
                 {
                     Minutes = minutesToArrive,
-                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
+                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past :
+                        nowInSecondsOfDay >= item.Trip.DepartureStoptime.ScheduledDeparture ? ArrivalPrecision.Confident : ArrivalPrecision.Unsure
                 },
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
                 RawOtpTrip = item
