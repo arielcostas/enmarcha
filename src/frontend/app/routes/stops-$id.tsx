@@ -1,7 +1,7 @@
 import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { fetchArrivals } from "~/api/arrivals";
 import {
   type Arrival,
@@ -17,6 +17,7 @@ import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
 import { StopUsageChart } from "~/components/stop/StopUsageChart";
 import { usePageRightNode, usePageTitle } from "~/contexts/PageTitleContext";
+import { useJourney } from "~/contexts/JourneyContext";
 import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";
@@ -66,6 +67,7 @@ interface ErrorInfo {
 export default function Estimates() {
   const { t } = useTranslation();
   const params = useParams();
+  const location = useLocation();
   const stopId = params.id ?? "";
   const stopFeedId = stopId.split(":")[0] || stopId;
   const fallbackStopCode = stopId.split(":")[1] || stopId;
@@ -88,6 +90,47 @@ export default function Estimates() {
   const [selectedArrivalId, setSelectedArrivalId] = useState<
     string | undefined
   >(undefined);
+
+  // Journey tracking
+  const { activeJourney, startJourney, stopJourney } = useJourney();
+  const trackedTripId =
+    activeJourney?.stopId === stopId ? activeJourney.tripId : undefined;
+
+  // If navigated from the journey banner, open the map for the tracked trip.
+  // Empty dependency array is intentional: we only consume the navigation state
+  // once on mount (location.state is fixed for the lifetime of this component
+  // instance; setters from useState are stable and don't need to be listed).
+  useEffect(() => {
+    const state = location.state as
+      | { openMap?: boolean; selectedTripId?: string }
+      | null
+      | undefined;
+    if (state?.openMap && state?.selectedTripId) {
+      setSelectedArrivalId(state.selectedTripId);
+      setIsMapModalOpen(true);
+    }
+  }, []); // mount-only: see comment above
+
+  const handleTrackArrival = useCallback(
+    (arrival: Arrival) => {
+      if (activeJourney?.tripId === arrival.tripId) {
+        stopJourney();
+        return;
+      }
+      startJourney({
+        tripId: arrival.tripId,
+        stopId,
+        stopName: stopName ?? stopId,
+        routeShortName: arrival.route.shortName,
+        routeColour: arrival.route.colour,
+        routeTextColour: arrival.route.textColour,
+        headsignDestination: arrival.headsign.destination,
+        initialMinutes: arrival.estimate.minutes,
+        notifyAtMinutes: 2,
+      });
+    },
+    [activeJourney, startJourney, stopJourney, stopId, stopName]
+  );
 
   // Helper function to get the display name for the stop
   const getStopDisplayName = useCallback(() => {
@@ -251,6 +294,8 @@ export default function Estimates() {
                   setSelectedArrivalId(getArrivalId(arrival));
                   setIsMapModalOpen(true);
                 }}
+                onTrackArrival={handleTrackArrival}
+                trackedTripId={trackedTripId}
               />
 
               {data.usage && data.usage.length > 0 && (

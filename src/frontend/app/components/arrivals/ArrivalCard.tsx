@@ -1,4 +1,4 @@
-import { AlertTriangle, BusFront, LocateIcon } from "lucide-react";
+import { AlertTriangle, BusFront, LocateIcon, Navigation } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,8 @@ import "./ArrivalCard.css";
 interface ArrivalCardProps {
   arrival: Arrival;
   onClick?: () => void;
+  onTrack?: () => void;
+  isTracked?: boolean;
 }
 
 const AutoMarquee = ({ text }: { text: string }) => {
@@ -57,6 +59,8 @@ const AutoMarquee = ({ text }: { text: string }) => {
 export const ArrivalCard: React.FC<ArrivalCardProps> = ({
   arrival,
   onClick,
+  onTrack,
+  isTracked = false,
 }) => {
   const { t } = useTranslation();
   const {
@@ -287,6 +291,43 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
             </span>
           );
         })}
+
+        {onTrack && estimate.precision !== "past" && (
+          // Use a <span> instead of a <button> here because this element can
+          // be rendered inside a <button> (when isClickable=true), and nested
+          // <button> elements are invalid HTML.
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTrack();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onTrack();
+              }
+            }}
+            aria-label={
+              isTracked
+                ? t("journey.stop_tracking", "Detener seguimiento")
+                : t("journey.track_bus", "Seguir este autobús")
+            }
+            aria-pressed={isTracked}
+            className={`ml-auto text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 font-medium tracking-wide transition-colors cursor-pointer select-none ${
+              isTracked
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-black/[0.04] dark:bg-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400"
+            }`}
+          >
+            <Navigation className="w-3 h-3" />
+            {isTracked
+              ? t("journey.tracking", "Siguiendo")
+              : t("journey.track", "Seguir")}
+          </span>
+        )}
       </div>
     </Tag>
   );
