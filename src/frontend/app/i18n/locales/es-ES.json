@@ -249,5 +249,18 @@
     "usage_passengers": "pas.",
     "usage_disclaimer": "Basado en la ocupación histórica promedio de los últimos meses disponible en datos.vigo.org. No refleja la ocupación en tiempo real.",
     "usage_scale_info": "La escala del gráfico no es lineal para resaltar mejor los valores bajos."
+  },
+  "journey": {
+    "track": "Seguir",
+    "tracking": "Siguiendo",
+    "track_bus": "Seguir este autobús",
+    "stop_tracking": "Detener seguimiento",
+    "tracking_bus": "Siguiendo autobús",
+    "arriving_now": "¡Llegando!",
+    "minutes_away": "{{minutes}} min",
+    "notifications_blocked": "Notificaciones bloqueadas",
+    "notification_now_title": "¡Tu autobús está llegando!",
+    "notification_approaching_title": "Tu autobús llega en {{minutes}} min",
+    "notification_body": "Línea {{line}} dirección {{destination}} — {{stop}}"
   }
 }

@@ -249,5 +249,18 @@
     "usage_passengers": "pax",
     "usage_disclaimer": "Based on average historical occupancy from recent months available at datos.vigo.org. Does not reflect real-time occupancy.",
     "usage_scale_info": "Graph uses a non-linear scale to better highlight lower occupancy values."
+  },
+  "journey": {
+    "track": "Track",
+    "tracking": "Tracking",
+    "track_bus": "Track this bus",
+    "stop_tracking": "Stop tracking",
+    "tracking_bus": "Tracking bus",
+    "arriving_now": "Arriving now!",
+    "minutes_away": "{{minutes}} min",
+    "notifications_blocked": "Notifications blocked",
+    "notification_now_title": "Your bus is arriving!",
+    "notification_approaching_title": "Your bus arrives in {{minutes}} min",
+    "notification_body": "Line {{line}} towards {{destination}} — {{stop}}"
   }
 }

@@ -17,6 +17,7 @@ import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
 import { StopUsageChart } from "~/components/stop/StopUsageChart";
 import { usePageRightNode, usePageTitle } from "~/contexts/PageTitleContext";
+import { useJourney } from "~/contexts/JourneyContext";
 import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";
@@ -88,6 +89,32 @@ export default function Estimates() {
   const [selectedArrivalId, setSelectedArrivalId] = useState<
     string | undefined
   >(undefined);
+
+  // Journey tracking
+  const { activeJourney, startJourney, stopJourney } = useJourney();
+  const trackedTripId =
+    activeJourney?.stopId === stopId ? activeJourney.tripId : undefined;
+
+  const handleTrackArrival = useCallback(
+    (arrival: Arrival) => {
+      if (activeJourney?.tripId === arrival.tripId) {
+        stopJourney();
+        return;
+      }
+      startJourney({
+        tripId: arrival.tripId,
+        stopId,
+        stopName: stopName ?? stopId,
+        routeShortName: arrival.route.shortName,
+        routeColour: arrival.route.colour,
+        routeTextColour: arrival.route.textColour,
+        headsignDestination: arrival.headsign.destination,
+        initialMinutes: arrival.estimate.minutes,
+        notifyAtMinutes: 2,
+      });
+    },
+    [activeJourney, startJourney, stopJourney, stopId, stopName]
+  );
 
   // Helper function to get the display name for the stop
   const getStopDisplayName = useCallback(() => {
@@ -251,6 +278,8 @@ export default function Estimates() {
                   setSelectedArrivalId(getArrivalId(arrival));
                   setIsMapModalOpen(true);
                 }}
+                onTrackArrival={handleTrackArrival}
+                trackedTripId={trackedTripId}
               />
 
               {data.usage && data.usage.length > 0 && (

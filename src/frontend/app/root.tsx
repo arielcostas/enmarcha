@@ -22,6 +22,7 @@ maplibregl.addProtocol("pmtiles", pmtiles.tile);
 //#endregion
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { JourneyProvider } from "./contexts/JourneyContext";
 import { PlannerProvider } from "./contexts/PlannerContext";
 import "./i18n";
 
@@ -342,9 +343,11 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
-        <PlannerProvider>
-          <AppShell />
-        </PlannerProvider>
+        <JourneyProvider>
+          <PlannerProvider>
+            <AppShell />
+          </PlannerProvider>
+        </JourneyProvider>
       </AppProvider>
     </QueryClientProvider>
   );

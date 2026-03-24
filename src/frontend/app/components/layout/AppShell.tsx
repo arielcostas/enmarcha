@@ -4,6 +4,8 @@ import {
   PageTitleProvider,
   usePageTitleContext,
 } from "~/contexts/PageTitleContext";
+import { ActiveJourneyBanner } from "~/components/journey/ActiveJourneyBanner";
+import { useJourneyTracker } from "~/hooks/useJourneyTracker";
 import { ThemeColorManager } from "../ThemeColorManager";
 import "./AppShell.css";
 import { Drawer } from "./Drawer";
@@ -14,6 +16,9 @@ const AppShellContent: React.FC = () => {
   const { title } = usePageTitleContext();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const location = useLocation();
+
+  // Mount journey tracker at shell level so tracking persists across navigation
+  useJourneyTracker();
 
   return (
     <div className="app-shell">
@@ -29,6 +34,7 @@ const AppShellContent: React.FC = () => {
           <Outlet key={location.pathname} />
         </main>
       </div>
+      <ActiveJourneyBanner />
       <footer className="app-shell__bottom-nav">
         <NavBar />
       </footer>
