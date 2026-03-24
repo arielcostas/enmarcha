@@ -31,7 +31,7 @@ public class NextStopsProcessor : IArrivalsProcessor
                 arrival.NextStops = otpArrival.Trip.Stoptimes
                     .Where(s => s.ScheduledDeparture > currentStopDeparture)
                     .OrderBy(s => s.ScheduledDeparture)
-                    .Select(s => s.Stop.Description)
+                    .Select(s => $"{s.Stop.Name} -- {s.Stop.Description}")
                     .Distinct()
                     .ToList();
             }
@@ -71,11 +71,22 @@ public class NextStopsProcessor : IArrivalsProcessor
                 .Select(SplitXuntaStopDescription)
                 .ToList();
 
-            List<string> seenConcellos = new();
-            List<string> seenParroquias = new();
+            List<string> seenConcellos = [];
+            List<string> seenParroquias = [];
             List<string> items = [];
 
-            foreach (var (parroquia, concello) in points)
+            var maxPointsPerCouncil = points.GroupBy(p => p.concello)
+                .Select(g => g.Count())
+                .DefaultIfEmpty(0)
+                .Max();
+
+            if (maxPointsPerCouncil == 1)
+            {
+                // If there's only one stop per council, we can simplify the marquee to just show the council names
+                return string.Join(" - ", points.Select(p => p.nombre).Distinct());
+            }
+
+            foreach (var (nombre, parroquia, concello) in points)
             {
                 // Santiago de Compostela -- Santiago de Compostela > Conxo -- Santiago de Compostela > Biduído -- Ames > Calo -- Teo > Bugallido -- Ames
                 // Santiago de Compostela -> Conxo -> Bidueiro (Ames) -> Calo (Teo) -> Bugallido
@@ -94,7 +105,7 @@ public class NextStopsProcessor : IArrivalsProcessor
                     if (!seenConcellos.Contains(concello))
                     {
                         seenConcellos.Add(concello);
-                        item = $"({concello}) {item}";
+                        item = $"{item} ({concello})";
                     }
 
                     items.Add(item);
@@ -112,14 +123,14 @@ public class NextStopsProcessor : IArrivalsProcessor
         };
     }
 
-    private static (string parroquia, string concello) SplitXuntaStopDescription(string stopName)
+    private static (string nombre, string parroquia, string concello) SplitXuntaStopDescription(string stopName)
     {
-        var parts = stopName.Split(" -- ", 2);
-        if (parts.Length != 2)
+        var parts = stopName.Split(" -- ", 3);
+        if (parts.Length != 3)
         {
-            return ("", ""); // TODO: Throw
+            return ("", "", ""); // TODO: Throw
         }
 
-        return (parts[0], parts[1]);
+        return (parts[0], parts[1], parts[2]);
     }
 }
