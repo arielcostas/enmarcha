@@ -194,8 +194,7 @@ public partial class ArrivalsController : ControllerBase
                 Estimate = new ArrivalDetails
                 {
                     Minutes = minutesToArrive,
-                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past :
-                        nowInSecondsOfDay >= item.Trip.DepartureStoptime.ScheduledDeparture ? ArrivalPrecision.Confident : ArrivalPrecision.Unsure
+                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
                 },
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
                 RawOtpTrip = item
