@@ -257,6 +257,7 @@
     "notifications_blocked": "Notificacións bloqueadas",
     "notification_now_title": "¡O teu autobús está chegando!",
     "notification_approaching_title": "O teu autobús chega en {{minutes}} min",
-    "notification_body": "Liña {{line}} dirección {{destination}} — {{stop}}"
+    "notification_body": "Liña {{line}} dirección {{destination}} — {{stop}}",
+    "view_on_map": "Ver no mapa"
   }
 }

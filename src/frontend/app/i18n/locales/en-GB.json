@@ -261,6 +261,7 @@
     "notifications_blocked": "Notifications blocked",
     "notification_now_title": "Your bus is arriving!",
     "notification_approaching_title": "Your bus arrives in {{minutes}} min",
-    "notification_body": "Line {{line}} towards {{destination}} — {{stop}}"
+    "notification_body": "Line {{line}} towards {{destination}} — {{stop}}",
+    "view_on_map": "View on map"
   }
 }

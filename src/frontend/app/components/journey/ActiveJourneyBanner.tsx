@@ -1,4 +1,4 @@
-import { Bell, X } from "lucide-react";
+import { Bell, Map, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
@@ -72,53 +72,62 @@ export function ActiveJourneyBanner() {
     <div
       role="status"
       aria-live="polite"
-      className={`flex items-center gap-3 px-4 py-2.5 text-sm border-t transition-colors ${
+      className={`relative mx-3 mb-2 rounded-2xl shadow-lg overflow-hidden border transition-colors ${
         isApproaching
-          ? "bg-blue-600 text-white border-blue-700"
-          : "bg-slate-800 text-white border-slate-700"
+          ? "bg-primary-400 border-primary-500"
+          : "bg-primary-600 border-primary-700"
       }`}
     >
-      <RouteIcon
-        line={activeJourney.routeShortName}
-        colour={activeJourney.routeColour}
-        textColour={activeJourney.routeTextColour}
-        mode="pill"
-      />
+      {/* Clickable body — navigates to the stop and opens the map for the tracked trip */}
+      <Link
+        to={`/stops/${activeJourney.stopId}`}
+        state={{
+          openMap: true,
+          selectedTripId: activeJourney.tripId,
+        }}
+        aria-label={t("journey.view_on_map", "View on map")}
+        className="flex items-center gap-3 px-4 py-2.5 pr-14 text-sm text-white w-full"
+      >
+        <RouteIcon
+          line={activeJourney.routeShortName}
+          colour={activeJourney.routeColour}
+          textColour={activeJourney.routeTextColour}
+          mode="pill"
+        />
 
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold leading-tight truncate">
-          {activeJourney.headsignDestination ??
-            t("journey.tracking_bus", "Siguiendo autobús")}
-        </p>
-        <p className="text-xs opacity-80 truncate">
-          <Link
-            to={`/stops/${activeJourney.stopId}`}
-            className="underline underline-offset-2"
-          >
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold leading-tight truncate">
+            {activeJourney.headsignDestination ??
+              t("journey.tracking_bus", "Siguiendo autobús")}
+          </p>
+          <p className="text-xs opacity-80 truncate">
             {activeJourney.stopName}
-          </Link>
-          {" · "}
-          {minutesLabel}
-        </p>
-      </div>
+            {" · "}
+            {minutesLabel}
+          </p>
+        </div>
 
-      {permissionState === "denied" && (
-        <span
-          title={t(
-            "journey.notifications_blocked",
-            "Notificaciones bloqueadas"
-          )}
-          className="opacity-60"
-        >
-          <Bell size={16} className="line-through" />
-        </span>
-      )}
+        {permissionState === "denied" && (
+          <span
+            title={t(
+              "journey.notifications_blocked",
+              "Notificaciones bloqueadas"
+            )}
+            className="opacity-60 shrink-0"
+          >
+            <Bell size={16} className="line-through" />
+          </span>
+        )}
 
+        <Map size={16} className="opacity-60 shrink-0" />
+      </Link>
+
+      {/* Cancel button — absolutely positioned so it doesn't nest inside the Link */}
       <button
         type="button"
         onClick={stopJourney}
         aria-label={t("journey.stop_tracking", "Detener seguimiento")}
-        className="p-1.5 rounded-full hover:bg-white/20 transition-colors shrink-0"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-white hover:bg-white/20 transition-colors shrink-0"
       >
         <X size={18} />
       </button>

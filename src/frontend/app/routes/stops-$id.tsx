@@ -1,7 +1,7 @@
 import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
 import { fetchArrivals } from "~/api/arrivals";
 import {
   type Arrival,
@@ -67,6 +67,7 @@ interface ErrorInfo {
 export default function Estimates() {
   const { t } = useTranslation();
   const params = useParams();
+  const location = useLocation();
   const stopId = params.id ?? "";
   const stopFeedId = stopId.split(":")[0] || stopId;
   const fallbackStopCode = stopId.split(":")[1] || stopId;
@@ -94,6 +95,21 @@ export default function Estimates() {
   const { activeJourney, startJourney, stopJourney } = useJourney();
   const trackedTripId =
     activeJourney?.stopId === stopId ? activeJourney.tripId : undefined;
+
+  // If navigated from the journey banner, open the map for the tracked trip.
+  // Empty dependency array is intentional: we only consume the navigation state
+  // once on mount (location.state is fixed for the lifetime of this component
+  // instance; setters from useState are stable and don't need to be listed).
+  useEffect(() => {
+    const state = location.state as
+      | { openMap?: boolean; selectedTripId?: string }
+      | null
+      | undefined;
+    if (state?.openMap && state?.selectedTripId) {
+      setSelectedArrivalId(state.selectedTripId);
+      setIsMapModalOpen(true);
+    }
+  }, []); // mount-only: see comment above
 
   const handleTrackArrival = useCallback(
     (arrival: Arrival) => {
