@@ -116,124 +116,10 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     .OrderBy(x => Math.Abs(x.TimeDiff)) // Best time fit
                     .FirstOrDefault();
 
-                if (bestMatch != null)
-                {
-                    var arrival = bestMatch.Arrival;
-
-                    var scheduledMinutes = arrival.Estimate.Minutes;
-                    arrival.Estimate.Minutes = estimate.Minutes;
-
-                    // Calculate delay badge
-                    var delayMinutes = estimate.Minutes - scheduledMinutes;
-                    arrival.Delay = new DelayBadge { Minutes = delayMinutes };
-
-                    string scheduledHeadsign = arrival.Headsign.Destination;
-                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
-                    {
-                        scheduledHeadsign = otpArr.Trip.TripHeadsign;
-                    }
-
-                    // Prefer real-time headsign UNLESS it's just the last stop name (which is less informative)
-                    if (!string.IsNullOrWhiteSpace(estimate.Route))
-                    {
-                        bool isJustLastStop = false;
-
-                        if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
-                        {
-                            var lastStop = otpArrival.Trip.Stoptimes.LastOrDefault();
-                            if (lastStop != null)
-                            {
-                                var arrivalLastStopNormalized = _feedService.NormalizeRouteNameForMatching(lastStop.Stop.Name);
-                                isJustLastStop = estimateRouteNormalized == arrivalLastStopNormalized;
-                            }
-                        }
-
-                        // Use real-time headsign unless it's just the final stop name
-                        if (!isJustLastStop)
-                        {
-                            arrival.Headsign.Destination = estimate.Route;
-                        }
-                    }
-
-                    // Calculate position
-                    if (stopLocation != null)
-                    {
-                        Position? currentPosition = null;
-
-                        if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
-                            otpArrival.Trip.Geometry?.Points != null)
-                        {
-                            var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)
-                                .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })
-                                .ToList();
-
-                            var shape = _shapeService.CreateShapeFromWgs84(decodedPoints);
-
-                            // Ensure meters is positive
-                            var meters = Math.Max(0, estimate.Meters);
-                            var result = _shapeService.GetBusPosition(shape, stopLocation, meters);
-
-                            currentPosition = result.BusPosition;
-
-                            // Populate Shape GeoJSON
-                            if (!context.IsReduced && currentPosition != null)
-                            {
-                                var features = new List<object>
-                                {
-                                    new
-                                    {
-                                        type = "Feature",
-                                        geometry = new
-                                        {
-                                            type = "LineString",
-                                            coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
-                                        },
-                                        properties = new { type = "route" }
-                                    }
-                                };
-
-                                // Add stops if available
-                                if (otpArrival.Trip.Stoptimes != null)
-                                {
-                                    foreach (var stoptime in otpArrival.Trip.Stoptimes)
-                                    {
-                                        features.Add(new
-                                        {
-                                            type = "Feature",
-                                            geometry = new
-                                            {
-                                                type = "Point",
-                                                coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
-                                            },
-                                            properties = new
-                                            {
-                                                type = "stop",
-                                                name = stoptime.Stop.Name
-                                            }
-                                        });
-                                    }
-                                }
-
-                                arrival.Shape = new
-                                {
-                                    type = "FeatureCollection",
-                                    features = features
-                                };
-                            }
-                        }
-
-                        if (currentPosition != null)
-                        {
-                            arrival.CurrentPosition = currentPosition;
-                        }
-                    }
-
-                    usedTripIds.Add(arrival.TripId);
-                }
-                else
+                if (bestMatch is null)
                 {
                     _logger.LogInformation("Adding unmatched Vitrasa real-time arrival for line {Line} in {Minutes}m",
-                        estimate.Line, estimate.Minutes);
+    estimate.Line, estimate.Minutes);
 
                     // Try to find a "template" arrival with the same line to copy colors from
                     var template = context.Arrivals
@@ -259,7 +145,127 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                             Precision = ArrivalPrecision.Confident
                         }
                     });
+
+                    continue;
                 }
+
+                var arrival = bestMatch.Arrival;
+
+                var scheduledMinutes = arrival.Estimate.Minutes;
+                arrival.Estimate.Minutes = estimate.Minutes;
+
+                // Calculate delay badge
+                var delayMinutes = estimate.Minutes - scheduledMinutes;
+                arrival.Delay = new DelayBadge { Minutes = delayMinutes };
+
+                string scheduledHeadsign = arrival.Headsign.Destination;
+                if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
+                {
+                    scheduledHeadsign = otpArr.Trip.TripHeadsign;
+                }
+
+                // Prefer real-time headsign UNLESS it's just the last stop name (which is less informative)
+                if (!string.IsNullOrWhiteSpace(estimate.Route))
+                {
+                    bool isJustLastStop = false;
+
+                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
+                    {
+                        var lastStop = otpArrival.Trip.Stoptimes.LastOrDefault();
+                        if (lastStop != null)
+                        {
+                            var arrivalLastStopNormalized = _feedService.NormalizeRouteNameForMatching(lastStop.Stop.Name);
+                            isJustLastStop = estimateRouteNormalized == arrivalLastStopNormalized;
+                        }
+                    }
+
+                    // Use real-time headsign unless it's just the final stop name
+                    if (!isJustLastStop)
+                    {
+                        arrival.Headsign.Destination = estimate.Route;
+                    }
+                }
+
+                // Calculate position
+                if (stopLocation != null)
+                {
+                    Position? currentPosition = null;
+
+                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
+                        otpArrival.Trip.Geometry?.Points != null)
+                    {
+                        var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)
+                            .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })
+                            .ToList();
+
+                        var shape = _shapeService.CreateShapeFromWgs84(decodedPoints);
+
+                        // Ensure meters is positive
+                        var meters = Math.Max(0, estimate.Meters);
+                        var result = _shapeService.GetBusPosition(shape, stopLocation, meters);
+
+                        currentPosition = result.BusPosition;
+
+                        // Populate Shape GeoJSON
+                        if (!context.IsReduced && currentPosition != null)
+                        {
+                            var features = new List<object>
+                                {
+                                    new
+                                    {
+                                        type = "Feature",
+                                        geometry = new
+                                        {
+                                            type = "LineString",
+                                            coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
+                                        },
+                                        properties = new { type = "route" }
+                                    }
+                                };
+
+                            // Add stops if available
+                            if (otpArrival.Trip.Stoptimes != null)
+                            {
+                                foreach (var stoptime in otpArrival.Trip.Stoptimes)
+                                {
+                                    features.Add(new
+                                    {
+                                        type = "Feature",
+                                        geometry = new
+                                        {
+                                            type = "Point",
+                                            coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
+                                        },
+                                        properties = new
+                                        {
+                                            type = "stop",
+                                            name = stoptime.Stop.Name
+                                        }
+                                    });
+                                }
+                            }
+
+                            arrival.Shape = new
+                            {
+                                type = "FeatureCollection",
+                                features = features
+                            };
+                        }
+                    }
+
+                    if (currentPosition != null)
+                    {
+                        arrival.CurrentPosition = currentPosition;
+                        arrival.Estimate.Precision = ArrivalPrecision.Confident;
+                    }
+                    else
+                    {
+                        // If we can't calculate a position, degrade precision to "Unsure" to indicate less confidence
+                        arrival.Estimate.Precision = ArrivalPrecision.Unsure;
+                    }
+                }
+
+                usedTripIds.Add(arrival.TripId);
             }
 
             context.Arrivals.AddRange(newArrivals);
