@@ -258,7 +258,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         arrival.CurrentPosition = currentPosition;
                         arrival.Estimate.Precision = ArrivalPrecision.Confident;
                     }
-                    else
+                    else if (!context.IsNano && !context.IsReduced) // Full mode, no position means actually no position
                     {
                         // If we can't calculate a position, degrade precision to "Unsure" to indicate less confidence
                         arrival.Estimate.Precision = ArrivalPrecision.Unsure;
