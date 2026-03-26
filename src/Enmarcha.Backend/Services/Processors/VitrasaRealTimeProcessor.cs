@@ -127,7 +127,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 
                     newArrivals.Add(new Arrival
                     {
-                        TripId = $"vitrasa:rt:{estimate.Line}:{estimate.Route}:{estimate.Minutes}",
+                        TripId = $"vitrasa:rtonly:{estimate.Line}:{estimate.Route}:{estimate.Minutes}",
                         Route = new RouteInfo
                         {
                             GtfsId = $"vitrasa:{estimate.Line}",
@@ -209,8 +209,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         // Populate Shape GeoJSON
                         if (!context.IsReduced && currentPosition != null)
                         {
-                            var features = new List<object>
-                                {
+                            List<object> features = [
                                     new
                                     {
                                         type = "Feature",
@@ -221,7 +220,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                                         },
                                         properties = new { type = "route" }
                                     }
-                                };
+                                ];
 
                             // Add stops if available
                             if (otpArrival.Trip.Stoptimes != null)
@@ -248,7 +247,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                             arrival.Shape = new
                             {
                                 type = "FeatureCollection",
-                                features = features
+                                features
                             };
                         }
                     }
@@ -262,6 +261,11 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     {
                         // If we can't calculate a position, degrade precision to "Unsure" to indicate less confidence
                         arrival.Estimate.Precision = ArrivalPrecision.Unsure;
+                    }
+                    else
+                    {
+                        // In Nano/Reduced mode we don't have shape data, so we can't calculate position. Don't degrade precision since it's expected.
+                        arrival.Estimate.Precision = ArrivalPrecision.Confident;
                     }
                 }
 

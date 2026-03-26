@@ -27,7 +27,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                     color
                     textColor
                 }}
-                arrivals: stoptimesWithoutPatterns(numberOfDepartures: 100, startTime: {startTimeUnix}, timeRange: 14400) {{
+                arrivals: stoptimesWithoutPatterns(numberOfDepartures: 50, startTime: {startTimeUnix}, timeRange: 14400) {{
                     headsign
                     scheduledDeparture
                     serviceDay

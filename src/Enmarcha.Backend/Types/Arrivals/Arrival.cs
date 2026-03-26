@@ -77,7 +77,7 @@ public class ArrivalDetails
     [JsonPropertyName("precision")] public ArrivalPrecision Precision { get; set; } = ArrivalPrecision.Scheduled;
 }
 
-[System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ArrivalPrecision
 {
     [JsonStringEnumMemberName("confident")]

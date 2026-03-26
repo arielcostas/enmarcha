@@ -178,8 +178,6 @@ public partial class ArrivalsController : ControllerBase
             var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
 
-            var nowInSecondsOfDay = (int)(nowLocal - nowLocal.Date).TotalSeconds;
-
             arrivals.Add(new Arrival
             {
                 TripId = item.Trip.GtfsId,
