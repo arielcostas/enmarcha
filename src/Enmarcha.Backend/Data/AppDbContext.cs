@@ -14,6 +14,7 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
     }
 
     public DbSet<ServiceAlert> ServiceAlerts { get; set; }
+    public DbSet<PushSubscription> PushSubscriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -71,6 +72,12 @@ public class AppDbContext : IdentityDbContext<IdentityUser>
                     v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                     v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null) ?? new List<string>(),
                     JsonComparer<List<string>>());
+        });
+
+        builder.Entity<PushSubscription>(b =>
+        {
+            b.HasKey(x => x.Id);
+            b.HasIndex(x => x.Endpoint).IsUnique();
         });
     }
 }

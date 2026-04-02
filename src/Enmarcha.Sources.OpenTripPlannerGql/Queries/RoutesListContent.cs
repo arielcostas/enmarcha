@@ -21,6 +21,7 @@ public class RoutesListContent : IGraphRequest<RoutesListContent.Args>
             textColor
             sortOrder
             agency {
+              gtfsId
               name
             }
             patterns {
@@ -52,6 +53,7 @@ public class RoutesListResponse : AbstractGraphResponse
 
     public class AgencyItem
     {
+        [JsonPropertyName("gtfsId")] public string? GtfsId { get; set; }
         [JsonPropertyName("name")] public string? Name { get; set; }
     }
 

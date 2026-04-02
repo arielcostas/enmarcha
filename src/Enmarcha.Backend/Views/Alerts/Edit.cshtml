@@ -57,6 +57,8 @@
     </a>
 </div>
 
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
 <form action="@formAction" method="post" novalidate>
     @Html.AntiForgeryToken()
     @if (!isCreate)
@@ -407,7 +409,7 @@
             }
             for (const a of agencies) el.appendChild(makeTransitItem(a.selector, () =>
                 `<i class="bi bi-building me-2"></i><span class="flex-grow-1">${escHtml(a.name)}</span>` +
-                `<code class="text-muted small">${escHtml(a.feedId)}</code>`
+                `<code class="text-muted small">${escHtml(a.agencyGtfsId)}</code>`
             ));
         }
 

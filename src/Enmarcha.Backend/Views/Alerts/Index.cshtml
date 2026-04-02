@@ -5,6 +5,14 @@
     ViewData["Title"] = "Alertas de servicio";
 }
 
+@if (TempData["SuccessMessage"] is string successMsg)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-check-circle-fill"></i> @successMsg
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
         <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Alertas de servicio
@@ -66,6 +74,12 @@ else
                                    title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <form action="/backoffice/alerts/@alert.Id/push" method="post" class="d-inline ms-1">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-primary" title="Enviar notificación push">
+                                        <i class="bi bi-bell"></i>
+                                    </button>
+                                </form>
                                 <a href="/backoffice/alerts/@alert.Id/delete"
                                    class="btn btn-sm btn-outline-danger ms-1"
                                    title="Eliminar">

@@ -13,7 +13,8 @@ public class AlertSelector
 
     public static AlertSelector FromStop(string feedId, string stopId) => new() { Raw = $"stop#{feedId}:{stopId}" };
     public static AlertSelector FromRoute(string feedId, string routeId) => new() { Raw = $"route#{feedId}:{routeId}" };
-    public static AlertSelector FromAgency(string feedId) => new() { Raw = $"agency#{feedId}" };
+    /// <param name="agencyGtfsId">Full GTFS agency id in the form <c>feedId:agencyId</c> (e.g. <c>vitrasa:1</c>).</param>
+    public static AlertSelector FromAgency(string agencyGtfsId) => new() { Raw = $"agency#{agencyGtfsId}" };
 
     public override string ToString() => Raw;
 }

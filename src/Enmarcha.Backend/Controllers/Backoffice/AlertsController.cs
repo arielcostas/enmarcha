@@ -1,4 +1,5 @@
 using Enmarcha.Backend.Data;
+using Enmarcha.Backend.Services;
 using Enmarcha.Backend.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,11 @@ namespace Enmarcha.Backend.Controllers.Backoffice;
 
 [Route("backoffice/alerts")]
 [Authorize(AuthenticationSchemes = "Backoffice")]
-public class AlertsController(AppDbContext db) : Controller
+public class AlertsController(
+    AppDbContext db,
+    IPushNotificationService pushService,
+    ILogger<AlertsController> logger
+) : Controller
 {
     [HttpGet("")]
     public async Task<IActionResult> Index()
@@ -28,6 +33,7 @@ public class AlertsController(AppDbContext db) : Controller
     {
         if (!ModelState.IsValid)
         {
+            logger.LogWarning("Invalid model state when creating alert: {Errors}", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             return View("Edit", model);
         }
 
@@ -50,6 +56,7 @@ public class AlertsController(AppDbContext db) : Controller
     {
         if (!ModelState.IsValid)
         {
+            logger.LogWarning("Invalid model state when editing alert {Id}: {Errors}", id, ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             return View("Edit", model);
         }
 
@@ -78,6 +85,18 @@ public class AlertsController(AppDbContext db) : Controller
 
         db.ServiceAlerts.Remove(alert);
         await db.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost("{id}/push")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SendPush(string id)
+    {
+        var alert = await db.ServiceAlerts.FindAsync(id);
+        if (alert is null) return NotFound();
+
+        await pushService.SendAlertAsync(alert);
+        TempData["SuccessMessage"] = $"Notificación enviada (v{alert.Version})";
         return RedirectToAction(nameof(Index));
     }
 }

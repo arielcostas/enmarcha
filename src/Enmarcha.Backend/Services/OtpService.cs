@@ -54,6 +54,7 @@ public class OtpService
             TextColor = textColor,
             SortOrder = route.SortOrder,
             AgencyName = route.Agency?.Name,
+            AgencyId = route.Agency?.GtfsId,
             TripCount = route.Patterns.Sum(p => p.TripsForDate.Count)
         };
     }

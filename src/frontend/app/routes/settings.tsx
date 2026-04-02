@@ -2,6 +2,7 @@ import { Computer, Moon, Sun, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { PushNotificationSettings } from "~/components/PushNotificationSettings";
 import { usePageTitle } from "~/contexts/PageTitleContext";
 import { useApp, type Theme } from "../AppContext";
 import "../tailwind-full.css";
@@ -178,7 +179,7 @@ export default function Settings() {
           className="block text-lg font-medium text-text mb-3"
         >
           {t("about.language", "Idioma")}
-        </label>
+        </label>{" "}
         <select
           id="language"
           className="
@@ -196,6 +197,11 @@ export default function Settings() {
           <option value="en-GB">English</option>
         </select>
       </section>
+
+      {/* Push Notifications */}
+      <div className="mt-8 pt-8 border-t border-border">
+        <PushNotificationSettings />
+      </div>
 
       {/* Privacy / Clear data */}
       <section className="mt-8 pt-8 border-t border-border">

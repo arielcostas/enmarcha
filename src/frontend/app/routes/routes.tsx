@@ -63,16 +63,30 @@ export default function RoutesPage() {
 
   const sortedAgencyEntries = useMemo(() => {
     if (!routesByAgency) return [];
-    return Object.entries(routesByAgency).sort(([a], [b]) => {
+    return Object.entries(routesByAgency).sort(([a, routesA], [b, routesB]) => {
+      // Use the agency's own gtfsId (feedId:agencyId) as the stable key — this
+      // matches the "agency#feedId:agencyId" alert selector format and correctly
+      // handles feeds that contain multiple agencies.
+      const agencyIdA =
+        routesA?.[0]?.agencyId ??
+        routesA?.[0]?.id.split(":")[0] ??
+        a.toLowerCase();
+      const agencyIdB =
+        routesB?.[0]?.agencyId ??
+        routesB?.[0]?.id.split(":")[0] ??
+        b.toLowerCase();
+      const feedIdA = agencyIdA.split(":")[0];
+      const feedIdB = agencyIdB.split(":")[0];
+
       // First, sort by favorite status
-      const isFavA = isFavoriteAgency(a);
-      const isFavB = isFavoriteAgency(b);
+      const isFavA = isFavoriteAgency(agencyIdA);
+      const isFavB = isFavoriteAgency(agencyIdB);
       if (isFavA && !isFavB) return -1;
       if (!isFavA && isFavB) return 1;
 
       // Then by fixed order
-      const indexA = orderedAgencies.indexOf(a.toLowerCase());
-      const indexB = orderedAgencies.indexOf(b.toLowerCase());
+      const indexA = orderedAgencies.indexOf(feedIdA);
+      const indexB = orderedAgencies.indexOf(feedIdB);
       if (indexA === -1 && indexB === -1) {
         return a.localeCompare(b);
       }
@@ -156,10 +170,15 @@ export default function RoutesPage() {
         )}
 
         {sortedAgencyEntries.map(([agency, agencyRoutes]) => {
-          const isFav = isFavoriteAgency(agency);
+          // Use the agency's own gtfsId (feedId:agencyId) as the stable favourite key.
+          const agencyId =
+            agencyRoutes?.[0]?.agencyId ??
+            agencyRoutes?.[0]?.id.split(":")[0] ??
+            agency.toLowerCase();
+          const isFav = isFavoriteAgency(agencyId);
           const isExpanded = searchQuery
             ? true
-            : (expandedAgencies[agency] ?? false);
+            : (expandedAgencies[agency] ?? isFav);
 
           return (
             <div
@@ -190,7 +209,7 @@ export default function RoutesPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => toggleFavoriteAgency(agency)}
+                  onClick={() => toggleFavoriteAgency(agencyId)}
                   className={`rounded-full p-2 transition-colors ${
                     isFav
                       ? "text-yellow-500"

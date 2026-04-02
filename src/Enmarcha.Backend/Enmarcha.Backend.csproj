@@ -30,6 +30,7 @@
 
     <PackageReference Include="CsvHelper" />
     <PackageReference Include="FuzzySharp" />
+    <PackageReference Include="WebPush" />
 
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />

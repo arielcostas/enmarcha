@@ -110,6 +110,7 @@ export const RouteSchema = z.object({
   textColor: z.string().nullable(),
   sortOrder: z.number().nullable(),
   agencyName: z.string().nullable().optional(),
+  agencyId: z.string().nullable().optional(),
   tripCount: z.number(),
 });
 

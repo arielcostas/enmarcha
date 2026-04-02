@@ -17,7 +17,7 @@ public class AlertFormViewModel
     [Display(Name = "Selectores (uno por línea)")]
     public string SelectorsRaw { get; set; } = "";
 
-    [Display(Name = "URLs de información (una por línea)")]
+    [Display(Name = "URLs de información (una por línea)"), Required(AllowEmptyStrings = true)]
     public string InfoUrlsRaw { get; set; } = "";
 
     [Display(Name = "Causa")]

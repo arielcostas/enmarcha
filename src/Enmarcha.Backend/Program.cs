@@ -202,6 +202,9 @@ builder.Services.AddSingleton<ShapeTraversalService>();
 builder.Services.AddSingleton<FeedService>();
 builder.Services.AddSingleton<FareService>();
 
+builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
+builder.Services.AddHostedService<AlertPhaseNotificationHostedService>();
+
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();

@@ -42,14 +42,16 @@ public class BackofficeSelectorService(
             {
                 var (feedId, routeId) = SplitGtfsId(r.GtfsId);
                 var color = NormalizeColor(r.Color);
-                return new SelectorRouteItem(feedId, r.GtfsId, $"route#{feedId}:{routeId}", r.ShortName, r.LongName, r.Agency?.Name, color);
+                return new SelectorRouteItem(feedId, r.GtfsId, $"route#{feedId}:{routeId}", r.ShortName, r.LongName, r.Agency?.Name, r.Agency?.GtfsId, color);
             })
             .OrderBy(r => r.ShortName)
             .ToList();
 
+        // Group by the full agency gtfsId (feedId:agencyId) so that feeds with
+        // multiple agencies each get their own entry.
         var agencyDtos = routeDtos
-            .Where(r => r.AgencyName is not null)
-            .GroupBy(r => r.FeedId)
+            .Where(r => r.AgencyGtfsId is not null && r.AgencyName is not null)
+            .GroupBy(r => r.AgencyGtfsId!)
             .Select(g => new SelectorAgencyItem(g.Key, $"agency#{g.Key}", g.First().AgencyName!))
             .ToList();
 
@@ -82,7 +84,7 @@ public class BackofficeSelectorService(
                     var routeItems = (s.Routes ?? []).Select(r =>
                     {
                         var (rf, ri) = SplitGtfsId(r.GtfsId);
-                        return new SelectorRouteItem(rf, r.GtfsId, $"route#{rf}:{ri}", r.ShortName, null, null, NormalizeColor(r.Color));
+                        return new SelectorRouteItem(rf, r.GtfsId, $"route#{rf}:{ri}", r.ShortName, null, null, null, NormalizeColor(r.Color));
                     }).ToList();
                     return new SelectorStopItem(s.GtfsId, $"stop#{feedId}:{stopId}", s.Name, s.Code, s.Lat, s.Lon, routeItems);
                 })
@@ -112,6 +114,7 @@ public class BackofficeSelectorService(
 }
 
 public record SelectorTransitData(List<SelectorAgencyItem> Agencies, List<SelectorRouteItem> Routes);
-public record SelectorAgencyItem(string FeedId, string Selector, string Name);
-public record SelectorRouteItem(string FeedId, string GtfsId, string Selector, string? ShortName, string? LongName, string? AgencyName, string? Color);
+/// <param name="AgencyGtfsId">Full GTFS agency id in the form <c>feedId:agencyId</c>.</param>
+public record SelectorAgencyItem(string AgencyGtfsId, string Selector, string Name);
+public record SelectorRouteItem(string FeedId, string GtfsId, string Selector, string? ShortName, string? LongName, string? AgencyName, string? AgencyGtfsId, string? Color);
 public record SelectorStopItem(string GtfsId, string Selector, string Name, string? Code, double Lat, double Lon, List<SelectorRouteItem> Routes);

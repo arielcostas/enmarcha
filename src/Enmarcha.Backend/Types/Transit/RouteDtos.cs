@@ -9,6 +9,7 @@ public class RouteDto
     public string? TextColor { get; set; }
     public int? SortOrder { get; set; }
     public string? AgencyName { get; set; }
+    public string? AgencyId { get; set; }
     public int TripCount { get; set; }
 }
 
@@ -19,6 +20,7 @@ public class RouteDetailsDto
     public string? Color { get; set; }
     public string? TextColor { get; set; }
     public string? AgencyName { get; set; }
+    public string? AgencyId { get; set; }
     public List<PatternDto> Patterns { get; set; } = [];
 }
 

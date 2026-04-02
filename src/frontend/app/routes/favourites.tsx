@@ -99,7 +99,10 @@ export default function Favourites() {
     return routes.reduce(
       (acc, route) => {
         const agency = route.agencyName || t("routes.unknown_agency", "Otros");
-        if (!isFavoriteAgency(agency)) {
+        // Match by the agency's own gtfsId (feedId:agencyId) — consistent with
+        // what routes.tsx stores and with the alert selector format.
+        const agencyId = route.agencyId ?? route.id.split(":")[0];
+        if (!isFavoriteAgency(agencyId)) {
           return acc;
         }
 

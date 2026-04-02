@@ -24,6 +24,15 @@ public class ServiceAlert
     [Column("event_end_date")] public DateTime EventEndDate { get; set; }
     [Column("hidden_date")] public DateTime HiddenDate { get; set; }
 
+    /// <summary>Incremented each time a push notification is sent for this alert.</summary>
+    public int Version { get; set; } = 1;
+
+    /// <summary>Set when a push notification was sent for the PreNotice phase.</summary>
+    [Column("pre_notice_notified_at")] public DateTime? PreNoticeNotifiedAt { get; set; }
+
+    /// <summary>Set when a push notification was sent for the Active phase.</summary>
+    [Column("active_notified_at")] public DateTime? ActiveNotifiedAt { get; set; }
+
     public AlertPhase GetPhase(DateTime? now = null)
     {
         now ??= DateTime.UtcNow;

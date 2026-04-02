@@ -1,3 +1,5 @@
+import { writeFavorites } from "~/utils/idb";
+
 export interface Stop {
   stopId: string;
   stopCode?: string;
@@ -168,6 +170,9 @@ function addFavourite(stopId: string | number) {
   if (!favouriteStops.includes(id)) {
     favouriteStops.push(id);
     localStorage.setItem(`favouriteStops`, JSON.stringify(favouriteStops));
+    writeFavorites("favouriteStops", favouriteStops).catch(() => {
+      /* best-effort */
+    });
   }
 }
 
@@ -183,6 +188,9 @@ function removeFavourite(stopId: string | number) {
 
   const newFavouriteStops = favouriteStops.filter((sid) => sid !== id);
   localStorage.setItem(`favouriteStops`, JSON.stringify(newFavouriteStops));
+  writeFavorites("favouriteStops", newFavouriteStops).catch(() => {
+    /* best-effort */
+  });
 }
 
 function isFavourite(stopId: string | number): boolean {
