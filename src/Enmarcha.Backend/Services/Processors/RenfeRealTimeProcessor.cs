@@ -64,7 +64,7 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
                     {
                         Latitude = position.Latitude,
                         Longitude = position.Longitude,
-                        OrientationDegrees = 0 // TODO: Set the proper degrees
+                        Bearing = 0 // TODO: Set the proper degrees
                     };
                 }
             }

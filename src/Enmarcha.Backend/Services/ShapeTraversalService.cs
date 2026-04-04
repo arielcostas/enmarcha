@@ -115,7 +115,7 @@ public class ShapeTraversalService
 
         // Transform from EPSG:25829 (meters) to EPSG:4326 (lat/lng)
         var pos = TransformToLatLng(busPoint);
-        pos.OrientationDegrees = (int)Math.Round(bearing);
+        pos.Bearing = (int)Math.Round(bearing);
         pos.ShapeIndex = forwardIndex;
         return (pos, closestPointIndex);
     }

@@ -37,7 +37,7 @@ export const ShiftBadgeSchema = z.object({
 export const PositionSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
-  orientationDegrees: z.number().optional().nullable(),
+  bearing: z.number().optional().nullable(),
   shapeIndex: z.number().optional().nullable(),
 });
 
@@ -174,12 +174,7 @@ export const ConsolidatedCirculationSchema = z.object({
     .optional()
     .nullable(),
   currentPosition: z
-    .object({
-      latitude: z.number(),
-      longitude: z.number(),
-      orientationDegrees: z.number(),
-      shapeIndex: z.number().optional().nullable(),
-    })
+    .object(PositionSchema)
     .optional()
     .nullable(),
   isPreviousTrip: z.boolean().optional().nullable(),

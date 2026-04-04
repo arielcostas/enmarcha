@@ -33,7 +33,7 @@ public class Position
 {
     public required double Latitude { get; set; }
     public required double Longitude { get; set; }
-    public int OrientationDegrees { get; set; }
+    public int? Bearing { get; set; }
     public int ShapeIndex { get; set; }
 }
 

@@ -15,7 +15,7 @@ import "./StopMapModal.css";
 export interface Position {
   latitude: number;
   longitude: number;
-  orientationDegrees?: number | null;
+  bearing?: number | null;
   shapeIndex?: number | null | undefined;
 }
 
@@ -475,26 +475,54 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                         flexDirection: "column",
                         alignItems: "center",
                         gap: 6,
-                        transform: `rotate(${selectedBus.currentPosition.orientationDegrees}deg)`,
+                        transform: `rotate(${selectedBus.currentPosition.bearing ?? 0}deg)`,
                         transformOrigin: "center center",
                       }}
                     >
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        style={{
-                          filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                        }}
-                      >
-                        <path
-                          d="M12 2 L22 22 L12 17 L2 22 Z"
-                          fill={selectedBus.colour}
-                          stroke="#000"
-                          strokeWidth="2"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                      {selectedBus.currentPosition.bearing ? (
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          style={{
+                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                          }}
+                        >
+                          <path
+                            d="M12 2 L22 22 L12 17 L2 22 Z"
+                            fill={selectedBus.colour}
+                            stroke="#000"
+                            strokeWidth="2"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          style={{
+                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                          }}
+                        >
+                          <rect
+                            x="2"
+                            y="2"
+                            width="20"
+                            height="20"
+                            rx="4"
+                            fill={selectedBus.colour}
+                            stroke="#000"
+                            strokeWidth="2"
+                          />
+                          <path
+                            d="M12 6v3M12 15v3M6 12h3M15 12h3"
+                            stroke="#fff"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      )}
                     </div>
                   </Marker>
                 )}

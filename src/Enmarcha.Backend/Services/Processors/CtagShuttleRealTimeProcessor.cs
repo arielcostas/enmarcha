@@ -209,7 +209,7 @@ public class CtagShuttleRealTimeProcessor : AbstractRealTimeProcessor
                     var dy = nextPoint.Y - currentPoint.Y;
                     var bearing = Math.Atan2(dx, dy) * 180.0 / Math.PI;
                     if (bearing < 0) bearing += 360.0;
-                    shuttleWgs84.OrientationDegrees = (int)Math.Round(bearing);
+                    shuttleWgs84.Bearing = (int)Math.Round(bearing);
                 }
 
                 activeArrival.CurrentPosition = shuttleWgs84;
@@ -220,7 +220,7 @@ public class CtagShuttleRealTimeProcessor : AbstractRealTimeProcessor
 
                 _logger.LogInformation(
                     "Shuttle position set: Lat={Lat}, Lon={Lon}, Bearing={Bearing}°",
-                    shuttleWgs84.Latitude, shuttleWgs84.Longitude, shuttleWgs84.OrientationDegrees);
+                    shuttleWgs84.Latitude, shuttleWgs84.Longitude, shuttleWgs84.Bearing);
             }
             else
             {
