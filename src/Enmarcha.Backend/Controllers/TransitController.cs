@@ -46,8 +46,49 @@ public class TransitController : ControllerBase
         }
         activity?.SetTag("feeds", string.Join(",", feeds));
 
+        // Parse requested feeds: entries may be plain "feedId" or "feedId:agencyId".
+        // Build the unique set of feed IDs to pass to OTP, and a per-feed agency
+        // allow-list (null = accept all agencies in that feed).
+        var feedIdsForOtp = new List<string>();
+        var agencyFilters = new Dictionary<string, HashSet<string>?>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var entry in feeds)
+        {
+            var colonIndex = entry.IndexOf(':');
+            if (colonIndex < 0)
+            {
+                // Plain feed ID — include all agencies in this feed.
+                var feedId = entry;
+                if (!feedIdsForOtp.Contains(feedId, StringComparer.OrdinalIgnoreCase))
+                    feedIdsForOtp.Add(feedId);
+                // null sentinel means "no agency filter"
+                agencyFilters[feedId] = null;
+            }
+            else
+            {
+                var feedId = entry[..colonIndex];
+                if (!feedIdsForOtp.Contains(feedId, StringComparer.OrdinalIgnoreCase))
+                    feedIdsForOtp.Add(feedId);
+
+                // Only add to the filter set if we haven't already opened this feed
+                // to all agencies (null). The full GTFS agency id is "feedId:agencyId".
+                if (!agencyFilters.TryGetValue(feedId, out var existing))
+                {
+                    agencyFilters[feedId] = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { entry };
+                }
+                else if (existing != null)
+                {
+                    existing.Add(entry);
+                }
+                // else: feed already open to all agencies — leave it as null.
+            }
+        }
+
         var serviceDate = DateTime.Now.ToString("yyyy-MM-dd");
-        var cacheKey = $"routes_{string.Join("_", feeds)}_{serviceDate}";
+        // Cache key uses the original (sorted) feed entries so "renfe" and
+        // "renfe:cercanias" produce different cache entries.
+        var sortedFeeds = feeds.OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
+        var cacheKey = $"routes_{string.Join("_", sortedFeeds)}_{serviceDate}";
         var cacheHit = _cache.TryGetValue(cacheKey, out List<RouteDto>? cachedRoutes);
         activity?.SetTag("cache.hit", cacheHit);
 
@@ -58,7 +99,7 @@ public class TransitController : ControllerBase
 
         try
         {
-            var query = RoutesListContent.Query(new RoutesListContent.Args(feeds, serviceDate));
+            var query = RoutesListContent.Query(new RoutesListContent.Args([.. feedIdsForOtp], serviceDate));
             var response = await SendOtpQueryAsync<RoutesListResponse>(query);
 
             if (response?.Data == null)
@@ -67,6 +108,13 @@ public class TransitController : ControllerBase
             }
 
             var routes = response.Data.Routes
+                .Where(r =>
+                {
+                    var feedId = r.GtfsId.Split(':')[0];
+                    if (!agencyFilters.TryGetValue(feedId, out var filter)) return false;
+                    if (filter == null) return true;
+                    return r.Agency?.GtfsId != null && filter.Contains(r.Agency.GtfsId);
+                })
                 .Select(_otpService.MapRoute)
                 .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.Id))
                 .ToList();

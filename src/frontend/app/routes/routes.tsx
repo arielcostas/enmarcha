@@ -26,6 +26,9 @@ export default function RoutesPage() {
     setExpandedAgencies((prev) => ({ ...prev, [agency]: !prev[agency] }));
   };
 
+  // Each entry is either a plain feed ID ("tussa") — which includes all agencies
+  // in that feed — or a "feedId:agencyId" pair ("renfe:cercanias") to restrict
+  // results to a single agency within a feed.
   const orderedAgencies = [
     "vitrasa",
     "tranvias",
@@ -33,6 +36,8 @@ export default function RoutesPage() {
     "ourense",
     "lugo",
     "shuttle",
+    "renfe:1071VC",
+    "xunta:XG621",
   ];
 
   const { data: routes, isLoading } = useQuery({
