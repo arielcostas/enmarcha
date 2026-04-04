@@ -167,7 +167,6 @@ public class TileController : ControllerBase
             "lugo" => "stop-lugo",
             "xunta" => "stop-xunta",
             "renfe" => "stop-renfe",
-            "feve" => "stop-feve",
             _ => "stop-generic",
         };
     }

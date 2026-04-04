@@ -9,8 +9,8 @@ public class TransitKindClassifier
         return feedId switch
         {
             "vitrasa" or "tussa" or "tranvias" or "shuttle" or "ourense" => TransitKind.Bus,
-            "xunta" =>  TransitKind.Coach,
-            "renfe" or "feve" => TransitKind.Train,
+            "xunta" => TransitKind.Coach,
+            "renfe" => TransitKind.Train,
             _ => TransitKind.Unknown
         };
     }

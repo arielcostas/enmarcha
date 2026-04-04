@@ -592,8 +592,6 @@ export default function StopMap() {
               "#007BC4",
               "renfe",
               "#870164",
-              "feve",
-              "#EE3D32",
               "#27187D",
             ],
             "text-halo-color": [

@@ -32,7 +32,6 @@ export default function RoutesPage() {
     "tussa",
     "ourense",
     "lugo",
-    "feve",
     "shuttle",
   ];
 

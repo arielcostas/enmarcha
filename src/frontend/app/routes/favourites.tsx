@@ -36,7 +36,6 @@ export default function Favourites() {
     "tussa",
     "ourense",
     "lugo",
-    "feve",
     "shuttle",
   ];
 

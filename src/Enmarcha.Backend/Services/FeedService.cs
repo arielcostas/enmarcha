@@ -43,7 +43,6 @@ public class FeedService
             "lugo" => ("#FDC609", "#000000"),
             "xunta" => ("#007BC4", "#FFFFFF"),
             "renfe" => ("#870164", "#FFFFFF"),
-            "feve" => ("#EE3D32", "#FFFFFF"),
             _ => ("#000000", "#FFFFFF"),
         };
     }
