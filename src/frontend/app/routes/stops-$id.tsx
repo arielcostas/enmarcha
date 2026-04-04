@@ -10,15 +10,15 @@ import {
   type StopArrivalsResponse,
 } from "~/api/schema";
 import { ArrivalList } from "~/components/arrivals/ArrivalList";
-import ServiceAlerts from "~/components/ServiceAlerts";
 import { ErrorDisplay } from "~/components/ErrorDisplay";
 import { PullToRefresh } from "~/components/PullToRefresh";
 import RouteIcon from "~/components/RouteIcon";
+import ServiceAlerts from "~/components/ServiceAlerts";
 import { StopHelpModal } from "~/components/stop/StopHelpModal";
 import { StopMapModal } from "~/components/stop/StopMapModal";
 import { StopUsageChart } from "~/components/stop/StopUsageChart";
-import { usePageRightNode, usePageTitle } from "~/contexts/PageTitleContext";
 import { useJourney } from "~/contexts/JourneyContext";
+import { usePageRightNode, usePageTitle } from "~/contexts/PageTitleContext";
 import { formatHex } from "~/utils/colours";
 import StopDataProvider from "../data/StopDataProvider";
 import "../tailwind-full.css";

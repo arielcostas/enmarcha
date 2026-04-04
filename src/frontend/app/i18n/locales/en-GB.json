@@ -261,6 +261,8 @@
     "notification_now_title": "Your bus is arriving!",
     "notification_approaching_title": "Your bus arrives in {{minutes}} min",
     "notification_body": "Line {{line}} towards {{destination}} — {{stop}}",
-    "view_on_map": "View on map"
+    "view_on_map": "View on map",
+    "pickup_only": "Boarding only",
+    "dropoff_only": "Alighting only"
   }
 }
