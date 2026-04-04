@@ -240,8 +240,6 @@ export default function StopList() {
                 </ul>
               </div>
             )}
-
-          {/*<ServiceAlerts />*/}
         </>
       )}
     </div>

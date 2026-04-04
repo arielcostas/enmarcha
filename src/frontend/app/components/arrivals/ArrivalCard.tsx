@@ -1,4 +1,11 @@
-import { AlertTriangle, BusFront, LocateIcon, Navigation } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowDownRightSquare,
+  ArrowUpRightSquare,
+  BusFront,
+  LocateIcon,
+  Navigation,
+} from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Marquee from "react-fast-marquee";
 import { useTranslation } from "react-i18next";
@@ -71,10 +78,10 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     shift,
     vehicleInformation,
     operator,
+    operation,
   } = arrival;
 
   const etaValue = estimate.minutes.toString();
-  const etaUnit = t("estimates.minutes", "min");
 
   const timeClass = useMemo(() => {
     switch (estimate.precision) {
@@ -93,8 +100,26 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     const chips: Array<{
       label: string;
       tone?: string;
-      kind?: "regular" | "gps" | "delay" | "warning" | "vehicle";
+      kind?:
+        | "regular"
+        | "gps"
+        | "delay"
+        | "warning"
+        | "vehicle"
+        | "pickup"
+        | "dropoff";
     }> = [];
+
+    if (operation !== "pickup_dropoff") {
+      chips.push({
+        label:
+          operation === "pickup_only"
+            ? t("journey.pickup_only", "Solo subida")
+            : t("journey.dropoff_only", "Solo bajada"),
+        tone: operation === "pickup_only" ? "pickup" : "dropoff",
+        kind: operation === "pickup_only" ? "pickup" : "dropoff",
+      });
+    }
 
     // Badge/Shift info as a chip
     if (headsign.badge) {
@@ -149,14 +174,6 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     if (estimate.precision === "unsure") {
       chips.push({
         label: t("estimates.low_accuracy"),
-        tone: "warning",
-        kind: "warning",
-      });
-    }
-
-    if (estimate.precision === "scheduled") {
-      chips.push({
-        label: t("estimates.no_realtime"),
         tone: "warning",
         kind: "warning",
       });
@@ -240,6 +257,14 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
         {metaChips.map((chip, idx) => {
           let chipColourClasses = "";
           switch (chip.tone) {
+            case "pickup":
+              chipColourClasses =
+                "bg-green-600/10 dark:bg-green-600/20 text-green-700 dark:text-green-300";
+              break;
+            case "dropoff":
+              chipColourClasses =
+                "bg-orange-400/10 dark:bg-orange-600/20 text-orange-700 dark:text-orange-300";
+              break;
             case "delay-ok":
               chipColourClasses =
                 "bg-green-600/10 dark:bg-green-600/20 text-green-700 dark:text-green-300";
@@ -279,47 +304,56 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
               {chip.kind === "vehicle" && (
                 <BusFront className="w-3 h-3 inline-block" />
               )}
+              {chip.kind === "pickup" && (
+                <ArrowUpRightSquare className="w-3 h-3 inline-block" />
+              )}
+              {chip.kind === "dropoff" && (
+                <ArrowDownRightSquare className="w-3 h-3 inline-block" />
+              )}
+
               {chip.label}
             </span>
           );
         })}
 
-        {onTrack && estimate.precision !== "past" && (
-          // Use a <span> instead of a <button> here because this element can
-          // be rendered inside a <button> (when isClickable=true), and nested
-          // <button> elements are invalid HTML.
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation();
-              onTrack();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
+        {onTrack &&
+          estimate.precision !== "past" &&
+          estimate.precision !== "scheduled" && (
+            // Use a <span> instead of a <button> here because this element can
+            // be rendered inside a <button> (when isClickable=true), and nested
+            // <button> elements are invalid HTML.
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
                 e.stopPropagation();
                 onTrack();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onTrack();
+                }
+              }}
+              aria-label={
+                isTracked
+                  ? t("journey.stop_tracking", "Detener seguimiento")
+                  : t("journey.track_bus", "Seguir este autobús")
               }
-            }}
-            aria-label={
-              isTracked
-                ? t("journey.stop_tracking", "Detener seguimiento")
-                : t("journey.track_bus", "Seguir este autobús")
-            }
-            aria-pressed={isTracked}
-            className={`ml-auto text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 font-medium tracking-wide transition-colors cursor-pointer select-none ${
-              isTracked
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-black/[0.04] dark:bg-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400"
-            }`}
-          >
-            <Navigation className="w-3 h-3" />
-            {isTracked
-              ? t("journey.tracking", "Siguiendo")
-              : t("journey.track", "Seguir")}
-          </span>
-        )}
+              aria-pressed={isTracked}
+              className={`ml-auto text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 font-medium tracking-wide transition-colors cursor-pointer select-none ${
+                isTracked
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-black/[0.04] dark:bg-white/[0.08] text-slate-500 dark:text-slate-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400"
+              }`}
+            >
+              <Navigation className="w-3 h-3" />
+              {isTracked
+                ? t("journey.tracking", "Siguiendo")
+                : t("journey.track", "Seguir")}
+            </span>
+          )}
       </div>
     </Tag>
   );

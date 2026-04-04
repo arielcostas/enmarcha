@@ -10,6 +10,7 @@ import {
   type StopArrivalsResponse,
 } from "~/api/schema";
 import { ArrivalList } from "~/components/arrivals/ArrivalList";
+import ServiceAlerts from "~/components/ServiceAlerts";
 import { ErrorDisplay } from "~/components/ErrorDisplay";
 import { PullToRefresh } from "~/components/PullToRefresh";
 import RouteIcon from "~/components/RouteIcon";
@@ -228,6 +229,8 @@ export default function Estimates() {
             ))}
           </div>
         )}
+
+        <ServiceAlerts selectorFilter={[`stop#${stopId}`]} />
 
         <div className="estimates-list-container flex-1">
           {dataLoading ? (

@@ -1,4 +1,10 @@
-import { AlertTriangle, BusFront, LocateIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowDownRightSquare,
+  ArrowUpRightSquare,
+  BusFront,
+  LocateIcon,
+} from "lucide-react";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import RouteIcon from "~/components/RouteIcon";
@@ -23,10 +29,10 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
     shift,
     vehicleInformation,
     operator,
+    operation,
   } = arrival;
 
   const etaValue = estimate.minutes.toString();
-  const etaUnit = t("estimates.minutes", "min");
 
   const timeClass = useMemo(() => {
     switch (estimate.precision) {
@@ -45,8 +51,26 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
     const chips: Array<{
       label: string;
       tone?: string;
-      kind?: "regular" | "gps" | "delay" | "warning" | "vehicle";
+      kind?:
+        | "regular"
+        | "gps"
+        | "delay"
+        | "warning"
+        | "vehicle"
+        | "pickup"
+        | "dropoff";
     }> = [];
+
+    if (operation !== "pickup_dropoff") {
+      chips.push({
+        label:
+          operation === "pickup_only"
+            ? t("journey.pickup_only", "Solo subida")
+            : t("journey.dropoff_only", "Solo bajada"),
+        tone: operation === "pickup_only" ? "pickup" : "dropoff",
+        kind: operation === "pickup_only" ? "pickup" : "dropoff",
+      });
+    }
 
     if (operator) {
       chips.push({
@@ -151,6 +175,7 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
     headsign.badge,
     vehicleInformation,
     operator,
+    operation,
   ]);
 
   const isClickable = !!onClick && estimate.precision !== "past";
@@ -184,6 +209,14 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
             {metaChips.map((chip, idx) => {
               let chipColourClasses = "";
               switch (chip.tone) {
+                case "pickup":
+                  chipColourClasses =
+                    "bg-green-600/10 dark:bg-green-600/20 text-green-700 dark:text-green-300";
+                  break;
+                case "dropoff":
+                  chipColourClasses =
+                    "bg-orange-400/10 dark:bg-orange-600/20 text-orange-700 dark:text-orange-300";
+                  break;
                 case "delay-ok":
                   chipColourClasses =
                     "bg-green-600/10 dark:bg-green-600/20 text-green-700 dark:text-green-300";
@@ -222,6 +255,13 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
                   )}
                   {chip.kind === "vehicle" && (
                     <BusFront className="w-3 h-3 my-0.5 inline-block" />
+                  )}
+                  {/** I tried imitating the tachograph symbols for loading/unloading, but "bottom right" was better distinguished compared to "bottom left" */}
+                  {chip.kind === "pickup" && (
+                    <ArrowUpRightSquare className="w-3 h-3 my-0.5 inline-block" />
+                  )}
+                  {chip.kind === "dropoff" && (
+                    <ArrowDownRightSquare className="w-3 h-3 my-0.5 inline-block" />
                   )}
                   {chip.label}
                 </span>

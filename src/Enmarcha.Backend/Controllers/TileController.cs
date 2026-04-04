@@ -127,7 +127,7 @@ public class TileController : ControllerBase
                     { "code", $"{idParts[0]}:{codeWithinFeed}" },
                     { "name", FeedService.NormalizeStopName(feedId, stop.Name) },
                     { "icon", GetIconNameForFeed(feedId) },
-                    { "transitKind", GetTransitKind(feedId) }
+                    { "transitKind", TransitKindClassifier.StringByFeed(feedId) }
                 }
             };
 
@@ -169,17 +169,6 @@ public class TileController : ControllerBase
             "renfe" => "stop-renfe",
             "feve" => "stop-feve",
             _ => "stop-generic",
-        };
-    }
-
-    private string GetTransitKind(string feedId)
-    {
-        return feedId switch
-        {
-            "vitrasa" or "tussa" or "tranvias" or "shuttle" or "ourense" => "bus",
-            "xunta" => "coach",
-            "renfe" or "feve" => "train",
-            _ => "unknown"
         };
     }
 

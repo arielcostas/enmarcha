@@ -140,6 +140,15 @@ public partial class ArrivalsController : ControllerBase
         return Ok(new StopEstimatesResponse { Arrivals = estimates });
     }
 
+    private static VehicleOperation GetVehicleOperation(ArrivalsAtStopResponse.PickupType pickup, ArrivalsAtStopResponse.PickupType dropoff)
+    {
+        if (pickup == ArrivalsAtStopResponse.PickupType.None && dropoff == ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupDropoff;
+        if (pickup != ArrivalsAtStopResponse.PickupType.None && dropoff != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupDropoff;
+        if (pickup != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupOnly;
+        if (dropoff != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.DropoffOnly;
+        return VehicleOperation.PickupDropoff;
+    }
+
     private async Task<(ArrivalsAtStopResponse.StopItem Stop, ArrivalsContext Context)?> FetchAndProcessArrivalsAsync(
         string id, bool reduced, bool nano)
     {
@@ -168,11 +177,21 @@ public partial class ArrivalsController : ControllerBase
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
-            if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
+            //if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
+            //if (
+            //    item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
+            //    item.Trip.DepartureStoptime.Stop.GtfsId != id
+            //) continue;
+
+            // Delete loop routes that aren't starting here
             if (
                 item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
-                item.Trip.DepartureStoptime.Stop.GtfsId != id
-            ) continue;
+                item.Trip.DepartureStoptime.Stop.GtfsId == id &&
+                item.StopPosition != 1
+            )
+            {
+                continue;
+            }
 
             var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
             var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
@@ -195,7 +214,8 @@ public partial class ArrivalsController : ControllerBase
                     Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
                 },
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
-                RawOtpTrip = item
+                RawOtpTrip = item,
+                Operation = GetVehicleOperation(item.PickupTypeParsed, item.DropoffTypeParsed)
             });
         }
 

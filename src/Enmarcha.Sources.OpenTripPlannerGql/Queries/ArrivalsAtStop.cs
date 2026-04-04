@@ -31,8 +31,9 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                     headsign
                     scheduledDeparture
                     serviceDay
+                    stopPosition
                     pickupType
-
+                    dropoffType
                     trip {{
                         gtfsId
                         serviceId
@@ -108,12 +109,15 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("scheduledDeparture")]
         public int ScheduledDepartureSeconds { get; set; }
 
-        [JsonPropertyName("serviceDay")]
-        public long ServiceDay { get; set; }
+        [JsonPropertyName("serviceDay")] public long ServiceDay { get; set; }
 
         [JsonPropertyName("pickupType")] public required string PickupTypeOriginal { get; set; }
-
         public PickupType PickupTypeParsed => PickupType.Parse(PickupTypeOriginal);
+
+        [JsonPropertyName("dropoffType")] public required string DropoffTypeOriginal { get; set; }
+        public PickupType DropoffTypeParsed => PickupType.Parse(DropoffTypeOriginal);
+
+        [JsonPropertyName("stopPosition")] public int StopPosition { get; set; }
 
         [JsonPropertyName("trip")] public required TripDetails Trip { get; set; }
     }
@@ -131,8 +135,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("departureStoptime")]
         public required TerminusStoptime DepartureStoptime { get; set; }
 
-        [JsonPropertyName("arrivalStoptime")]
-        public required TerminusStoptime ArrivalStoptime { get; set; }
+        [JsonPropertyName("arrivalStoptime")] public required TerminusStoptime ArrivalStoptime { get; set; }
 
         [JsonPropertyName("route")] public required RouteDetails Route { get; set; }
 
@@ -156,7 +159,9 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
     public class StoptimeDetails
     {
         [JsonPropertyName("stop")] public required StopDetails Stop { get; set; }
-        [JsonPropertyName("scheduledDeparture")] public int ScheduledDeparture { get; set; }
+
+        [JsonPropertyName("scheduledDeparture")]
+        public int ScheduledDeparture { get; set; }
     }
 
     public class StopDetails
