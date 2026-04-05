@@ -32,7 +32,6 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 
             foreach (Arrival contextArrival in context.Arrivals)
             {
-                // var trainNumber = contextArrival.TripId.Split(":")[1][..5];
                 var trainNumber = RenfeTrainNumberExpression.Match(contextArrival.TripId).Groups[1].Value;
 
                 contextArrival.Headsign.Destination = trainNumber + " - " + contextArrival.Headsign.Destination;

@@ -510,7 +510,7 @@ export default function RouteDetailsPage() {
               onClick={() => setIsPatternPickerOpen(false)}
             >
               <div
-                className="w-full sm:max-w-lg bg-background rounded-t-2xl sm:rounded-2xl border border-border shadow-xl max-h-[75%] overflow-hidden"
+                className="w-full sm:max-w-lg bg-background rounded-t-2xl sm:rounded-2xl border border-border shadow-xl max-h-[80%] overflow-hidden"
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -546,10 +546,10 @@ export default function RouteDetailsPage() {
 
                     return (
                       <div key={dir}>
-                        <div className="px-4 py-2 text-xs font-semibold text-muted uppercase tracking-wide">
+                        <div className="px-4 my-2 text-xs font-semibold text-muted uppercase tracking-wide">
                           {directionLabel}
                         </div>
-                        <div className="space-y-2 px-3 pb-3">
+                        <div className="space-y-2 px-3 mb-3">
                           {sortedPatterns.map((pattern) => {
                             const destination =
                               pattern.headsign || pattern.name || "";
