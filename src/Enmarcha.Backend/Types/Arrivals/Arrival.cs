@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 
 namespace Enmarcha.Backend.Types.Arrivals;
 
@@ -33,7 +34,7 @@ public class Arrival
     public List<string> NextStops { get; set; } = [];
 
     [JsonIgnore]
-    public object? RawOtpTrip { get; set; }
+    public ArrivalsAtStopResponse.Arrival? RawOtpTrip { get; set; }
 
     [JsonIgnore] public bool Delete { get; set; }
 }

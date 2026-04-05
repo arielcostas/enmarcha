@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
 using Enmarcha.Sources.GtfsRealtime;
@@ -5,7 +6,7 @@ using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
 
 namespace Enmarcha.Backend.Services.Processors;
 
-public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
+public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 {
     private readonly GtfsRealtimeEstimatesProvider _realtime;
     private readonly ILogger<RenfeRealTimeProcessor> _logger;
@@ -31,7 +32,8 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 
             foreach (Arrival contextArrival in context.Arrivals)
             {
-                var trainNumber = contextArrival.TripId.Split(":")[1][..5];
+                // var trainNumber = contextArrival.TripId.Split(":")[1][..5];
+                var trainNumber = RenfeTrainNumberExpression.Match(contextArrival.TripId).Groups[1].Value;
 
                 contextArrival.Headsign.Destination = trainNumber + " - " + contextArrival.Headsign.Destination;
 
@@ -40,6 +42,7 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
                     if (delay is null)
                     {
                         // TODO: Indicate train got cancelled
+                        _logger.LogDebug("Train {TrainNumber} has no delay information, skipping", trainNumber);
                         continue;
                     }
 
@@ -49,11 +52,13 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
                         Minutes = delayMinutes
                     };
 
+                    var oldEstimate = contextArrival.Estimate.Minutes;
                     contextArrival.Estimate.Minutes += delayMinutes;
                     contextArrival.Estimate.Precision = ArrivalPrecision.Confident;
 
                     if (contextArrival.Estimate.Minutes < 0)
                     {
+                        _logger.LogDebug("Train {TrainNumber} supposedly departed already ({OldEstimate} + {DelayMinutes} minutes), marking as deleted. ", trainNumber, oldEstimate, delayMinutes);
                         contextArrival.Delete = true;
                     }
                 }
@@ -64,7 +69,7 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
                     {
                         Latitude = position.Latitude,
                         Longitude = position.Longitude,
-                        Bearing = 0 // TODO: Set the proper degrees
+                        Bearing = null // TODO: Set the proper degrees
                     };
                 }
             }
@@ -74,4 +79,7 @@ public class RenfeRealTimeProcessor : AbstractRealTimeProcessor
             _logger.LogError(ex, "Error fetching Renfe real-time data");
         }
     }
+
+    [GeneratedRegex(@"renfe:(?:\d{4}[A-Z]|)(\d{5})")]
+    public partial Regex RenfeTrainNumberExpression { get; }
 }

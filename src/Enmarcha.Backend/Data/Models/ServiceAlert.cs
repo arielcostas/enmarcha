@@ -6,7 +6,7 @@ namespace Enmarcha.Backend.Data.Models;
 [Table("service_alerts")]
 public class ServiceAlert
 {
-    public string Id { get; set; }
+    public required string Id { get; set; }
 
     public List<AlertSelector> Selectors { get; set; } = [];
 
