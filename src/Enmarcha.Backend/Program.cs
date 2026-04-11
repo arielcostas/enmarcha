@@ -7,6 +7,7 @@ using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Services.Geocoding;
 using Enmarcha.Backend.Services.Processors;
 using Enmarcha.Backend.Services.Providers;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -37,10 +38,7 @@ builder.Logging.AddOpenTelemetry(options =>
     }
 
 #if DEBUG
-    options.AddOtlpExporter(exporterOptions =>
-    {
-        exporterOptions.Endpoint = new Uri("http://localhost:17011");
-    });
+    options.AddOtlpExporter(exporterOptions => { exporterOptions.Endpoint = new Uri("http://localhost:17011"); });
 #endif
 });
 
@@ -69,6 +67,7 @@ builder.Services.AddOpenTelemetry()
                         for (var i = 6; i < 16; i++) bytes[i] = 0;
                         anonymised = new System.Net.IPAddress(bytes).ToString();
                     }
+
                     activity.SetTag("client.address", anonymised);
                 };
             })
@@ -108,7 +107,8 @@ builder.Services.AddOpenTelemetry()
                     {
                         activity.SetTag("peer.service", "Vitrasa");
                     }
-                    else if (appConfig?.OpenTripPlannerBaseUrl != null && req.RequestUri!.ToString().StartsWith(appConfig.OpenTripPlannerBaseUrl))
+                    else if (appConfig?.OpenTripPlannerBaseUrl != null &&
+                             req.RequestUri!.ToString().StartsWith(appConfig.OpenTripPlannerBaseUrl))
                     {
                         activity.SetTag("peer.service", "OpenTripPlanner");
                     }
@@ -126,19 +126,13 @@ builder.Services.AddOpenTelemetry()
         }
 
 #if DEBUG
-        tracing.AddOtlpExporter(exporterOptions =>
-        {
-            exporterOptions.Endpoint = new Uri("http://localhost:17011");
-        });
+        tracing.AddOtlpExporter(exporterOptions => { exporterOptions.Endpoint = new Uri("http://localhost:17011"); });
 #endif
     });
 
 builder.Services
     .AddControllersWithViews()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+    .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
@@ -146,10 +140,10 @@ builder.Services.AddMemoryCache();
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("Database"),
-        o => o.UseNetTopologySuite()
-    )
-    .UseCamelCaseNamingConvention();
+            builder.Configuration.GetConnectionString("Database"),
+            o => o.UseNetTopologySuite()
+        )
+        .UseCamelCaseNamingConvention();
 });
 
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
@@ -159,9 +153,10 @@ var auth0Domain = builder.Configuration["Auth0:Domain"] ?? "";
 var auth0ClientId = builder.Configuration["Auth0:ClientId"] ?? "";
 
 builder.Services.AddAuthentication()
-    .AddCookie("Backoffice", options =>
-    {
+    .AddCookie("Backoffice", options => {
         options.LoginPath = "/backoffice/auth/login";
+        options.Cookie.SameSite = SameSiteMode.None;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     })
     .AddOpenIdConnect("Auth0", options =>
     {
@@ -171,10 +166,15 @@ builder.Services.AddAuthentication()
         options.ResponseType = "code";
         options.CallbackPath = "/backoffice/auth/callback";
         options.SignInScheme = "Backoffice";
+
+        options.CorrelationCookie.Path = "/";
+        options.NonceCookie.Path = "/";
+
         options.Scope.Clear();
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         options.Scope.Add("email");
+
         options.SaveTokens = true;
         options.Events = new OpenIdConnectEvents
         {
@@ -189,6 +189,7 @@ builder.Services.AddAuthentication()
                         returnTo = $"{req.Scheme}://{req.Host}{req.PathBase}{returnTo}";
                     logoutUri += $"&returnTo={Uri.EscapeDataString(returnTo)}";
                 }
+
                 context.Response.Redirect(logoutUri);
                 context.HandleResponse();
                 return Task.CompletedTask;
@@ -230,7 +231,15 @@ builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
 var app = builder.Build();
 
-app.UseForwardedHeaders();
+var forwardedHeaderOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+};
+// Crucial: Clear the networks/proxies list if you are in a container or specific Linux setup
+forwardedHeaderOptions.KnownNetworks.Clear();
+forwardedHeaderOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardedHeaderOptions);
 
 app.UseStaticFiles();
 app.UseAuthentication();
@@ -244,6 +253,7 @@ app.Use(async (context, next) =>
     {
         System.Diagnostics.Activity.Current?.SetTag("session.id", sessionId.ToString());
     }
+
     await next();
 });
 
