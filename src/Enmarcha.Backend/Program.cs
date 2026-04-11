@@ -8,7 +8,6 @@ using Enmarcha.Backend.Services.Geocoding;
 using Enmarcha.Backend.Services.Processors;
 using Enmarcha.Backend.Services.Providers;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Logs;
@@ -146,13 +145,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         .UseCamelCaseNamingConvention();
 });
 
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-    .AddEntityFrameworkStores<AppDbContext>();
-
 var auth0Domain = builder.Configuration["Auth0:Domain"] ?? "";
 var auth0ClientId = builder.Configuration["Auth0:ClientId"] ?? "";
 
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = "Backoffice";
+        options.DefaultChallengeScheme = "Auth0";
+    })
     .AddCookie("Backoffice", options => {
         options.LoginPath = "/backoffice/auth/login";
         options.Cookie.SameSite = SameSiteMode.None;
@@ -235,8 +235,9 @@ var forwardedHeaderOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
 };
+
 // Crucial: Clear the networks/proxies list if you are in a container or specific Linux setup
-forwardedHeaderOptions.KnownNetworks.Clear();
+forwardedHeaderOptions.KnownIPNetworks.Clear();
 forwardedHeaderOptions.KnownProxies.Clear();
 
 app.UseForwardedHeaders(forwardedHeaderOptions);
@@ -244,8 +245,6 @@ app.UseForwardedHeaders(forwardedHeaderOptions);
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapGroup("/api/identity").MapIdentityApi<IdentityUser>();
 
 app.Use(async (context, next) =>
 {
