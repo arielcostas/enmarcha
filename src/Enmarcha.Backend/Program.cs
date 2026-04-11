@@ -230,6 +230,8 @@ builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
