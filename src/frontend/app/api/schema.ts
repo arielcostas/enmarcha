@@ -173,10 +173,7 @@ export const ConsolidatedCirculationSchema = z.object({
     })
     .optional()
     .nullable(),
-  currentPosition: z
-    .object(PositionSchema)
-    .optional()
-    .nullable(),
+  currentPosition: z.object(PositionSchema).optional().nullable(),
   isPreviousTrip: z.boolean().optional().nullable(),
   previousTripShapeId: z.string().optional().nullable(),
   nextStreets: z.array(z.string()).optional().nullable(),

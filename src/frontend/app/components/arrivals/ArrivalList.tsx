@@ -26,7 +26,10 @@ export const ArrivalList: React.FC<ArrivalListProps> = ({
     <div className="flex flex-col flex-1 gap-3">
       {arrivals.length === 0 && (
         <div className="text-center text-muted mt-16">
-          {t("estimates.none", "No hay llegadas próximas disponibles para esta parada.")}
+          {t(
+            "estimates.none",
+            "No hay llegadas próximas disponibles para esta parada."
+          )}
         </div>
       )}
       {arrivals.map((arrival, index) =>

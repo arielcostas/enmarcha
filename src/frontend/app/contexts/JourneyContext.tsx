@@ -25,9 +25,7 @@ export interface ActiveJourney {
 
 interface JourneyContextValue {
   activeJourney: ActiveJourney | null;
-  startJourney: (
-    journey: Omit<ActiveJourney, "hasNotified">
-  ) => void;
+  startJourney: (journey: Omit<ActiveJourney, "hasNotified">) => void;
   stopJourney: () => void;
   markNotified: () => void;
 }
@@ -61,9 +59,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const markNotified = useCallback(() => {
-    setActiveJourney((prev) =>
-      prev ? { ...prev, hasNotified: true } : null
-    );
+    setActiveJourney((prev) => (prev ? { ...prev, hasNotified: true } : null));
   }, []);
 
   return (

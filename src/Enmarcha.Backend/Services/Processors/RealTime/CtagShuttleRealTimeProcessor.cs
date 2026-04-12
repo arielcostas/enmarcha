@@ -3,7 +3,7 @@ using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
 
-namespace Enmarcha.Backend.Services.Processors;
+namespace Enmarcha.Backend.Services.Processors.RealTime;
 
 public class CtagShuttleRealTimeProcessor : AbstractRealTimeProcessor
 {

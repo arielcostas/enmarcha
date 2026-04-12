@@ -1,5 +1,4 @@
 using Enmarcha.Backend.Data;
-using Enmarcha.Backend.Data.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

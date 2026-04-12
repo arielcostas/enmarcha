@@ -1,44 +1,19 @@
-using Enmarcha.Backend.Helpers;
 using Enmarcha.Backend.Types.Arrivals;
 
-namespace Enmarcha.Backend.Services.Processors;
+namespace Enmarcha.Backend.Services.Processors.Normalisation;
 
-public class FeedConfigProcessor : IArrivalsProcessor
+public class VitrasaNormalizationProcessor : IArrivalsProcessor
 {
-    private readonly FeedService _feedService;
-
-    public FeedConfigProcessor(FeedService feedService)
-    {
-        _feedService = feedService;
-    }
-
     public Task ProcessAsync(ArrivalsContext context)
     {
-        var feedId = context.StopId.Split(':')[0];
-        var (fallbackColor, fallbackTextColor) = _feedService.GetFallbackColourForFeed(feedId);
+        if (context.StopId.Split(':')[0] != "vitrasa")
+            return Task.CompletedTask;
 
         foreach (var arrival in context.Arrivals)
         {
-            arrival.Route.ShortName = _feedService.NormalizeRouteShortName(feedId, arrival.Route.ShortName);
-            arrival.Headsign.Destination = FeedService.NormalizeStopName(feedId, arrival.Headsign.Destination);
-
-            // Apply Vitrasa-specific line formatting
-            if (feedId == "vitrasa")
-            {
-                FormatVitrasaLine(arrival);
-            }
-
-            arrival.Shift = FeedService.GetShiftBadge(feedId, arrival.TripId);
-
-            if (string.IsNullOrEmpty(arrival.Route.Colour) || arrival.Route.Colour == "FFFFFF")
-            {
-                arrival.Route.Colour = fallbackColor;
-                arrival.Route.TextColour = fallbackTextColor;
-            }
-            else if (string.IsNullOrEmpty(arrival.Route.TextColour) || arrival.Route.TextColour == "000000")
-            {
-                arrival.Route.TextColour = ContrastHelper.GetBestTextColour(arrival.Route.Colour);
-            }
+            arrival.Headsign.Destination = FeedService.NormalizeStopName("vitrasa", arrival.Headsign.Destination);
+            FormatVitrasaLine(arrival);
+            arrival.Shift = FeedService.GetShiftBadge("vitrasa", arrival.TripId);
         }
 
         return Task.CompletedTask;
@@ -93,6 +68,7 @@ public class FeedConfigProcessor : IArrivalsProcessor
                     arrival.Route.ShortName = "GOL";
                     arrival.Headsign.Destination = "GOL ⚽: NAVIA-BOUZAS-URZAIZ-G. ESPINO";
                 }
+
                 arrival.Route.Colour = "6CACE4";
                 arrival.Route.TextColour = "000000";
                 break;

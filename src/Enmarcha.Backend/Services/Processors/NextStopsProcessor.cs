@@ -1,4 +1,3 @@
-using System.Text;
 using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 
 namespace Enmarcha.Backend.Services.Processors;

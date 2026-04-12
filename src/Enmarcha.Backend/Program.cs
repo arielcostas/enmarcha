@@ -13,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Enmarcha.Backend.Services.Processors.Normalisation;
+using Enmarcha.Backend.Services.Processors.RealTime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,7 +155,8 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = "Backoffice";
         options.DefaultChallengeScheme = "Auth0";
     })
-    .AddCookie("Backoffice", options => {
+    .AddCookie("Backoffice", options =>
+    {
         options.LoginPath = "/backoffice/auth/login";
         options.Cookie.SameSite = SameSiteMode.None;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
@@ -216,7 +219,10 @@ builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, FeedConfigProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, VitrasaNormalizationProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, XuntaNormalizationProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, TranviasNormalizationProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, ColourProcessor>();
 builder.Services.AddScoped<ArrivalsPipeline>();
 
 // builder.Services.AddKeyedScoped<IGeocodingService, NominatimGeocodingService>("Nominatim");

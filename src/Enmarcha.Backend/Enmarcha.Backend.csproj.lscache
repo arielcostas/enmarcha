@@ -109,15 +109,20 @@ Services/
  OtpService.cs
  Processors/
   AbstractProcessor.cs
-  CorunaRealTimeProcessor.cs
-  CtagShuttleRealTimeProcessor.cs
-  FeedConfigProcessor.cs
   FilterAndSortProcessor.cs
   NextStopsProcessor.cs
-  RenfeRealTimeProcessor.cs
+  Normalisation/
+   ColourProcessor.cs
+   TranviasNormalizationProcessor.cs
+   VitrasaNormalizationProcessor.cs
+   XuntaNormalizationProcessor.cs
+  RealTime/
+   CorunaRealTimeProcessor.cs
+   CtagShuttleRealTimeProcessor.cs
+   RenfeRealTimeProcessor.cs
+   TussaRealTimeProcessor.cs
+   VitrasaRealTimeProcessor.cs
   ShapeProcessor.cs
-  TussaRealTimeProcessor.cs
-  VitrasaRealTimeProcessor.cs
   VitrasaUsageProcessor.cs
  Providers/XuntaFareProvider.cs
  PushNotificationService.cs

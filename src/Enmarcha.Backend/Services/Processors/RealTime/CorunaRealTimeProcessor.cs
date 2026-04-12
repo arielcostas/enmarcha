@@ -3,7 +3,7 @@ using Enmarcha.Sources.TranviasCoruna;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
 
-namespace Enmarcha.Backend.Services.Processors;
+namespace Enmarcha.Backend.Services.Processors.RealTime;
 
 public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 {

@@ -3,7 +3,7 @@ using Enmarcha.Backend.Types.Arrivals;
 using Enmarcha.Sources.Tussa;
 using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
 
-namespace Enmarcha.Backend.Services.Processors;
+namespace Enmarcha.Backend.Services.Processors.RealTime;
 
 public class TussaRealTimeProcessor : AbstractRealTimeProcessor
 {

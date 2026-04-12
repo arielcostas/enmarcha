@@ -57,10 +57,7 @@ export function useJourneyTracker() {
       ) {
         const title =
           minutes <= 0
-            ? t(
-                "journey.notification_now_title",
-                "¡Tu autobús está llegando!"
-              )
+            ? t("journey.notification_now_title", "¡Tu autobús está llegando!")
             : t("journey.notification_approaching_title", {
                 defaultValue: "Tu autobús llega en {{minutes}} min",
                 minutes,

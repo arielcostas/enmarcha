@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Enmarcha.Backend.Data.Models;
 
 namespace Enmarcha.Backend.ViewModels;

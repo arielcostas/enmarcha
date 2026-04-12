@@ -5,7 +5,7 @@ using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
 using Microsoft.Extensions.Options;
 
-namespace Enmarcha.Backend.Services.Processors;
+namespace Enmarcha.Backend.Services.Processors.RealTime;
 
 public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 {
