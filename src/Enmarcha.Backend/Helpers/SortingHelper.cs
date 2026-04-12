@@ -86,6 +86,7 @@ public class SortingHelper
     /// 1 = Regular numbered routes (4A, 6, 10, A, etc.)
     /// 2 = Hospital (H, H1, H2, H3)
     /// 3 = Others (N*, PSA*, U*, LZD, PTL)
+    /// 4 = Football (MAR, GOL and RIO)
     /// </summary>
     private static int GetVitrasaRouteGroup(string shortName)
     {
@@ -123,6 +124,11 @@ public class SortingHelper
         if (shortName.Length >= 2 && shortName.All(char.IsLetter))
         {
             return 3;
+        }
+
+        if (shortName == "MAR" || shortName == "GOL" || shortName == "RIO")
+        {
+            return 4;
         }
 
         // Everything else is regular (numbered routes like 4A, 6, 10, single letters like A)
