@@ -209,13 +209,6 @@ builder.Services.AddSingleton<FareService>();
 builder.Services.AddScoped<IPushNotificationService, PushNotificationService>();
 builder.Services.AddHostedService<AlertPhaseNotificationHostedService>();
 
-builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, CtagShuttleRealTimeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, VitrasaUsageProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
-
 builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
@@ -223,6 +216,14 @@ builder.Services.AddScoped<IArrivalsProcessor, VitrasaNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, XuntaNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, TranviasNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ColourProcessor>();
+
+builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, CtagShuttleRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, VitrasaUsageProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
+
 builder.Services.AddScoped<ArrivalsPipeline>();
 
 // builder.Services.AddKeyedScoped<IGeocodingService, NominatimGeocodingService>("Nominatim");
