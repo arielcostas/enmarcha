@@ -98,6 +98,7 @@ public class TileController : ControllerBase
         var stopsLayer = new Layer { Name = "stops" };
 
         var features = new List<Feature>();
+        var xuntaSeenBaseCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         responseBody.Data?.StopsByBbox?.ForEach(stop =>
         {
@@ -108,6 +109,17 @@ public class TileController : ControllerBase
             if (_feedService.IsStopHidden($"{feedId}:{codeWithinFeed}"))
             {
                 return;
+            }
+
+            // For xunta stops, deduplicate by stripping the first 2 chars of the code
+            // (e.g. "1007958" and "2007958" refer to the same physical stop)
+            if (feedId == "xunta" && codeWithinFeed.Length > 2)
+            {
+                var baseCode = codeWithinFeed[2..];
+                if (!xuntaSeenBaseCodes.Add(baseCode))
+                {
+                    return;
+                }
             }
 
             // TODO: Duplicate from ArrivalsController
@@ -127,7 +139,9 @@ public class TileController : ControllerBase
                     { "code", $"{idParts[0]}:{codeWithinFeed}" },
                     { "name", FeedService.NormalizeStopName(feedId, stop.Name) },
                     { "icon", GetIconNameForFeed(feedId) },
-                    { "transitKind", TransitKindClassifier.StringByFeed(feedId) }
+                    { "transitKind", TransitKindClassifier.StringByFeed(feedId) },
+                    { "color", Color },
+                    { "textColor", TextColor }
                 }
             };
 

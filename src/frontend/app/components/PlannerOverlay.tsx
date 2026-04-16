@@ -247,7 +247,11 @@ export const PlannerOverlay: React.FC<PlannerOverlayProps> = ({
     setRemoteLoading(true);
     const t = setTimeout(async () => {
       try {
-        const results = await searchPlaces(q);
+        const results = await searchPlaces(
+          q,
+          userLocation?.latitude,
+          userLocation?.longitude
+        );
         if (!cancelled) setRemoteResults(results);
       } finally {
         if (!cancelled) setRemoteLoading(false);

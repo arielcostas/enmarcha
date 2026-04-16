@@ -85,4 +85,6 @@ public class PlannerSearchResult
     public string? Layer { get; set; }
     public string? StopId { get; set; }
     public string? StopCode { get; set; }
+    public string? Color { get; set; }
+    public string? TextColor { get; set; }
 }

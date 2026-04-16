@@ -6,6 +6,8 @@ export interface PlannerSearchResult {
   layer?: string;
   stopId?: string;
   stopCode?: string;
+  color?: string;
+  textColor?: string;
 }
 
 export interface RoutePlan {
@@ -74,11 +76,15 @@ export interface Step {
 }
 
 export async function searchPlaces(
-  query: string
+  query: string,
+  lat?: number,
+  lon?: number
 ): Promise<PlannerSearchResult[]> {
-  const response = await fetch(
-    `/api/planner/autocomplete?query=${encodeURIComponent(query)}`
-  );
+  let url = `/api/planner/autocomplete?query=${encodeURIComponent(query)}`;
+  if (lat !== undefined && lon !== undefined) {
+    url += `&lat=${lat}&lon=${lon}`;
+  }
+  const response = await fetch(url);
   if (!response.ok) return [];
   return response.json();
 }

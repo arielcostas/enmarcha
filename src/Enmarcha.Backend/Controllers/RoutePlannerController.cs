@@ -46,7 +46,10 @@ public partial class RoutePlannerController : ControllerBase
     }
 
     [HttpGet("autocomplete")]
-    public async Task<ActionResult<List<PlannerSearchResult>>> Autocomplete([FromQuery] string query)
+    public async Task<ActionResult<List<PlannerSearchResult>>> Autocomplete(
+        [FromQuery] string query,
+        [FromQuery] double? lat = null,
+        [FromQuery] double? lon = null)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -83,12 +86,32 @@ public partial class RoutePlannerController : ControllerBase
             }
         }
 
+        // Sort by distance from the map viewport center when provided
+        if (lat.HasValue && lon.HasValue)
+        {
+            finalResults = [.. finalResults.OrderBy(r => HaversineKm(lat.Value, lon.Value, r.Lat, r.Lon))];
+        }
+
         return Ok(finalResults);
+    }
+
+    private static double HaversineKm(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double R = 6371.0;
+        var dLat = (lat2 - lat1) * Math.PI / 180.0;
+        var dLon = (lon2 - lon1) * Math.PI / 180.0;
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+              + Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0)
+              * Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     }
 
     private async Task<List<PlannerSearchResult>> SearchStops(string query)
     {
         var stops = await GetCachedStopsAsync();
+
+        // Normalize query for better matching: strip diacritics and punctuation
+        var normalizedQuery = _feedService.NormalizeRouteNameForMatching(query);
 
         // 1. Exact or prefix matches by stop code
         var codeMatches = stops
@@ -97,10 +120,21 @@ public partial class RoutePlannerController : ControllerBase
             .Take(5)
             .ToList();
 
-        // 2. Fuzzy search stops by label (Name + Code)
-        var fuzzyResults = Process.ExtractSorted(
-            query,
-            stops.Select(s => s.Label ?? string.Empty),
+        // 2. Fuzzy search stops by name only (preferential: higher cutoff, name is more meaningful)
+        var nameOnlyFuzzy = Process.ExtractSorted(
+            normalizedQuery,
+            stops.Select(s => _feedService.NormalizeRouteNameForMatching(s.Name ?? string.Empty)),
+            cutoff: 65
+        )
+        .OrderByDescending(r => r.Score)
+        .Take(6)
+        .Select(r => stops[r.Index])
+        .ToList();
+
+        // 3. Fuzzy search stops by label (Name + Code + Desc) as fallback
+        var labelFuzzy = Process.ExtractSorted(
+            normalizedQuery,
+            stops.Select(s => _feedService.NormalizeRouteNameForMatching(s.Label ?? string.Empty)),
             cutoff: 60
         )
         .OrderByDescending(r => r.Score)
@@ -108,8 +142,8 @@ public partial class RoutePlannerController : ControllerBase
         .Select(r => stops[r.Index])
         .ToList();
 
-        // Merge stops, prioritizing code matches
-        var stopResults = codeMatches.Concat(fuzzyResults)
+        // Merge stops: code matches first, then name matches, then label matches
+        var stopResults = codeMatches.Concat(nameOnlyFuzzy).Concat(labelFuzzy)
             .GroupBy(s => s.StopId)
             .Select(g => g.First())
             .Take(6)
@@ -182,11 +216,12 @@ public partial class RoutePlannerController : ControllerBase
 
         var allStopsRaw = await _otpService.GetStopsByBboxAsync(-9.3, 41.7, -6.7, 43.8);
 
-        var stops = allStopsRaw.Select(s =>
+        var mappedStops = allStopsRaw.Select(s =>
         {
             var feedId = s.GtfsId.Split(':')[0];
             var name = FeedService.NormalizeStopName(feedId, s.Name);
             var code = _feedService.NormalizeStopCode(feedId, s.Code ?? string.Empty);
+            var (color, textColor) = _feedService.GetFallbackColourForFeed(feedId);
 
             return new PlannerSearchResult
             {
@@ -196,8 +231,21 @@ public partial class RoutePlannerController : ControllerBase
                 Lon = s.Lon,
                 Layer = "stop",
                 StopId = s.GtfsId,
-                StopCode = code
+                StopCode = code,
+                Color = color,
+                TextColor = textColor
             };
+        });
+
+        // For xunta stops, deduplicate by base code (strip first 2 chars)
+        // e.g. "1007958" and "2007958" refer to the same physical stop
+        var xuntaSeenBaseCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var stops = mappedStops.Where(s =>
+        {
+            if (s.StopId?.StartsWith("xunta:") != true) return true;
+            var code = s.StopCode ?? string.Empty;
+            var baseCode = code.Length > 2 ? code[2..] : code;
+            return xuntaSeenBaseCodes.Add(baseCode);
         }).ToList();
 
         _cache.Set(cacheKey, stops, TimeSpan.FromHours(1));

@@ -32,6 +32,16 @@ const mapSearchState: { query: string; results: PlannerSearchResult[] } = {
   results: [],
 };
 
+const FEED_LABELS: Record<string, string> = {
+  vitrasa: "Vitrasa",
+  tussa: "Tussa",
+  tranvias: "Tranvías",
+  ourense: "TUORTE",
+  lugo: "AUCORSA",
+  xunta: "Xunta",
+  renfe: "Renfe",
+};
+
 interface MapSearchBarProps {
   mapRef: React.RefObject<MapRef | null>;
 }
@@ -82,7 +92,8 @@ function MapSearchBar({ mapRef }: MapSearchBarProps) {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await searchPlaces(q.trim());
+        const center = mapRef.current?.getCenter();
+        const res = await searchPlaces(q.trim(), center?.lat, center?.lng);
         setResults(res);
         mapSearchState.results = res;
         setShowResults(true);
@@ -97,9 +108,11 @@ function MapSearchBar({ mapRef }: MapSearchBarProps) {
   const handleSelect = (place: PlannerSearchResult) => {
     const map = mapRef.current;
     if (map) {
-      map.flyTo({ center: [place.lon, place.lat], zoom: 15, duration: 800 });
+      const zoom = place.layer === "stop" ? 17 : 16;
+      map.flyTo({ center: [place.lon, place.lat], zoom, duration: 800 });
     }
-    // Keep results visible so user can pick another without retyping
+    setShowResults(false);
+    mapSearchState.results = [];
   };
 
   const handleClear = () => {
@@ -129,6 +142,10 @@ function MapSearchBar({ mapRef }: MapSearchBarProps) {
             onChange={(e) => handleQueryChange(e.target.value)}
             onFocus={() => {
               if (results.length > 0) setShowResults(true);
+              // Re-trigger search if we have a query but results were cleared
+              if (results.length === 0 && query.trim().length >= 2) {
+                handleQueryChange(query);
+              }
             }}
           />
           {loading ? (
@@ -152,25 +169,50 @@ function MapSearchBar({ mapRef }: MapSearchBarProps) {
         {showResults && results.length > 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-              {results.map((place, i) => (
-                <button
-                  key={`${place.lat}-${place.lon}-${i}`}
-                  className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm"
-                  onClick={() => handleSelect(place)}
-                >
-                  <MapPin className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" />
-                  <div className="min-w-0">
-                    <div className="font-medium text-slate-900 dark:text-slate-100 truncate">
-                      {place.name}
-                    </div>
-                    {place.label && place.label !== place.name && (
-                      <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                        {place.label}
-                      </div>
+              {results.map((place, i) => {
+                const isStop = place.layer === "stop";
+                const feedId = place.stopId?.split(":")[0];
+                const feedLabel = feedId ? (FEED_LABELS[feedId] ?? feedId) : undefined;
+                const subtitle = isStop && feedLabel && place.stopCode
+                  ? `${feedLabel} · ${place.stopCode}`
+                  : isStop && feedLabel
+                    ? feedLabel
+                    : !isStop && place.label && place.label !== place.name
+                      ? place.label
+                      : null;
+                return (
+                  <button
+                    key={`${place.lat}-${place.lon}-${i}`}
+                    className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm"
+                    onClick={() => handleSelect(place)}
+                  >
+                    {isStop && place.color ? (
+                      <span
+                        className="shrink-0 mt-0.5 rounded-full"
+                        style={{
+                          width: 16,
+                          height: 16,
+                          backgroundColor: place.color,
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <MapPin className="w-4 h-4 text-primary-600 shrink-0 mt-0.5" />
                     )}
-                  </div>
-                </button>
-              ))}
+                    <div className="min-w-0">
+                      <div className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                        {place.name}
+                      </div>
+                      {subtitle && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                          {subtitle}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -194,7 +236,7 @@ export default function StopMap() {
   >(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [disambiguationStops, setDisambiguationStops] = useState<
-    Array<StopSheetProps["stop"]>
+    Array<StopSheetProps["stop"] & { color?: string }>
   >([]);
   const mapRef = useRef<MapRef>(null);
 
@@ -323,6 +365,9 @@ export default function StopMap() {
 
   // Handle click events on clusters and individual stops
   const onMapClick = (e: MapLayerMouseEvent) => {
+    // Clicking anywhere on the map closes the disambiguation panel
+    setDisambiguationStops([]);
+
     const features = e.features;
     if (!features || features.length === 0) {
       console.debug(
@@ -349,7 +394,7 @@ export default function StopMap() {
 
     // Multiple overlapping stops – deduplicate by stop id and ask the user
     const seen = new Set<string>();
-    const candidates: Array<StopSheetProps["stop"]> = [];
+    const candidates: Array<StopSheetProps["stop"] & { color?: string }> = [];
     for (const f of stopFeatures) {
       const id: string = f.properties!.id;
       if (!seen.has(id)) {
@@ -358,16 +403,29 @@ export default function StopMap() {
           stopId: id,
           stopCode: f.properties!.code,
           name: f.properties!.name || "Unknown Stop",
+          color: f.properties!.color as string | undefined,
         });
       }
     }
 
-    if (candidates.length === 1) {
+    // For xunta stops, further deduplicate by base code (strip first 2 chars)
+    // e.g. "xunta:1007958" and "xunta:2007958" → keep only the first seen
+    const xuntaBaseSeen = new Set<string>();
+    const deduped = candidates.filter((stop) => {
+      if (!stop.stopId?.startsWith("xunta:")) return true;
+      const code = stop.stopCode ?? "";
+      const base = code.startsWith("xunta:") ? code.slice("xunta:".length + 2) : code.slice(2);
+      if (xuntaBaseSeen.has(base)) return false;
+      xuntaBaseSeen.add(base);
+      return true;
+    });
+
+    if (deduped.length === 1) {
       // After deduplication only one stop remains
-      setSelectedStop(candidates[0]);
+      setSelectedStop(deduped[0]);
       setIsSheetOpen(true);
     } else {
-      setDisambiguationStops(candidates);
+      setDisambiguationStops(deduped);
     }
   };
 
@@ -473,6 +531,7 @@ export default function StopMap() {
           onMapClick(e);
         }}
         onContextMenu={handleContextMenu}
+        onDragStart={() => setDisambiguationStops([])}
         attributionControl={{ compact: false }}
       >
         <Source
@@ -649,7 +708,19 @@ export default function StopMap() {
                         setIsSheetOpen(true);
                       }}
                     >
-                      <MapPin className="w-4 h-4 flex-shrink-0 text-primary-600" />
+                      {stop.color ? (
+                        <span
+                          className="rounded-full shrink-0"
+                          style={{
+                            width: 18,
+                            height: 18,
+                            backgroundColor: stop.color,
+                            display: "inline-block",
+                          }}
+                        />
+                      ) : (
+                        <MapPin className="w-4 h-4 shrink-0 text-primary-600" />
+                      )}
                       <div>
                         <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
                           {stop.name}
