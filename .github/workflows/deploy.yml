@@ -21,7 +21,7 @@ jobs:
       stops-script: ${{ steps.filter.outputs.stops-script }}
     steps:
       - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -61,7 +61,7 @@ jobs:
           mkdir -p dist/frontend
           cp -R src/frontend/build/client/. dist/frontend/
       - name: Archive Production Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: production
           path: dist
@@ -90,7 +90,7 @@ jobs:
       - name: Build EF migrations bundle
         run: dotnet ef migrations bundle --project src/Enmarcha.Backend/Enmarcha.Backend.csproj -r linux-arm64 --self-contained -o dist/backend/efbundle
       - name: Archive Backend Artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: backend
           path: dist/backend
@@ -109,13 +109,13 @@ jobs:
     steps:
       - name: Download Frontend Artifact
         if: needs.detect-changes.outputs.frontend == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: production
           path: dist
       - name: Download Backend Artifact
         if: needs.detect-changes.outputs.backend == 'true'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: backend
           path: dist/backend
