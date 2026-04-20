@@ -1,7 +1,7 @@
-import { CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
+import { CalendarDays, CircleHelp, Eye, EyeClosed, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { fetchArrivals } from "~/api/arrivals";
 import {
   type Arrival,
@@ -266,6 +266,13 @@ export default function Estimates() {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <Link
+                      to={`/stops/${stopId}/schedule`}
+                      className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-muted"
+                      aria-label={t("stop.view_schedule", "Ver horarios")}
+                    >
+                      <CalendarDays className="w-5 h-5" />
+                    </Link>
                     <button
                       className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-muted"
                       onClick={() => setIsHelpModalOpen(true)}

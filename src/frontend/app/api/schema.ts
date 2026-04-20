@@ -261,3 +261,30 @@ export type PlannerStep = z.infer<typeof PlannerStepSchema>;
 export type PlannerLeg = z.infer<typeof PlannerLegSchema>;
 export type Itinerary = z.infer<typeof ItinerarySchema>;
 export type RoutePlan = z.infer<typeof RoutePlanSchema>;
+
+// Stop Schedule
+export const ScheduledTripSchema = z.object({
+  scheduledDeparture: z.number().int(),
+  routeId: z.string(),
+  routeShortName: z.string().nullable(),
+  routeColor: z.string(),
+  routeTextColor: z.string(),
+  headsign: z.string().nullable(),
+  originStop: z.string().nullable().optional(),
+  destinationStop: z.string().nullable().optional(),
+  operator: z.string().nullable().optional(),
+  pickupType: z.string().nullable().optional(),
+  dropOffType: z.string().nullable().optional(),
+  isFirstStop: z.boolean().optional(),
+  isLastStop: z.boolean().optional(),
+});
+
+export const StopScheduleResponseSchema = z.object({
+  stopCode: z.string(),
+  stopName: z.string(),
+  stopLocation: PositionSchema.optional().nullable(),
+  trips: z.array(ScheduledTripSchema),
+});
+
+export type ScheduledTrip = z.infer<typeof ScheduledTripSchema>;
+export type StopScheduleResponse = z.infer<typeof StopScheduleResponseSchema>;

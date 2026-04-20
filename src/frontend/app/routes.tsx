@@ -7,6 +7,7 @@ export default [
   route("/routes/:id", "routes/routes-$id.tsx"),
   route("/stops", "routes/stops.tsx"),
   route("/stops/:id", "routes/stops-$id.tsx"),
+  route("/stops/:id/schedule", "routes/stops-$id.schedule.tsx"),
   route("/settings", "routes/settings.tsx"),
   route("/about", "routes/about.tsx"),
   route("/favourites", "routes/favourites.tsx"),

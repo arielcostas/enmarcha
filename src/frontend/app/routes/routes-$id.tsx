@@ -150,7 +150,9 @@ export default function RouteDetailsPage() {
   const rightNode = useMemo(() => <FavoriteStar id={id} />, [id]);
   usePageRightNode(rightNode);
 
-  useBackButton({ to: "/routes" });
+  const backTo =
+    (location.state as { backTo?: string } | null)?.backTo ?? "/routes";
+  useBackButton({ to: backTo });
 
   const weekDays = useMemo(() => {
     const base = new Date();

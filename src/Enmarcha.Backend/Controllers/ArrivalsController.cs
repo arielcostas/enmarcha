@@ -6,10 +6,12 @@ using Enmarcha.Backend.Helpers;
 using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
+using Enmarcha.Backend.Types.Schedule;
 using FuzzySharp;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using System.Globalization;
 
 namespace Enmarcha.Backend.Controllers;
 
@@ -414,4 +416,109 @@ public partial class ArrivalsController : ControllerBase
 
     [LoggerMessage(LogLevel.Error, "Error fetching stop data, received {statusCode} {responseBody}")]
     partial void LogErrorFetchingStopData(HttpStatusCode statusCode, string responseBody);
+
+    [HttpGet("schedule")]
+    public async Task<IActionResult> GetSchedule(
+        [FromQuery] string id,
+        [FromQuery] string? date
+    )
+    {
+        using var activity = Telemetry.Source.StartActivity("GetSchedule");
+        activity?.SetTag("stop.id", id);
+
+        if (string.IsNullOrWhiteSpace(id))
+            return BadRequest("'id' is required.");
+
+        string serviceDate;
+        if (!string.IsNullOrWhiteSpace(date))
+        {
+            if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+                return BadRequest("Invalid date. Use yyyy-MM-dd.");
+
+            serviceDate = parsedDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+            var nowLocal = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz);
+            serviceDate = nowLocal.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+        }
+
+        var cacheKey = $"stop_schedule_{id}_{serviceDate}";
+        if (_cache.TryGetValue(cacheKey, out StopScheduleResponse? cached) && cached != null)
+            return Ok(cached);
+
+        var rawStop = await GetStopScheduleFromOtpAsync(id, serviceDate);
+        if (rawStop == null)
+            return StatusCode(500, "Error fetching stop schedule from OTP");
+
+        var feedId = id.Split(':')[0];
+        var (fallbackColor, fallbackTextColor) = _feedService.GetFallbackColourForFeed(feedId);
+        var showOperator = feedId == "xunta";
+
+        var trips = rawStop.StoptimesForServiceDate
+            .Where(p => p.Stoptimes.Count > 0)
+            .SelectMany(p =>
+            {
+                var color = !string.IsNullOrWhiteSpace(p.Pattern.Route.Color) ? p.Pattern.Route.Color : fallbackColor;
+                var textColor = p.Pattern.Route.TextColor is null or "000000"
+                    ? ContrastHelper.GetBestTextColour(color)
+                    : p.Pattern.Route.TextColor;
+                var shortName = _feedService.NormalizeRouteShortName(feedId, p.Pattern.Route.ShortName ?? "");
+
+                return p.Stoptimes.Select(s => new ScheduledTripDto
+                {
+                    ScheduledDeparture = s.ScheduledDepartureSeconds,
+                    RouteId = p.Pattern.Route.GtfsId,
+                    RouteShortName = shortName,
+                    RouteColor = color,
+                    RouteTextColor = textColor,
+                    Headsign = s.Trip?.TripHeadsign ?? p.Pattern.Headsign,
+                    OriginStop = s.Trip?.DepartureStoptime?.Stop?.Name,
+                    DestinationStop = s.Trip?.ArrivalStoptime?.Stop?.Name,
+                    Operator = showOperator ? s.Trip?.Route?.Agency?.Name : null,
+                    PickupType = s.PickupType,
+                    DropOffType = s.DropoffType,
+                    IsFirstStop = s.Trip?.DepartureStoptime?.Stop?.GtfsId == id,
+                    IsLastStop = s.Trip?.ArrivalStoptime?.Stop?.GtfsId == id
+                });
+            })
+            .OrderBy(t => t.ScheduledDeparture)
+            .ToList();
+
+        var result = new StopScheduleResponse
+        {
+            StopCode = _feedService.NormalizeStopCode(feedId, rawStop.Code),
+            StopName = FeedService.NormalizeStopName(feedId, rawStop.Name),
+            StopLocation = new Position { Latitude = rawStop.Lat, Longitude = rawStop.Lon },
+            Trips = trips
+        };
+
+        var tz2 = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        var todayKey = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz2).ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+        var cacheDuration = serviceDate == todayKey ? TimeSpan.FromHours(1) : TimeSpan.FromHours(6);
+        _cache.Set(cacheKey, result, cacheDuration);
+
+        return Ok(result);
+    }
+
+    private async Task<StopScheduleOtpResponse.StopItem?> GetStopScheduleFromOtpAsync(string id, string serviceDate)
+    {
+        var query = StopScheduleContent.Query(new StopScheduleContent.Args(id, serviceDate));
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1")
+        {
+            Content = JsonContent.Create(new GraphClientRequest { Query = query })
+        };
+
+        var response = await _httpClient.SendAsync(request);
+        var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<StopScheduleOtpResponse>>();
+
+        if (responseBody is not { IsSuccess: true } || responseBody.Data?.Stop == null)
+        {
+            LogErrorFetchingStopData(response.StatusCode, await response.Content.ReadAsStringAsync());
+            return null;
+        }
+
+        return responseBody.Data.Stop;
+    }
 }
