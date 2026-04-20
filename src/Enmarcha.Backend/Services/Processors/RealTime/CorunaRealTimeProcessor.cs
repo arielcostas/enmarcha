@@ -69,7 +69,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                     var template = context.Arrivals
                         .FirstOrDefault(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim());
 
-                    var busInfo = GetBusInfoByNumber(estimate.VehicleNumber);
+                    var templateBusInfo = GetBusInfoByNumber(estimate.VehicleNumber);
                     newArrivals.Add(new Arrival
                     {
                         TripId = $"tranvias:rtonly:{estimate.RouteId}:{estimate.VehicleNumber}:{estimate.Minutes}",
@@ -93,10 +93,10 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                         VehicleInformation = new VehicleBadge
                         {
                             Identifier = estimate.VehicleNumber,
-                            Make = busInfo?.Make,
-                            Model = busInfo?.Model,
-                            Kind = busInfo?.Kind,
-                            Year = busInfo?.Year
+                            Make = templateBusInfo?.Make,
+                            Model = templateBusInfo?.Model,
+                            Kind = templateBusInfo?.Kind,
+                            Year = templateBusInfo?.Year
                         }
                     });
                     continue;
