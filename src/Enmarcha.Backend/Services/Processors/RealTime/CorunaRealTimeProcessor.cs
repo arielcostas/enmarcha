@@ -46,6 +46,9 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
             var usedTripIds = new HashSet<string>();
             var newArrivals = new List<Arrival>();
+            var routeTemplates = context.Arrivals
+                .GroupBy(a => a.Route.RouteIdInGtfs.Trim())
+                .ToDictionary(g => g.Key, g => g.First());
 
             foreach (var estimate in realtime)
             {
@@ -66,16 +69,15 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                 if (bestMatch == null)
                 {
-                    var template = context.Arrivals
-                        .FirstOrDefault(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim());
+                    routeTemplates.TryGetValue(estimate.RouteId.Trim(), out var template);
 
                     var templateBusInfo = GetBusInfoByNumber(estimate.VehicleNumber);
                     newArrivals.Add(new Arrival
                     {
-                        TripId = $"tranvias:rtonly:{estimate.RouteId}:{estimate.VehicleNumber}:{estimate.Minutes}",
+                        TripId = $"tranvias:rtonly:{estimate.RouteId}:{estimate.VehicleNumber}",
                         Route = new RouteInfo
                         {
-                            GtfsId = $"tranvias:{estimate.RouteId}",
+                            GtfsId = template?.Route.GtfsId ?? $"tranvias:{estimate.RouteId}",
                             ShortName = estimate.RouteId,
                             Colour = template?.Route.Colour ?? "FFFFFF",
                             TextColour = template?.Route.TextColour ?? "000000"
