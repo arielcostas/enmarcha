@@ -2,6 +2,7 @@ using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Sources.TranviasCoruna;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
+using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
 
 namespace Enmarcha.Backend.Services.Processors.RealTime;
 
@@ -44,6 +45,10 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
             System.Diagnostics.Activity.Current?.SetTag("realtime.count", realtime.Count);
 
             var usedTripIds = new HashSet<string>();
+            var newArrivals = new List<Arrival>();
+            var routeTemplates = context.Arrivals
+                .GroupBy(a => a.Route.RouteIdInGtfs.Trim())
+                .ToDictionary(g => g.Key, g => g.First());
 
             foreach (var estimate in realtime)
             {
@@ -64,6 +69,38 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                 if (bestMatch == null)
                 {
+                    routeTemplates.TryGetValue(estimate.RouteId.Trim(), out var template);
+
+                    var templateBusInfo = GetBusInfoByNumber(estimate.VehicleNumber);
+                    newArrivals.Add(new Arrival
+                    {
+                        TripId = $"tranvias:rtonly:{estimate.RouteId}:{estimate.VehicleNumber}",
+                        Route = new RouteInfo
+                        {
+                            GtfsId = template?.Route.GtfsId ?? $"tranvias:{estimate.RouteId}",
+                            ShortName = estimate.RouteId,
+                            Colour = template?.Route.Colour ?? "FFFFFF",
+                            TextColour = template?.Route.TextColour ?? "000000"
+                        },
+                        Headsign = new HeadsignInfo
+                        {
+                            Badge = "T.REAL",
+                            Destination = template?.Headsign.Destination ?? $"Línea {estimate.RouteId}"
+                        },
+                        Estimate = new ArrivalDetails
+                        {
+                            Minutes = estimate.Minutes,
+                            Precision = ArrivalPrecision.Confident
+                        },
+                        VehicleInformation = new VehicleBadge
+                        {
+                            Identifier = estimate.VehicleNumber,
+                            Make = templateBusInfo?.Make,
+                            Model = templateBusInfo?.Model,
+                            Kind = templateBusInfo?.Kind,
+                            Year = templateBusInfo?.Year
+                        }
+                    });
                     continue;
                 }
 
@@ -171,6 +208,8 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                 usedTripIds.Add(arrival.TripId);
             }
+
+            context.Arrivals.AddRange(newArrivals);
         }
         catch (Exception ex)
         {
