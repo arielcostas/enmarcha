@@ -46,7 +46,11 @@ public enum VehicleOperation
     [JsonStringEnumMemberName("pickup_only")]
     PickupOnly = 1,
     [JsonStringEnumMemberName("dropoff_only")]
-    DropoffOnly = 2
+    DropoffOnly = 2,
+    [JsonStringEnumMemberName("departure")]
+    Departure = 3,
+    [JsonStringEnumMemberName("arrival")]
+    Arrival = 4
 }
 
 public class RouteInfo

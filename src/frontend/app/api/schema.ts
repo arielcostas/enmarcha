@@ -66,7 +66,13 @@ export const ArrivalSchema = z.object({
   currentPosition: PositionSchema.optional().nullable(),
   vehicleInformation: VehicleInformationSchema.optional().nullable(),
   operator: z.string().nullable(),
-  operation: z.enum(["pickup_dropoff", "pickup_only", "dropoff_only"]),
+  operation: z.enum([
+    "pickup_dropoff",
+    "pickup_only",
+    "dropoff_only",
+    "departure",
+    "arrival",
+  ]),
 });
 
 export const ArrivalEstimateSchema = z.object({

@@ -140,8 +140,23 @@ public partial class ArrivalsController : ControllerBase
         return Ok(new StopEstimatesResponse { Arrivals = estimates });
     }
 
-    private static VehicleOperation GetVehicleOperation(ArrivalsAtStopResponse.PickupType pickup, ArrivalsAtStopResponse.PickupType dropoff)
+    private static VehicleOperation GetVehicleOperation(
+        ArrivalsAtStopResponse.Arrival item
+    )
     {
+        var pickup = item.PickupTypeParsed;
+        var dropoff = item.DropoffTypeParsed;
+
+        if (item.StopPosition == 0)
+        {
+            return VehicleOperation.Departure;
+        }
+
+        if (item.StopPosition == item.Trip.Stoptimes.Count - 1)
+        {
+            return VehicleOperation.Arrival;
+        }
+
         if (pickup == ArrivalsAtStopResponse.PickupType.None && dropoff == ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupDropoff;
         if (pickup != ArrivalsAtStopResponse.PickupType.None && dropoff != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupDropoff;
         if (pickup != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupOnly;
@@ -215,7 +230,7 @@ public partial class ArrivalsController : ControllerBase
                 },
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
                 RawOtpTrip = item,
-                Operation = GetVehicleOperation(item.PickupTypeParsed, item.DropoffTypeParsed)
+                Operation = GetVehicleOperation(item)
             });
         }
 

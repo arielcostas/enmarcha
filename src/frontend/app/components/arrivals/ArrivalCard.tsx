@@ -5,13 +5,18 @@ import {
   BusFront,
   LocateIcon,
   Navigation,
+  SquareArrowRightEnter,
+  SquareArrowRightExit,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Marquee from "react-fast-marquee";
+import _MarqueeImport from "react-fast-marquee";
 import { useTranslation } from "react-i18next";
 import RouteIcon from "~/components/RouteIcon";
 import { type Arrival } from "../../api/schema";
 import "./ArrivalCard.css";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Marquee: typeof _MarqueeImport =
+  (_MarqueeImport as any).default ?? _MarqueeImport;
 
 interface ArrivalCardProps {
   arrival: Arrival;
@@ -96,6 +101,22 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     }
   }, [estimate.precision]);
 
+  const OPERATION_LABELS: Record<string, string> = {
+    pickup_only: t("journey.pickup_only", "Solo subida"),
+    dropoff_only: t("journey.dropoff_only", "Solo bajada"),
+    departure: t("journey.departure", "Salida"),
+    arrival: t("journey.arrival", "Llegada"),
+  };
+
+  type OperationKind = "pickup" | "dropoff" | "departure" | "arrival";
+
+  const OPERATION_KINDS: Record<string, OperationKind> = {
+    pickup_only: "pickup",
+    dropoff_only: "dropoff",
+    departure: "departure",
+    arrival: "arrival",
+  };
+
   const metaChips = useMemo(() => {
     const chips: Array<{
       label: string;
@@ -106,18 +127,14 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
         | "delay"
         | "warning"
         | "vehicle"
-        | "pickup"
-        | "dropoff";
+        | OperationKind;
     }> = [];
 
     if (operation !== "pickup_dropoff") {
       chips.push({
-        label:
-          operation === "pickup_only"
-            ? t("journey.pickup_only", "Solo subida")
-            : t("journey.dropoff_only", "Solo bajada"),
-        tone: operation === "pickup_only" ? "pickup" : "dropoff",
-        kind: operation === "pickup_only" ? "pickup" : "dropoff",
+        label: OPERATION_LABELS[operation] || operation,
+        tone: OPERATION_KINDS[operation] || "regular",
+        kind: OPERATION_KINDS[operation] || "regular",
       });
     }
 
@@ -258,10 +275,12 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
           let chipColourClasses = "";
           switch (chip.tone) {
             case "pickup":
+            case "departure":
               chipColourClasses =
                 "bg-green-600/10 dark:bg-green-600/20 text-green-700 dark:text-green-300";
               break;
             case "dropoff":
+            case "arrival":
               chipColourClasses =
                 "bg-orange-400/10 dark:bg-orange-600/20 text-orange-700 dark:text-orange-300";
               break;
@@ -309,6 +328,12 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
               )}
               {chip.kind === "dropoff" && (
                 <ArrowDownRightSquare className="w-3 h-3 inline-block" />
+              )}
+              {chip.kind === "departure" && (
+                <SquareArrowRightExit className="w-3 h-3 inline-block" />
+              )}
+              {chip.kind === "arrival" && (
+                <SquareArrowRightEnter className="w-3 h-3 inline-block" />
               )}
 
               {chip.label}

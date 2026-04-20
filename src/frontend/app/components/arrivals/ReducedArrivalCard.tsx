@@ -47,6 +47,22 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
     }
   }, [estimate.precision]);
 
+  const OPERATION_LABELS: Record<string, string> = {
+    pickup_only: t("journey.pickup_only", "Solo subida"),
+    dropoff_only: t("journey.dropoff_only", "Solo bajada"),
+    departure: t("journey.departure", "Salida"),
+    arrival: t("journey.arrival", "Llegada"),
+  };
+
+  type OperationKind = "pickup" | "dropoff" | "departure" | "arrival";
+
+  const OPERATION_KINDS: Record<string, OperationKind> = {
+    pickup_only: "pickup",
+    dropoff_only: "dropoff",
+    departure: "departure",
+    arrival: "arrival",
+  };
+
   const metaChips = useMemo(() => {
     const chips: Array<{
       label: string;
@@ -57,18 +73,14 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
         | "delay"
         | "warning"
         | "vehicle"
-        | "pickup"
-        | "dropoff";
+        | OperationKind;
     }> = [];
 
     if (operation !== "pickup_dropoff") {
       chips.push({
-        label:
-          operation === "pickup_only"
-            ? t("journey.pickup_only", "Solo subida")
-            : t("journey.dropoff_only", "Solo bajada"),
-        tone: operation === "pickup_only" ? "pickup" : "dropoff",
-        kind: operation === "pickup_only" ? "pickup" : "dropoff",
+        label: OPERATION_LABELS[operation] || operation,
+        tone: OPERATION_KINDS[operation] || "regular",
+        kind: OPERATION_KINDS[operation] || "regular",
       });
     }
 
@@ -210,10 +222,12 @@ export const ReducedArrivalCard: React.FC<ArrivalCardProps> = ({
               let chipColourClasses = "";
               switch (chip.tone) {
                 case "pickup":
+                case "departure":
                   chipColourClasses =
                     "bg-green-600/10 dark:bg-green-600/20 text-green-700 dark:text-green-300";
                   break;
                 case "dropoff":
+                case "arrival":
                   chipColourClasses =
                     "bg-orange-400/10 dark:bg-orange-600/20 text-orange-700 dark:text-orange-300";
                   break;
