@@ -11,6 +11,7 @@ export const HeadsignInfoSchema = z.object({
   badge: z.string().optional().nullable(),
   destination: z.string().nullable(),
   marquee: z.string().optional().nullable(),
+  origin: z.string().optional().nullable(),
 });
 
 export const ArrivalPrecisionSchema = z.enum([

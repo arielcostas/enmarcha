@@ -34,6 +34,9 @@ public class Arrival
     public List<string> NextStops { get; set; } = [];
 
     [JsonIgnore]
+    public List<string> OriginStops { get; set; } = [];
+
+    [JsonIgnore]
     public ArrivalsAtStopResponse.Arrival? RawOtpTrip { get; set; }
 
     [JsonIgnore] public bool Delete { get; set; }
@@ -73,6 +76,8 @@ public class HeadsignInfo
     [JsonPropertyName("destination")] public required string Destination { get; set; }
 
     [JsonPropertyName("marquee")] public string? Marquee { get; set; }
+
+    [JsonPropertyName("origin")] public string? Origin { get; set; }
 }
 
 public class ArrivalDetails

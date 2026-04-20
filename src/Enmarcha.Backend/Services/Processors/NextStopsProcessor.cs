@@ -43,7 +43,31 @@ public class NextStopsProcessor : IArrivalsProcessor
                     .ToList();
             }
 
+            // Remove last stop since it doesn't make sense to show "via" for the terminus
+            arrival.NextStops = arrival.NextStops.Take(arrival.NextStops.Count - 1).ToList();
+
+            if (feedId == "xunta")
+            {
+                arrival.OriginStops = otpArrival.Trip.Stoptimes
+                    .Where(s => s.ScheduledDeparture < currentStopDeparture)
+                    .OrderBy(s => s.ScheduledDeparture)
+                    .Take(1)
+                    .Select(s => $"{s.Stop.Name} -- {s.Stop.Description}")
+                    .Distinct()
+                    .ToList();
+            }
+            else if (feedId == "renfe")
+            {
+                arrival.OriginStops = otpArrival.Trip.Stoptimes
+                    .Where(s => s.ScheduledDeparture < currentStopDeparture)
+                    .OrderBy(s => s.ScheduledDeparture)
+                    .Take(1)
+                    .Select(s => FeedService.NormalizeStopName(feedId, s.Stop.Name))
+                    .ToList();
+            }
+
             arrival.Headsign.Marquee = GenerateMarquee(feedId, arrival.NextStops);
+            arrival.Headsign.Origin = GenerateOrigin(feedId, arrival.OriginStops);
         }
 
         return Task.CompletedTask;
@@ -120,6 +144,33 @@ public class NextStopsProcessor : IArrivalsProcessor
             "renfe" => string.Join(" - ", nextStops),
             _ => string.Join(", ", nextStops.Take(4))
         };
+    }
+
+    private static string? GenerateOrigin(string feedId, List<string> originStops)
+    {
+        if (originStops.Count == 0) return null;
+
+        if (feedId == "xunta")
+        {
+            var points = originStops.Select(SplitXuntaStopDescription).ToList();
+            var concellos = points
+                .Select(p => p.concello)
+                .Where(c => !string.IsNullOrWhiteSpace(c))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return concellos.Count > 0 ? string.Join(" > ", concellos) : null;
+        }
+
+        if (feedId == "renfe")
+        {
+            // For trains just show the origin terminus
+            return originStops.First();
+        }
+
+        // For local bus feeds, origin is generally not very informative,
+        // but return the first stop for completeness
+        return originStops.First();
     }
 
     private static (string nombre, string parroquia, string concello) SplitXuntaStopDescription(string stopName)

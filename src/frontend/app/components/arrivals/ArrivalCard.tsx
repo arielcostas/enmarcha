@@ -34,7 +34,7 @@ const AutoMarquee = ({ text }: { text: string }) => {
     if (!el) return;
 
     const checkScroll = () => {
-      const charWidth = 8;
+      const charWidth = 12;
       const availableWidth = el.offsetWidth;
       const textWidth = text.length * charWidth;
       setShouldScroll(textWidth > availableWidth);
@@ -252,10 +252,22 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
               {operator && (
                 <span className="text-xs font-mono text-slate-700 dark:text-slate-200 font-medium shrink-0">
                   {operator}
+                  {headsign.destination || headsign.origin ? (
+                    <>&nbsp;·&nbsp;</>
+                  ) : (
+                    ""
+                  )}
+                </span>
+              )}
+              {headsign.origin && (
+                <span className="text-xs font-mono text-slate-500 dark:text-slate-400 shrink-0">
+                  Proc: {headsign.origin}{" "}
                   {headsign.marquee && <>&nbsp;·&nbsp;</>}
                 </span>
               )}
-              {headsign.marquee && <AutoMarquee text={headsign.marquee} />}
+              {headsign.marquee && (
+                <AutoMarquee text={"Via: " + headsign.marquee} />
+              )}
             </div>
           </div>
         </div>
