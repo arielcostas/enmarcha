@@ -161,7 +161,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("stop")] public required StopDetails Stop { get; set; }
 
         [JsonPropertyName("scheduledDeparture")]
-        public int ScheduledDeparture { get; set; }
+        public int? ScheduledDeparture { get; set; }
     }
 
     public class StopDetails

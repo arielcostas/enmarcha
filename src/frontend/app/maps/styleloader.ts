@@ -1,5 +1,4 @@
 import type { StyleSpecification } from "react-map-gl/maplibre";
-import type { Theme } from "~/AppContext";
 
 export interface StyleLoaderOptions {
   includeTraffic?: boolean;
@@ -74,107 +73,71 @@ function applyLanguageToStyle(style: any, language: string): void {
 }
 
 export async function loadStyle(
-  styleName: string,
-  colorScheme: Theme,
   options?: StyleLoaderOptions
 ): Promise<StyleSpecification> {
-  const { includeTraffic = true, language } = options || {};
+  const url = `/maps/styles/openfreemap-light.json`;
 
-  // Always use the light style as the single canonical base style.
-  colorScheme = "light";
-
-  if (styleName == "openfreemap") {
-    const url = `/maps/styles/openfreemap-${colorScheme}.json`;
-
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      throw new Error(`Failed to load style: ${url}`);
-    }
-
-    const style = await resp.json();
-
-    // Remove traffic layers if not requested
-    if (!includeTraffic) {
-      style.layers = (style.layers || []).filter(
-        (layer: any) => !layer.id?.startsWith("vigo_traffic")
-      );
-      delete style.sources?.vigo_traffic;
-    }
-
-    // Apply language-aware label expressions.
-    if (language) {
-      applyLanguageToStyle(style, language);
-    }
-
-    return style as StyleSpecification;
-  }
-
-  const stylePath = `/maps/styles/${styleName}-${colorScheme}.json`;
-  const resp = await fetch(stylePath);
-
+  const resp = await fetch(url);
   if (!resp.ok) {
-    throw new Error(`Failed to load style: ${stylePath}`);
+    throw new Error(`Failed to load style: ${url}`);
   }
 
-  const style = await resp.json();
+  const style = (await resp.json()) as StyleSpecification;
 
-  // Remove traffic layers if not requested
-  if (!includeTraffic) {
-    style.layers = (style.layers || []).filter(
-      (layer: any) => !layer.id?.startsWith("vigo_traffic")
-    );
-    delete style.sources?.vigo_traffic;
-  }
+  if (options?.includeTraffic) {
+    style.sources["vigo_traffic"] = {
+      type: "vector",
+      tiles: [`https://enmarcha.app/tiles/vigo-traffic/{z}/{x}/{y}.pbf`],
+      minzoom: 7,
+      maxzoom: 18,
+      bounds: [-8.774113, 42.175803, -8.632514, 42.259719],
+    };
 
-  const baseUrl = window.location.origin;
-  const spritePath = style.sprite;
-
-  // Handle both string and array cases for spritePath
-  if (Array.isArray(spritePath)) {
-    // For array format, update each sprite object's URL to be absolute
-    style.sprite = spritePath.map((spriteObj) => {
-      const isAbsoluteUrl =
-        spriteObj.url.startsWith("http://") ||
-        spriteObj.url.startsWith("https://");
-      if (isAbsoluteUrl) {
-        return spriteObj;
-      }
-
-      return {
-        ...spriteObj,
-        url: `${baseUrl}${spriteObj.url}`,
-      };
+    style.layers.push({
+      id: "vigo_traffic",
+      type: "line",
+      source: "vigo_traffic",
+      "source-layer": "trafico_vigo_latest",
+      layout: {},
+      filter: ["!=", ["get", "style"], "#SINDATOS"],
+      paint: {
+        "line-opacity": [
+          "interpolate",
+          ["linear"],
+          ["get", "zoom"],
+          0,
+          11,
+          14,
+          1,
+          16,
+          0.8,
+          18,
+          0.6,
+          22,
+          0.6,
+        ],
+        "line-color": [
+          "match",
+          ["get", "style"],
+          "#CONGESTION",
+          "hsl(70.7 100% 38%)",
+          "#MUYDENSO",
+          "hsl(36.49 100% 50%)",
+          "#DENSO",
+          "hsl(47.61 100% 49%)",
+          "#FLUIDO",
+          "hsl(83.9 100% 40%)",
+          "#MUYFLUIDO",
+          "hsl(161.25 100% 42%)",
+          "hsl(0.0 0% 0%)",
+        ],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 14, 2, 18, 4],
+      },
     });
-  } else if (typeof spritePath === "string") {
-    if (
-      !spritePath.startsWith("http://") &&
-      !spritePath.startsWith("https://")
-    ) {
-      style.sprite = `${baseUrl}${spritePath}`;
-    }
   }
 
-  // Detect on each source if it the 'tiles' URLs are relative and convert them to absolute URLs
-  for (const sourceKey in style.sources) {
-    const source = style.sources[sourceKey];
-    for (const tileKey in source.tiles) {
-      const tileUrl = source.tiles[tileKey];
-      const isAbsoluteUrl =
-        tileUrl.startsWith("http://") || tileUrl.startsWith("https://");
-      if (!isAbsoluteUrl) {
-        source.tiles[tileKey] = `${baseUrl}${tileUrl}`;
-      }
-    }
-  }
-
-  // Remove the pseudo-3D building-top layer.
-  style.layers = (style.layers || []).filter(
-    (layer: any) => layer.id !== "building-top"
-  );
-
-  // Apply language-aware label expressions.
-  if (language) {
-    applyLanguageToStyle(style, language);
+  if (options?.language) {
+    applyLanguageToStyle(style, options.language);
   }
 
   return style as StyleSpecification;

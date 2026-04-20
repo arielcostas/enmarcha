@@ -13,7 +13,7 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#f8f4f0"
+        "background-color": "#f0f4f7"
       }
     },
     {
@@ -875,7 +875,7 @@
           16,
           1
         ],
-        "fill-outline-color": "#dfdbd7"
+        "fill-outline-color": "#E0CCB8"
       }
     },
     {
@@ -2418,6 +2418,14 @@
           ],
           true,
           false
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "service"
+          ],
+          "driveway"
         ]
       ],
       "layout": {
@@ -2766,69 +2774,6 @@
       }
     },
     {
-      "id": "highway-path",
-      "type": "line",
-      "source": "openmaptiles",
-      "source-layer": "transportation",
-      "filter": [
-        "all",
-        [
-          "match",
-          [
-            "geometry-type"
-          ],
-          [
-            "LineString",
-            "MultiLineString"
-          ],
-          true,
-          false
-        ],
-        [
-          "match",
-          [
-            "get",
-            "brunnel"
-          ],
-          [
-            "bridge",
-            "tunnel"
-          ],
-          false,
-          true
-        ],
-        [
-          "==",
-          [
-            "get",
-            "class"
-          ],
-          "path"
-        ]
-      ],
-      "paint": {
-        "line-color": "#cba",
-        "line-dasharray": [
-          1.5,
-          0.75
-        ],
-        "line-width": [
-          "interpolate",
-          [
-            "exponential",
-            1.2
-          ],
-          [
-            "zoom"
-          ],
-          15,
-          1.2,
-          20,
-          4
-        ]
-      }
-    },
-    {
       "id": "highway-motorway-link",
       "type": "line",
       "source": "openmaptiles",
@@ -3003,6 +2948,14 @@
           ],
           true,
           false
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "service"
+          ],
+          "driveway"
         ]
       ],
       "layout": {
@@ -4942,6 +4895,14 @@
           ],
           true,
           false
+        ],
+        [
+          "!=",
+          [
+            "get",
+            "service"
+          ],
+          "driveway"
         ]
       ],
       "layout": {
@@ -6169,87 +6130,6 @@
         "text-color": "#666",
         "text-halo-blur": 0.5,
         "text-halo-color": "#ffffff",
-        "text-halo-width": 1
-      }
-    },
-    {
-      "id": "label_other",
-      "type": "symbol",
-      "source": "openmaptiles",
-      "source-layer": "place",
-      "minzoom": 8,
-      "filter": [
-        "match",
-        [
-          "get",
-          "class"
-        ],
-        [
-          "city",
-          "continent",
-          "country",
-          "state",
-          "town",
-          "village"
-        ],
-        false,
-        true
-      ],
-      "layout": {
-        "text-field": [
-          "case",
-          [
-            "has",
-            "name:nonlatin"
-          ],
-          [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
-          ],
-          [
-            "coalesce",
-            [
-              "get",
-              "name_en"
-            ],
-            [
-              "get",
-              "name"
-            ]
-          ]
-        ],
-        "text-font": [
-          "Noto Sans Italic"
-        ],
-        "text-letter-spacing": 0.1,
-        "text-max-width": 9,
-        "text-size": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          8,
-          9,
-          12,
-          10
-        ],
-        "text-transform": "uppercase"
-      },
-      "paint": {
-        "text-color": "#333",
-        "text-halo-blur": 1,
-        "text-halo-color": "#fff",
         "text-halo-width": 1
       }
     },

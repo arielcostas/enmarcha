@@ -101,7 +101,7 @@ export const AppMap = forwardRef<MapRef, AppMapProps>(
     useImperativeHandle(ref, () => mapRef.current!);
 
     useEffect(() => {
-      loadStyle("openfreemap", theme, {
+      loadStyle({
         includeTraffic: showTraffic,
         language: i18n.language,
       })
