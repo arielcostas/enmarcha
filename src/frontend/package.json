@@ -58,8 +58,7 @@
     "react-map-gl": "^8.1.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.9",
-    "vite-tsconfig-paths": "6.1.1"
+    "vite": "^8.0.9"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"

@@ -2,7 +2,6 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { execSync } from "child_process";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 
 const commitHash = execSync("git rev-parse --short HEAD").toString().trim();
 
@@ -11,7 +10,7 @@ export default defineConfig({
   define: {
     __COMMIT_HASH__: JSON.stringify(commitHash),
   },
-  plugins: [reactRouter(), tsconfigPaths(), tailwindcss()],
+  plugins: [reactRouter(), tailwindcss()],
   server: {
     proxy: {
       "^/(api|backoffice)": {
@@ -19,5 +18,8 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  resolve: {
+    tsconfigPaths: true,
   },
 });
