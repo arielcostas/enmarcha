@@ -128,6 +128,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     newArrivals.Add(new Arrival
                     {
                         TripId = $"vitrasa:rtonly:{estimate.Line}:{estimate.Route}:{estimate.Minutes}",
+                        RealTimeOnly = true,
                         Route = new RouteInfo
                         {
                             GtfsId = $"vitrasa:{estimate.Line}",

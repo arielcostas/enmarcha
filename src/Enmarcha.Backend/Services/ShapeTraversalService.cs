@@ -93,7 +93,7 @@ public class ShapeTraversalService
         // on a previous trip whose shape we don't have. Don't provide position information.
         if (distanceMeters > totalDistanceToStop)
         {
-            _logger.LogDebug("Distance {Distance}m exceeds total shape distance to stop {Total}m - bus likely on previous trip", distanceMeters, totalDistanceToStop);
+            _logger.LogDebug("Distance {Distance}m exceeds total shape distance to stop ({Total}m) - bus likely on previous trip", distanceMeters, totalDistanceToStop);
             return (null, closestPointIndex);
         }
 

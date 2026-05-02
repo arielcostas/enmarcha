@@ -9,6 +9,7 @@ public class TranviasNormalizationProcessor : IArrivalsProcessor
 
         foreach (var arrival in context.Arrivals)
         {
+            if (arrival.RealTimeOnly) continue;
             arrival.Shift = FeedService.GetShiftBadge("tranvias", arrival.TripId);
         }
 

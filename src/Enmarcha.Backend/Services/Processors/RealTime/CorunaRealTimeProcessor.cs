@@ -46,6 +46,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
             var usedTripIds = new HashSet<string>();
             var newArrivals = new List<Arrival>();
+            // TODO: Use context.Routes too, since that will contain routes that may not have any trips
             var routeTemplates = context.Arrivals
                 .GroupBy(a => a.Route.RouteIdInGtfs.Trim())
                 .ToDictionary(g => g.Key, g => g.First());
@@ -69,16 +70,47 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                 if (bestMatch == null)
                 {
+                    var goodEnoughMatch = context.Arrivals
+                        .Where(a => !usedTripIds.Contains(a.TripId))
+                        .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
+                        .Select(a => new
+                        {
+                            Arrival = a,
+                            TimeDiff = estimate.Minutes - a.Estimate.Minutes, // RealTime - Schedule
+                            RouteMatch = true
+                        })
+                        .Where(x => x.RouteMatch) // Strict route matching
+                        .Where(x => x.TimeDiff is >= -10
+                            and <= 25) // Allow 10m early (RealTime < Schedule) or 25m late (RealTime > Schedule)
+                        .OrderBy(x => x.TimeDiff < 0 ? Math.Abs(x.TimeDiff) * 2 : x.TimeDiff) // Best time fit
+                        .FirstOrDefault();
+
+                    if (goodEnoughMatch != null)
+                    {
+                        bestMatch = goodEnoughMatch;
+                        _logger.LogInformation(
+                            "Using good enough match for trip {TripId} with time difference of {TimeDiff} minutes",
+                            bestMatch.Arrival.TripId, bestMatch.TimeDiff);
+                    }
+                }
+
+                // TODO: Ñapa, de algún modo no debería haber dos veces el mismo IF
+                if (bestMatch == null)
+                {
                     routeTemplates.TryGetValue(estimate.RouteId.Trim(), out var template);
+
+                    var routeByGtfsId = context.Routes
+                        .FirstOrDefault(r => IsRouteMatch(r.GtfsId, estimate.RouteId));
 
                     var templateBusInfo = GetBusInfoByNumber(estimate.VehicleNumber);
                     newArrivals.Add(new Arrival
                     {
                         TripId = $"tranvias:rtonly:{estimate.RouteId}:{estimate.VehicleNumber}",
+                        RealTimeOnly = true,
                         Route = new RouteInfo
                         {
                             GtfsId = template?.Route.GtfsId ?? $"tranvias:{estimate.RouteId}",
-                            ShortName = estimate.RouteId,
+                            ShortName = template?.Route.ShortName ?? estimate.RouteId,
                             Colour = template?.Route.Colour ?? "FFFFFF",
                             TextColour = template?.Route.TextColour ?? "000000"
                         },

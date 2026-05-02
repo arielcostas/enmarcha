@@ -55,7 +55,8 @@ public class TussaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     context.Arrivals.Add(new Arrival
                     {
-                        TripId = $"tussa:rt:{estimate.Id}:{estimate.MinutesToArrive}",
+                        TripId = $"tussa:rtonly:{estimate.Id}:{estimate.MinutesToArrive}",
+                        RealTimeOnly = true,
                         Route = new RouteInfo
                         {
                             GtfsId = $"tussa:{estimate.Id}",

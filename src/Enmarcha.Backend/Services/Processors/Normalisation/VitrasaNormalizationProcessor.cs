@@ -13,7 +13,11 @@ public class VitrasaNormalizationProcessor : IArrivalsProcessor
         {
             arrival.Headsign.Destination = FeedService.NormalizeStopName("vitrasa", arrival.Headsign.Destination);
             FormatVitrasaLine(arrival);
-            arrival.Shift = FeedService.GetShiftBadge("vitrasa", arrival.TripId);
+
+            if (!arrival.RealTimeOnly)
+            {
+                arrival.Shift = FeedService.GetShiftBadge("vitrasa", arrival.TripId);
+            }
         }
 
         return Task.CompletedTask;

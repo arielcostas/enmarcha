@@ -208,8 +208,6 @@ public class FeedService
         // Example:  200032223 || 2301032230
         var padded = tripId.PadLeft(10);
 
-        Console.WriteLine(padded[4..6]);
-
         var dayOfWeek = padded[4..6] switch
         {
             "01" => "Lab",

@@ -40,6 +40,7 @@ public class Arrival
     public ArrivalsAtStopResponse.Arrival? RawOtpTrip { get; set; }
 
     [JsonIgnore] public bool Delete { get; set; }
+    [JsonIgnore] public bool RealTimeOnly { get; set; } = false;
 }
 
 public enum VehicleOperation

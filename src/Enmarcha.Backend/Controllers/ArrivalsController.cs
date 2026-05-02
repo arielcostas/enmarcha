@@ -176,8 +176,10 @@ public partial class ArrivalsController : ControllerBase
 
         var requestContent = ArrivalsAtStopContent.Query(new ArrivalsAtStopContent.Args(id, reduced || nano));
 
-        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1");
-        request.Content = JsonContent.Create(new GraphClientRequest { Query = requestContent });
+        var request = new HttpRequestMessage(HttpMethod.Post, $"{_config.OpenTripPlannerBaseUrl}/gtfs/v1")
+        {
+            Content = JsonContent.Create(new GraphClientRequest { Query = requestContent })
+        };
 
         var response = await _httpClient.SendAsync(request);
         var responseBody = await response.Content.ReadFromJsonAsync<GraphClientResponse<ArrivalsAtStopResponse>>();
@@ -243,6 +245,7 @@ public partial class ArrivalsController : ControllerBase
             IsReduced = reduced,
             IsNano = nano,
             Arrivals = arrivals,
+            Routes = responseBody.Data.Stop.Routes,
             NowLocal = nowLocal,
             StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon }
         };

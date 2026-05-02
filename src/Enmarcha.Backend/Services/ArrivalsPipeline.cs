@@ -1,5 +1,6 @@
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
+using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 
 namespace Enmarcha.Backend.Services;
 
@@ -31,6 +32,7 @@ public class ArrivalsContext
     public required List<Arrival> Arrivals { get; set; }
     public List<BusStopUsagePoint>? Usage { get; set; }
     public required DateTime NowLocal { get; set; }
+    public List<ArrivalsAtStopResponse.RouteDetails> Routes { get; set; } = [];
 }
 
 public interface IArrivalsProcessor
