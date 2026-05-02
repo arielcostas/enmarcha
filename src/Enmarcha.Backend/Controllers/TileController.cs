@@ -126,6 +126,11 @@ public class TileController : ControllerBase
             var (Color, TextColor) = _feedService.GetFallbackColourForFeed(idParts[0]);
             var distinctRoutes = GetDistinctRoutes(feedId, stop.Routes ?? []);
 
+            if (distinctRoutes.Count == 0)
+            {
+                return;
+            }
+
             Feature feature = new()
             {
                 Geometry = new NetTopologySuite.Geometries.Point(stop.Lon, stop.Lat),
