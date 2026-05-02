@@ -78,7 +78,7 @@ public class ShapeTraversalService
     /// <returns>The lat/lng position of the bus and the stop index on the shape</returns>
     public (Position? BusPosition, int StopIndex) GetBusPosition(Shape shape, Epsg25829 stopLocation, int distanceMeters)
     {
-        if (shape.Points.Count == 0 || distanceMeters <= 0)
+        if (shape.Points.Count == 0 || distanceMeters < 0)
         {
             return (null, -1);
         }
