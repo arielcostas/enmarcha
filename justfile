@@ -3,6 +3,9 @@
 default:
     just --list
 
+run-backend:
+    dotnet run --project src/Enmarcha.Backend/Enmarcha.Backend.csproj
+
 dev-backend:
     dotnet watch --project src/Enmarcha.Backend/Enmarcha.Backend.csproj
 

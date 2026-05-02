@@ -149,12 +149,12 @@ public partial class ArrivalsController : ControllerBase
         var pickup = item.PickupTypeParsed;
         var dropoff = item.DropoffTypeParsed;
 
-        if (item.StopPosition == 0)
+        if (item.StopPosition == 1)
         {
             return VehicleOperation.Departure;
         }
 
-        if (item.StopPosition == item.Trip.Stoptimes.Count - 1)
+        if (item.StopPosition == item.Trip.Stoptimes.Count)
         {
             return VehicleOperation.Arrival;
         }

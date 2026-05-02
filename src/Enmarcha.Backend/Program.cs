@@ -221,7 +221,7 @@ builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, XuntaNormalizationProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, TranviasNormalizationProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, CorunaNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ColourProcessor>();
 
 builder.Services.AddScoped<ArrivalsPipeline>();

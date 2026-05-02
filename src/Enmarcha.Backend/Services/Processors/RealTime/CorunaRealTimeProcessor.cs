@@ -56,6 +56,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 var bestMatch = context.Arrivals
                     .Where(a => !usedTripIds.Contains(a.TripId))
                     .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
+                    .Where(a => a.Operation != VehicleOperation.Arrival)
                     .Select(a => new
                     {
                         Arrival = a,
@@ -73,6 +74,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                     var goodEnoughMatch = context.Arrivals
                         .Where(a => !usedTripIds.Contains(a.TripId))
                         .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
+                        .Where(a => a.Operation != VehicleOperation.Arrival)
                         .Select(a => new
                         {
                             Arrival = a,
