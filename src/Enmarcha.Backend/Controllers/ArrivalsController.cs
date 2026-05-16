@@ -149,20 +149,20 @@ public partial class ArrivalsController : ControllerBase
         var pickup = item.PickupTypeParsed;
         var dropoff = item.DropoffTypeParsed;
 
-        if (item.StopPosition == 1)
+        if (item.StopPositionInPattern == 0)
         {
             return VehicleOperation.Departure;
         }
 
-        if (item.StopPosition == item.Trip.Stoptimes.Count)
+        if (item.StopPositionInPattern == item.Trip.Stoptimes.Count - 1)
         {
             return VehicleOperation.Arrival;
         }
 
-        if (pickup == ArrivalsAtStopResponse.PickupType.None && dropoff == ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupDropoff;
-        if (pickup != ArrivalsAtStopResponse.PickupType.None && dropoff != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupDropoff;
-        if (pickup != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.PickupOnly;
-        if (dropoff != ArrivalsAtStopResponse.PickupType.None) return VehicleOperation.DropoffOnly;
+        if (Equals(pickup, ArrivalsAtStopResponse.PickupType.None) && Equals(dropoff, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.PickupDropoff;
+        if (!Equals(pickup, ArrivalsAtStopResponse.PickupType.None) && !Equals(dropoff, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.PickupDropoff;
+        if (!Equals(pickup, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.PickupOnly;
+        if (!Equals(dropoff, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.DropoffOnly;
         return VehicleOperation.PickupDropoff;
     }
 
@@ -206,7 +206,7 @@ public partial class ArrivalsController : ControllerBase
             if (
                 item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
                 item.Trip.DepartureStoptime.Stop.GtfsId == id &&
-                item.StopPosition != 1
+                item.StopPositionInPattern != 1
             )
             {
                 continue;

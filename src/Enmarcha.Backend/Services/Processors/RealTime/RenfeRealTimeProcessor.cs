@@ -2,17 +2,18 @@ using System.Text.RegularExpressions;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
 using Enmarcha.Sources.GtfsRealtime;
+using Enmarcha.Sources.Renfe;
 using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
 
 namespace Enmarcha.Backend.Services.Processors.RealTime;
 
 public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 {
-    private readonly GtfsRealtimeEstimatesProvider _realtime;
+    private readonly RenfeRealtimeEstimatesProvider _realtime;
     private readonly ILogger<RenfeRealTimeProcessor> _logger;
 
     public RenfeRealTimeProcessor(
-        GtfsRealtimeEstimatesProvider realtime,
+        RenfeRealtimeEstimatesProvider realtime,
         ILogger<RenfeRealTimeProcessor> logger
     )
     {
@@ -26,9 +27,8 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 
         try
         {
-            var delays = await _realtime.GetRenfeDelays();
-            var positions = await _realtime.GetRenfePositions();
-            System.Diagnostics.Activity.Current?.SetTag("realtime.count", delays.Count);
+            var realtime = await _realtime.GetTrainInformation();
+            System.Diagnostics.Activity.Current?.SetTag("realtime.count", realtime.Count);
 
             foreach (Arrival contextArrival in context.Arrivals)
             {
@@ -36,40 +36,38 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 
                 contextArrival.Headsign.Destination = trainNumber + " - " + contextArrival.Headsign.Destination;
 
-                if (delays.TryGetValue(trainNumber, out var delay))
+                if (realtime.TryGetValue(trainNumber, out var train))
                 {
-                    if (delay is null)
+                    contextArrival.Delay = new DelayBadge
                     {
-                        // TODO: Indicate train got cancelled
-                        _logger.LogDebug("Train {TrainNumber} has no delay information, skipping", trainNumber);
-                        continue;
-                    }
-
-                    var delayMinutes = delay.Value / 60;
-                    contextArrival.Delay = new DelayBadge()
-                    {
-                        Minutes = delayMinutes
+                        Minutes = train.LastDelayValue
                     };
 
                     var oldEstimate = contextArrival.Estimate.Minutes;
-                    contextArrival.Estimate.Minutes += delayMinutes;
+                    contextArrival.Estimate.Minutes += train.LastDelayValue;
                     contextArrival.Estimate.Precision = ArrivalPrecision.Confident;
+
+                    contextArrival.CurrentPosition = new Position
+                    {
+                        Latitude = train.Latitude,
+                        Longitude = train.Longitude,
+                        Bearing = null
+                    };
+
+                    // TODO: Handle multiple vehicles properly
+                    var firstVehicle = train.RollingStock.Split(",")[0];
+                    contextArrival.VehicleInformation = new VehicleBadge
+                    {
+                        Identifier = context.IsReduced || context.IsNano ?
+                            $"S{firstVehicle[..3]} R{firstVehicle[3..]}" :
+                            $"Serie {firstVehicle[..3]} Rama {firstVehicle[3..]}"
+                    };
 
                     if (contextArrival.Estimate.Minutes < 0)
                     {
-                        _logger.LogDebug("Train {TrainNumber} supposedly departed already ({OldEstimate} + {DelayMinutes} minutes), marking as deleted. ", trainNumber, oldEstimate, delayMinutes);
+                        _logger.LogDebug("Train {TrainNumber} supposedly departed already ({OldEstimate} + {DelayMinutes} minutes), marking as deleted. ", trainNumber, oldEstimate, train.LastDelayValue);
                         contextArrival.Delete = true;
                     }
-                }
-
-                if (positions.TryGetValue(trainNumber, out var position))
-                {
-                    contextArrival.CurrentPosition = new Position
-                    {
-                        Latitude = position.Latitude,
-                        Longitude = position.Longitude,
-                        Bearing = null // TODO: Set the proper degrees
-                    };
                 }
             }
         }

@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -143,8 +142,8 @@ public partial class GtfsRealtimeEstimatesProvider
 
             positions.TryAdd(trainNumber, new Coordinates
             {
-                Latitude =  entity.Vehicle.Position.Latitude,
-                Longitude =  entity.Vehicle.Position.Longitude
+                Latitude = entity.Vehicle.Position.Latitude,
+                Longitude = entity.Vehicle.Position.Longitude
             });
 
         }

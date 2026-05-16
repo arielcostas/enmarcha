@@ -31,7 +31,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                     headsign
                     scheduledDeparture
                     serviceDay
-                    stopPosition
+                    stopPositionInPattern
                     pickupType
                     dropoffType
                     trip {{
@@ -117,7 +117,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("dropoffType")] public required string DropoffTypeOriginal { get; set; }
         public PickupType DropoffTypeParsed => PickupType.Parse(DropoffTypeOriginal);
 
-        [JsonPropertyName("stopPosition")] public int StopPosition { get; set; }
+        [JsonPropertyName("stopPositionInPattern")] public int StopPositionInPattern { get; set; }
 
         [JsonPropertyName("trip")] public required TripDetails Trip { get; set; }
     }

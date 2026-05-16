@@ -234,6 +234,7 @@ builder.Services.AddHttpClient<Enmarcha.Sources.TranviasCoruna.CorunaRealtimeEst
 builder.Services.AddHttpClient<Enmarcha.Sources.Tussa.SantiagoRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.CtagShuttle.CtagShuttleRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.GtfsRealtime.GtfsRealtimeEstimatesProvider>();
+builder.Services.AddHttpClient<Enmarcha.Sources.Renfe.RenfeRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
 var app = builder.Build();
