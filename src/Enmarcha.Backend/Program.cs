@@ -212,7 +212,6 @@ builder.Services.AddHostedService<AlertPhaseNotificationHostedService>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, CtagShuttleRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaUsageProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
 
@@ -232,7 +231,6 @@ builder.Services.AddHttpClient<OtpService>();
 builder.Services.AddHttpClient<BackofficeSelectorService>();
 builder.Services.AddHttpClient<Enmarcha.Sources.TranviasCoruna.CorunaRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.Tussa.SantiagoRealtimeEstimatesProvider>();
-builder.Services.AddHttpClient<Enmarcha.Sources.CtagShuttle.CtagShuttleRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.GtfsRealtime.GtfsRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.Renfe.RenfeRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();

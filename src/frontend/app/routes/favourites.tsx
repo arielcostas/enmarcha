@@ -35,8 +35,7 @@ export default function Favourites() {
     "tranvias",
     "tussa",
     "ourense",
-    "lugo",
-    "shuttle",
+    "lugo"
   ];
 
   const { data: routes = [], isLoading: routesLoading } = useQuery({

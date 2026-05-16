@@ -5,7 +5,6 @@
   <Project Path="src/Enmarcha.Sources.OpenTripPlannerGql/Enmarcha.Sources.OpenTripPlannerGql.csproj" />
   <Project Path="src/Enmarcha.Sources.TranviasCoruna/Enmarcha.Sources.TranviasCoruna.csproj" />
   <Project Path="src/Enmarcha.Sources.Tussa/Enmarcha.Sources.Tussa.csproj" />
-  <Project Path="src/Enmarcha.Sources.CtagShuttle/Enmarcha.Sources.CtagShuttle.csproj" />
   <Project Path="src/Enmarcha.Sources.Renfe/Enmarcha.Sources.Renfe.csproj" />
   <Project Path="src\frontend\frontend.esproj" />
 </Solution>

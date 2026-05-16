@@ -65,7 +65,6 @@ export default function RoutesPage() {
     "tussa",
     "ourense",
     "lugo",
-    "shuttle",
     "renfe:1071VC",
   ];
 
