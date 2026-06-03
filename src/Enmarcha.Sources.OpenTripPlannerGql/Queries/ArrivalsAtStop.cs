@@ -107,7 +107,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("headsign")] public required string Headsign { get; set; }
 
         [JsonPropertyName("scheduledDeparture")]
-        public int ScheduledDepartureSeconds { get; set; }
+        public int? ScheduledDepartureSeconds { get; set; }
 
         [JsonPropertyName("serviceDay")] public long ServiceDay { get; set; }
 
@@ -178,7 +178,7 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
         [JsonPropertyName("scheduledDeparture")]
         public int? ScheduledDeparture { get; set; }
 
-        [JsonPropertyName("stop")] public TerminusStoptimeStop Stop { get; set; }
+        [JsonPropertyName("stop")] public required TerminusStoptimeStop Stop { get; set; }
     }
 
     public class TerminusStoptimeStop

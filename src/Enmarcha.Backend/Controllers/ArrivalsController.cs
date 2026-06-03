@@ -213,7 +213,7 @@ public partial class ArrivalsController : ControllerBase
             }
 
             var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
-            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds);
+            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds ?? 0);
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
 
             arrivals.Add(new Arrival

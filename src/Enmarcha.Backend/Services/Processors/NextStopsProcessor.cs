@@ -23,7 +23,7 @@ public class NextStopsProcessor : IArrivalsProcessor
             if (arrival.Headsign.Marquee is not null) continue;
 
             // Filter stoptimes that are after the current stop's departure
-            var currentStopDeparture = otpArrival.ScheduledDepartureSeconds;
+            var currentStopDeparture = otpArrival.ScheduledDepartureSeconds ?? int.MaxValue;
 
             if (feedId == "xunta")
             {
