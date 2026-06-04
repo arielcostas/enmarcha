@@ -213,7 +213,7 @@ public partial class ArrivalsController : ControllerBase
             }
 
             var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
-            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledDepartureSeconds ?? 0);
+            var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledAt);
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
 
             arrivals.Add(new Arrival
@@ -471,7 +471,7 @@ public partial class ArrivalsController : ControllerBase
 
                 return p.Stoptimes.Select(s => new ScheduledTripDto
                 {
-                    ScheduledDeparture = s.ScheduledDepartureSeconds,
+                    ScheduledDeparture = s.ScheduledAt,
                     RouteId = p.Pattern.Route.GtfsId,
                     RouteShortName = shortName,
                     RouteColor = color,

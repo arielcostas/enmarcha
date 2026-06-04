@@ -28,6 +28,7 @@ public class StopScheduleContent : IGraphRequest<StopScheduleContent.Args>
                         }}
                     }}
                     stoptimes {{
+                        scheduledArrival
                         scheduledDeparture
                         pickupType
                         dropoffType
@@ -124,8 +125,13 @@ public class StopScheduleOtpResponse : AbstractGraphResponse
 
     public class Stoptime
     {
+        [JsonPropertyName("scheduledArrival")]
+        public int? ScheduledArrivalSeconds { get; set; }
+
         [JsonPropertyName("scheduledDeparture")]
-        public int ScheduledDepartureSeconds { get; set; }
+        public int? ScheduledDepartureSeconds { get; set; }
+
+        public int ScheduledAt => ScheduledDepartureSeconds ?? ScheduledArrivalSeconds ?? 0;
 
         [JsonPropertyName("pickupType")]
         public string? PickupType { get; set; }

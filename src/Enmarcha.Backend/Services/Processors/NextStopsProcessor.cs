@@ -23,13 +23,13 @@ public class NextStopsProcessor : IArrivalsProcessor
             if (arrival.Headsign.Marquee is not null) continue;
 
             // Filter stoptimes that are after the current stop's departure
-            var currentStopDeparture = otpArrival.ScheduledDepartureSeconds ?? int.MaxValue;
+            var currentStopDeparture = otpArrival.ScheduledAt;
 
             if (feedId == "xunta")
             {
                 arrival.NextStops = otpArrival.Trip.Stoptimes
-                    .Where(s => s.ScheduledDeparture > currentStopDeparture)
-                    .OrderBy(s => s.ScheduledDeparture)
+                    .Where(s => s.ScheduledAt > currentStopDeparture)
+                    .OrderBy(s => s.ScheduledAt)
                     .Select(s => $"{s.Stop.Name} -- {s.Stop.Description}")
                     .Distinct()
                     .ToList();
@@ -37,8 +37,8 @@ public class NextStopsProcessor : IArrivalsProcessor
             else
             {
                 arrival.NextStops = otpArrival.Trip.Stoptimes
-                    .Where(s => s.ScheduledDeparture > currentStopDeparture)
-                    .OrderBy(s => s.ScheduledDeparture)
+                    .Where(s => s.ScheduledAt > currentStopDeparture)
+                    .OrderBy(s => s.ScheduledAt)
                     .Select(s => FeedService.NormalizeStopName(feedId, s.Stop.Name))
                     .ToList();
             }
@@ -49,8 +49,8 @@ public class NextStopsProcessor : IArrivalsProcessor
             if (feedId == "xunta")
             {
                 arrival.OriginStops = otpArrival.Trip.Stoptimes
-                    .Where(s => s.ScheduledDeparture < currentStopDeparture)
-                    .OrderBy(s => s.ScheduledDeparture)
+                    .Where(s => s.ScheduledAt < currentStopDeparture)
+                    .OrderBy(s => s.ScheduledAt)
                     .Take(1)
                     .Select(s => $"{s.Stop.Name} -- {s.Stop.Description}")
                     .Distinct()
@@ -59,8 +59,8 @@ public class NextStopsProcessor : IArrivalsProcessor
             else if (feedId == "renfe")
             {
                 arrival.OriginStops = otpArrival.Trip.Stoptimes
-                    .Where(s => s.ScheduledDeparture < currentStopDeparture)
-                    .OrderBy(s => s.ScheduledDeparture)
+                    .Where(s => s.ScheduledAt < currentStopDeparture)
+                    .OrderBy(s => s.ScheduledAt)
                     .Take(1)
                     .Select(s => FeedService.NormalizeStopName(feedId, s.Stop.Name))
                     .ToList();

@@ -29,6 +29,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                 }}
                 arrivals: stoptimesWithoutPatterns(numberOfDepartures: 50, startTime: {startTimeUnix}, timeRange: 14400) {{
                     headsign
+                    scheduledArrival
                     scheduledDeparture
                     serviceDay
                     stopPositionInPattern
@@ -71,6 +72,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                                 lat
                                 lon
                             }}
+                            scheduledArrival
                             scheduledDeparture
                         }}
                     }}
@@ -106,8 +108,13 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
     {
         [JsonPropertyName("headsign")] public required string Headsign { get; set; }
 
+        [JsonPropertyName("scheduledArrival")]
+        public int? ScheduledArrivalSeconds { get; set; }
+
         [JsonPropertyName("scheduledDeparture")]
         public int? ScheduledDepartureSeconds { get; set; }
+
+        public int ScheduledAt => (int)(ScheduledDepartureSeconds ?? ScheduledArrivalSeconds)!;
 
         [JsonPropertyName("serviceDay")] public long ServiceDay { get; set; }
 
@@ -160,8 +167,13 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
     {
         [JsonPropertyName("stop")] public required StopDetails Stop { get; set; }
 
+        [JsonPropertyName("scheduledArrival")]
+        public int? ScheduledArrival { get; set; }
+
         [JsonPropertyName("scheduledDeparture")]
         public int? ScheduledDeparture { get; set; }
+
+        public int ScheduledAt => (int)(ScheduledDeparture ?? ScheduledArrival)!;
     }
 
     public class StopDetails
