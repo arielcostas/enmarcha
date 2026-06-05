@@ -112,7 +112,7 @@ public class RouteDetailsResponse : AbstractGraphResponse
     {
         [JsonPropertyName("scheduledArrival")] public int? ScheduledArrival { get; set; }
         [JsonPropertyName("scheduledDeparture")] public int? ScheduledDeparture { get; set; }
-        public int ScheduledAt => (int)(ScheduledDeparture ?? ScheduledArrival)!;
+        public int? ScheduledAt => ScheduledDeparture ?? ScheduledArrival;
         [JsonPropertyName("pickupType")] public string? PickupType { get; set; }
         [JsonPropertyName("dropoffType")] public string? DropoffType { get; set; }
     }
