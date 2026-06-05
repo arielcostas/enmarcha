@@ -106,7 +106,7 @@ public class OtpService
                 Lat = s.Lat,
                 Lon = s.Lon,
                 ScheduledDepartures = pattern.TripsForDate
-                    .Select(t => t.Stoptimes.ElementAtOrDefault(i)?.ScheduledDeparture ?? -1)
+                    .Select(t => t.Stoptimes.ElementAtOrDefault(i)?.ScheduledAt ?? -1)
                     .Where(d => d != -1)
                     .OrderBy(d => d)
                     .ToList(),
