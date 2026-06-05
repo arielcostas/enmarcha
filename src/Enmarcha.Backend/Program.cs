@@ -225,7 +225,6 @@ builder.Services.AddScoped<IArrivalsProcessor, ColourProcessor>();
 
 builder.Services.AddScoped<ArrivalsPipeline>();
 
-// builder.Services.AddKeyedScoped<IGeocodingService, NominatimGeocodingService>("Nominatim");
 builder.Services.AddHttpClient<IGeocodingService, GeoapifyGeocodingService>();
 builder.Services.AddHttpClient<OtpService>();
 builder.Services.AddHttpClient<BackofficeSelectorService>();
