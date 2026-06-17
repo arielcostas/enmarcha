@@ -2,13 +2,15 @@
 
 namespace Enmarcha.Sources.Renfe;
 
-public class RenfeStatus
+public class RenfeStatus<T> where T:TrainType
 {
     [JsonPropertyName("fechaActualizacion")] public DateTime FechaActualizacion { get; set; }
-    [JsonPropertyName("trenes")] public List<Train> Trenes { get; set; }
+    [JsonPropertyName("trenes")] public List<T> Trenes { get; set; }
 }
 
-public class Train
+public class TrainType;
+
+public class LdTrain : TrainType
 {
     [JsonPropertyName("codComercial")] public required string TrainCode { get; set; }
     [JsonPropertyName("codEstAnt")] public required string LastStationCalled { get; set; }
@@ -19,10 +21,20 @@ public class Train
     [JsonPropertyName("codDestino")] public required string DestinationStationCode { get; set; }
     [JsonPropertyName("accesible")] public required bool Accessible { get; set; }
     [JsonPropertyName("ultRetraso")] public required string LastDelay { get; set; }
-    [JsonIgnore] public int LastDelayValue => int.Parse(LastDelay);
+    [JsonIgnore] public int Delay => int.Parse(LastDelay);
     [JsonPropertyName("latitud")] public required double Latitude { get; set; }
     [JsonPropertyName("longitud")] public required double Longitude { get; set; }
     [JsonPropertyName("time")] public required int Timestamp { get; set; }
     [JsonPropertyName("p")] public required string P { get; set; }
     [JsonPropertyName("mat")] public required string RollingStock { get; set; }
 }
+
+public class CercaniasTrain : TrainType
+{
+    [JsonPropertyName("codTren")] public required string TrainCode { get; set; }
+    [JsonPropertyName("retrasoMin")] public required string DelayMin { get; set; }
+    [JsonIgnore] public int Delay => int.Parse(DelayMin);
+    [JsonPropertyName("latitud")] public required double Latitude { get; set; }
+    [JsonPropertyName("longitud")] public required double Longitude { get; set; }
+}
+

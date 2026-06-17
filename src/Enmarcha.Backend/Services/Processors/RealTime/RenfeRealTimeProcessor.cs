@@ -25,10 +25,22 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
     {
         if (!context.StopId.StartsWith("renfe:")) return;
 
+        // FIXME: ñapa, perhaps make the feed have different route types or whatever
+        var cercanias = context.Routes.Any(r => r.ShortName == "C1");
+
+        // TODO: Filter trips with same code for two services (cercanías and regional sinergiados)
+
         try
         {
-            var realtime = await _realtime.GetTrainInformation();
-            System.Diagnostics.Activity.Current?.SetTag("realtime.count", realtime.Count);
+            var ldRealtime = await _realtime.GetLongDistanceTrainInformation();
+            System.Diagnostics.Activity.Current?.SetTag("realtime.count", ldRealtime.Count);
+
+            Dictionary<string, CercaniasTrain>? cercaniasRealtime = null;
+
+            if (cercanias)
+            {
+                cercaniasRealtime = await _realtime.GetCercaniasTrainInformation();
+            }
 
             foreach (Arrival contextArrival in context.Arrivals)
             {
@@ -36,39 +48,65 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
 
                 contextArrival.Headsign.Destination = trainNumber + " - " + contextArrival.Headsign.Destination;
 
-                if (realtime.TryGetValue(trainNumber, out var train))
+                int oldEstimate = contextArrival.Estimate.Minutes;
+
+                if (ldRealtime.TryGetValue(trainNumber, out var ldTrain))
                 {
                     contextArrival.Delay = new DelayBadge
                     {
-                        Minutes = train.LastDelayValue
+                        Minutes = ldTrain.Delay
                     };
 
-                    var oldEstimate = contextArrival.Estimate.Minutes;
-                    contextArrival.Estimate.Minutes += train.LastDelayValue;
+                    contextArrival.Estimate.Minutes += ldTrain.Delay;
                     contextArrival.Estimate.Precision = ArrivalPrecision.Confident;
 
                     contextArrival.CurrentPosition = new Position
                     {
-                        Latitude = train.Latitude,
-                        Longitude = train.Longitude,
+                        Latitude = ldTrain.Latitude,
+                        Longitude = ldTrain.Longitude,
                         Bearing = null
                     };
 
                     // TODO: Handle multiple vehicles properly
-                    var firstVehicle = train.RollingStock.Split(",")[0];
+                    var firstVehicle = ldTrain.RollingStock.Split(",")[0];
                     contextArrival.VehicleInformation = new VehicleBadge
                     {
-                        Identifier = context.IsReduced || context.IsNano ?
-                            $"S{firstVehicle[..3]} R{firstVehicle[3..]}" :
-                            $"Serie {firstVehicle[..3]} Rama {firstVehicle[3..]}"
+                        Identifier = context.IsReduced || context.IsNano
+                            ? $"S{firstVehicle[..3]} R{firstVehicle[3..]}"
+                            : $"Serie {firstVehicle[..3]} Rama {firstVehicle[3..]}"
                     };
 
                     if (contextArrival.Estimate.Minutes < 0)
                     {
-                        _logger.LogDebug("Train {TrainNumber} supposedly departed already ({OldEstimate} + {DelayMinutes} minutes), marking as deleted. ", trainNumber, oldEstimate, train.LastDelayValue);
+                        _logger.LogDebug(
+                            "Train {TrainNumber} supposedly departed already ({OldEstimate} + {DelayMinutes} minutes), marking as deleted. ",
+                            trainNumber, oldEstimate, ldTrain.Delay);
                         contextArrival.Delete = true;
                     }
+
+                    continue;
                 }
+
+                if (!(cercaniasRealtime?.TryGetValue(trainNumber, out var cercaniasTrain) ?? false))
+                {
+                    continue;
+                }
+
+                contextArrival.Delay = new DelayBadge
+                {
+                    Minutes = cercaniasTrain.Delay
+                };
+
+                contextArrival.Estimate.Minutes += cercaniasTrain.Delay;
+                contextArrival.Estimate.Precision = ArrivalPrecision.Confident;
+
+                contextArrival.CurrentPosition = new Position
+                {
+                    Latitude = cercaniasTrain.Latitude,
+                    Longitude = cercaniasTrain.Longitude,
+                    Bearing = null
+                };
+
             }
         }
         catch (Exception ex)
