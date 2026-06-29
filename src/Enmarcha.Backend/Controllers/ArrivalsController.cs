@@ -75,6 +75,7 @@ public partial class ArrivalsController : ControllerBase
                     .Select(r => new RouteInfo
                     {
                         GtfsId = r.GtfsId,
+                        OriginalShortName = r.ShortName ?? "",
                         ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
                         Colour = r.Color ?? fallbackColor,
                         TextColour = r.TextColor is null or "000000" ?
@@ -108,7 +109,7 @@ public partial class ArrivalsController : ControllerBase
         // Annotate each arrival with its OTP pattern ID
         foreach (var arrival in context.Arrivals)
         {
-            if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
+            if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival)
                 arrival.PatternId = otpArrival.Trip.Pattern?.Id;
         }
 
@@ -123,7 +124,7 @@ public partial class ArrivalsController : ControllerBase
         {
             filtered = filtered.Where(a =>
             {
-                if (a.RawOtpTrip is not ArrivalsAtStopResponse.Arrival otpArrival) return false;
+                if (a.RawOtpArrival is not ArrivalsAtStopResponse.Arrival otpArrival) return false;
                 var stoptimes = otpArrival.Trip.Stoptimes;
                 var originIdx = stoptimes.FindIndex(s => s.Stop.GtfsId == stop);
                 var searchFrom = originIdx >= 0 ? originIdx + 1 : 0;
@@ -223,6 +224,7 @@ public partial class ArrivalsController : ControllerBase
                 Route = new RouteInfo
                 {
                     GtfsId = item.Trip.Route.GtfsId,
+                    OriginalShortName = item.Trip.RouteShortName,
                     ShortName = item.Trip.RouteShortName,
                     Colour = item.Trip.Route.Color ?? "FFFFFF",
                     TextColour = item.Trip.Route.TextColor ?? "000000"
@@ -233,8 +235,9 @@ public partial class ArrivalsController : ControllerBase
                     Minutes = minutesToArrive,
                     Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
                 },
+                AgencyId = item.Trip.Route.Agency?.Id,
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
-                RawOtpTrip = item,
+                RawOtpArrival = item,
                 Operation = operation
             });
         }
@@ -267,7 +270,7 @@ public partial class ArrivalsController : ControllerBase
 
         if (feedId is "tussa" or "ourense" or "lugo")
         {
-            return -5;
+            return -10;
         }
 
         return -30;
@@ -321,6 +324,7 @@ public partial class ArrivalsController : ControllerBase
                             .Select(r => new RouteInfo
                             {
                                 GtfsId = r.GtfsId,
+                                OriginalShortName = r.ShortName ?? "",
                                 ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
                                 Colour = r.Color ?? fallbackColor,
                                 TextColour = r.TextColor is null or "000000" ?
@@ -374,6 +378,7 @@ public partial class ArrivalsController : ControllerBase
                             .Select(r => new RouteInfo
                             {
                                 GtfsId = r.GtfsId,
+                                OriginalShortName = r.ShortName ?? "",
                                 ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
                                 Colour = r.Color ?? fallbackColor,
                                 TextColour = r.TextColor is null or "000000" ?

@@ -84,6 +84,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     vehicleInformation,
     operator,
     operation,
+      currentPosition
   } = arrival;
 
   const etaValue = estimate.minutes.toString();
@@ -218,7 +219,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     return chips;
   }, [delay, shift, estimate.precision, t, headsign.badge, vehicleInformation]);
 
-  const isClickable = !!onClick && estimate.precision !== "past";
+  const isClickable = !!onClick && (estimate.precision !== "past" || (estimate.precision === "past" && currentPosition));
   const Tag = isClickable ? "button" : "div";
 
   return (

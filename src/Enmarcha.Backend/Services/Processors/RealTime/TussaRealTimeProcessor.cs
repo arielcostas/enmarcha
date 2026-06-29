@@ -60,6 +60,7 @@ public class TussaRealTimeProcessor : AbstractRealTimeProcessor
                         Route = new RouteInfo
                         {
                             GtfsId = $"tussa:{estimate.Id}",
+                            OriginalShortName = estimate.Sinoptico,
                             ShortName = estimate.Sinoptico,
                             Colour = estimate.Colour,
                             TextColour = ContrastHelper.GetBestTextColour(estimate.Colour)

@@ -481,25 +481,25 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                     >
                       {selectedBus.currentPosition.bearing ? (
                         <svg
-                          width="24"
-                          height="24"
+                          width="28"
+                          height="28"
                           viewBox="0 0 24 24"
                           style={{
-                            filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                            filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.5))",
                           }}
                         >
                           <path
                             d="M12 2 L22 22 L12 17 L2 22 Z"
-                            fill={selectedBus.colour}
-                            stroke="#000"
+                            fill="#FFF"
+                            stroke={selectedBus.colour}
                             strokeWidth="2"
                             strokeLinejoin="round"
                           />
                         </svg>
                       ) : (
                         <svg
-                          width="24"
-                          height="24"
+                          width="28"
+                          height="28"
                           viewBox="0 0 24 24"
                           style={{
                             filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
@@ -512,7 +512,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                             height="20"
                             rx="4"
                             fill={selectedBus.colour}
-                            stroke="#000"
+                            stroke="#FFF"
                             strokeWidth="2"
                           />
                           <path

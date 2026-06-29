@@ -26,7 +26,7 @@ public class FilterAndSortProcessor : IArrivalsProcessor
             }
 
             // For others, show up to 10 minutes ago
-            return a.Estimate.Minutes >= -10;
+            return a.Estimate.Minutes >= -15;
         }).ToList();
 
         // 3. Limit results — nano requests a full set so route/via filtering in the controller doesn't starve

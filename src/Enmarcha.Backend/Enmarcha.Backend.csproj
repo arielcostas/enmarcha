@@ -44,6 +44,7 @@
     <ProjectReference Include="..\Enmarcha.Sources.Tussa\Enmarcha.Sources.Tussa.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.GtfsRealtime\Enmarcha.Sources.GtfsRealtime.csproj" />
     <ProjectReference Include="..\Enmarcha.Sources.Renfe\Enmarcha.Sources.Renfe.csproj" />
+    <ProjectReference Include="..\Enmarcha.Sources.Xunta\Enmarcha.Sources.Xunta.csproj" />
   </ItemGroup>
 
   <ItemGroup>

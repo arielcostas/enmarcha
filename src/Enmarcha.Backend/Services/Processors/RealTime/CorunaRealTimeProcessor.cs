@@ -112,6 +112,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                         Route = new RouteInfo
                         {
                             GtfsId = template?.Route.GtfsId ?? $"tranvias:{estimate.RouteId}",
+                            OriginalShortName = template?.Route.ShortName ?? estimate.RouteId,
                             ShortName = template?.Route.ShortName ?? estimate.RouteId,
                             Colour = template?.Route.Colour ?? "FFFFFF",
                             TextColour = template?.Route.TextColour ?? "000000"
@@ -167,7 +168,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     Position? currentPosition = null;
 
-                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
+                    if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival &&
                         otpArrival.Trip.Geometry?.Points != null)
                     {
                         var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)

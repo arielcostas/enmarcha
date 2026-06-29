@@ -23,7 +23,7 @@ public class ShapeProcessor : IArrivalsProcessor
             // If shape is already populated (e.g. by VitrasaRealTimeProcessor), skip
             if (arrival.Shape != null) continue;
 
-            if (arrival.RawOtpTrip is not ArrivalsAtStopResponse.Arrival otpArrival) continue;
+            if (arrival.RawOtpArrival is not ArrivalsAtStopResponse.Arrival otpArrival) continue;
 
             var encodedPoints = otpArrival.Trip.Geometry?.Points;
             if (string.IsNullOrEmpty(encodedPoints))

@@ -46,6 +46,7 @@ public class ArrivalsAtStopContent : IGraphRequest<ArrivalsAtStopContent.Args>
                             textColor
                             longName
                             agency {{
+                                gtfsId
                                 name
                             }}
                         }}
@@ -215,7 +216,10 @@ public class ArrivalsAtStopResponse : AbstractGraphResponse
 
     public class AgencyDetails
     {
+        [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
         [JsonPropertyName("name")] public required string Name { get; set; }
+
+        [JsonIgnore] public string Id => GtfsId.Split(":", 2)[1];
     }
 
     public class PickupType

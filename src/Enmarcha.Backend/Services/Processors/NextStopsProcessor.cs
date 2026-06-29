@@ -19,7 +19,7 @@ public class NextStopsProcessor : IArrivalsProcessor
 
         foreach (var arrival in context.Arrivals)
         {
-            if (arrival.RawOtpTrip is not ArrivalsAtStopResponse.Arrival otpArrival) continue;
+            if (arrival.RawOtpArrival is not ArrivalsAtStopResponse.Arrival otpArrival) continue;
             if (arrival.Headsign.Marquee is not null) continue;
 
             // Filter stoptimes that are after the current stop's departure

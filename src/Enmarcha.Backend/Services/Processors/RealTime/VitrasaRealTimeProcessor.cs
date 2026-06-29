@@ -68,7 +68,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     {
                         // Use tripHeadsign from GTFS if available, otherwise fall back to stop-level headsign
                         string scheduleHeadsign = a.Headsign.Destination;
-                        if (a.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
+                        if (a.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
                         {
                             scheduleHeadsign = otpArr.Trip.TripHeadsign;
                         }
@@ -76,7 +76,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         string? arrivalLongNameNormalized = null;
                         string? arrivalLastStopNormalized = null;
 
-                        if (a.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
+                        if (a.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival)
                         {
                             if (otpArrival.Trip.Route.LongName != null)
                             {
@@ -132,6 +132,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         Route = new RouteInfo
                         {
                             GtfsId = $"vitrasa:{estimate.Line}",
+                            OriginalShortName = estimate.Line,
                             ShortName = estimate.Line,
                             Colour = template?.Route.Colour ?? "FFFFFF",
                             TextColour = template?.Route.TextColour ?? "000000",
@@ -160,7 +161,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                 arrival.Delay = new DelayBadge { Minutes = delayMinutes };
 
                 string scheduledHeadsign = arrival.Headsign.Destination;
-                if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
+                if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
                 {
                     scheduledHeadsign = otpArr.Trip.TripHeadsign;
                 }
@@ -170,7 +171,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     bool isJustLastStop = false;
 
-                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival)
+                    if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival)
                     {
                         var lastStop = otpArrival.Trip.Stoptimes.LastOrDefault();
                         if (lastStop != null)
@@ -192,7 +193,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     Position? currentPosition = null;
 
-                    if (arrival.RawOtpTrip is ArrivalsAtStopResponse.Arrival otpArrival &&
+                    if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival &&
                         otpArrival.Trip.Geometry?.Points != null)
                     {
                         var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)

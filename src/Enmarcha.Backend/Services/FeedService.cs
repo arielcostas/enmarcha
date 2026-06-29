@@ -147,6 +147,7 @@ public partial class FeedService
                 result.Add(new RouteInfo
                 {
                     GtfsId = items[0].GtfsId,
+                    OriginalShortName = group.Key.Trim(),
                     ShortName = group.Key.Trim(),
                     Colour = items[0].Colour,
                     TextColour = items[0].TextColour
@@ -169,6 +170,7 @@ public partial class FeedService
                 result.Add(new RouteInfo
                 {
                     GtfsId = items[0].GtfsId,
+                    OriginalShortName = $"XG{group.Key}",
                     ShortName = $"XG{group.Key}",
                     Colour = items[0].Colour,
                     TextColour = items[0].TextColour

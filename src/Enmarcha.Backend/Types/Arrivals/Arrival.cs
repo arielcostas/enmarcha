@@ -21,9 +21,9 @@ public class Arrival
 
     [JsonPropertyName("currentPosition")] public Position? CurrentPosition { get; set; }
 
+    [JsonIgnore] public string? AgencyId { get; set; }
     [JsonPropertyName("operator")] public string? Operator { get; set; }
     [JsonPropertyName("operation")] public VehicleOperation Operation { get; set; } = VehicleOperation.PickupDropoff;
-
 
     [JsonPropertyName("vehicleInformation")]
     public VehicleBadge? VehicleInformation { get; set; }
@@ -37,7 +37,7 @@ public class Arrival
     public List<string> OriginStops { get; set; } = [];
 
     [JsonIgnore]
-    public ArrivalsAtStopResponse.Arrival? RawOtpTrip { get; set; }
+    public ArrivalsAtStopResponse.Arrival? RawOtpArrival { get; set; }
 
     [JsonIgnore] public bool Delete { get; set; }
     [JsonIgnore] public bool RealTimeOnly { get; set; } = false;
@@ -57,12 +57,22 @@ public enum VehicleOperation
     Arrival = 4
 }
 
+public enum SeatInformation
+{
+    Empty,
+    ManySeatsAvailable,
+    FewSeatsAvailable,
+
+
+}
+
 public class RouteInfo
 {
     [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
 
     public string RouteIdInGtfs => GtfsId.Split(':', 2)[1];
 
+    public required string OriginalShortName { get; set; }
     [JsonPropertyName("shortName")] public required string ShortName { get; set; }
 
     [JsonPropertyName("colour")] public required string Colour { get; set; }

@@ -212,8 +212,10 @@ builder.Services.AddHostedService<AlertPhaseNotificationHostedService>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, XuntaRealTimeProcessor>();
+
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaUsageProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
 
 builder.Services.AddScoped<IArrivalsProcessor, FilterAndSortProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
@@ -232,6 +234,7 @@ builder.Services.AddHttpClient<Enmarcha.Sources.TranviasCoruna.CorunaRealtimeEst
 builder.Services.AddHttpClient<Enmarcha.Sources.Tussa.SantiagoRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.GtfsRealtime.GtfsRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Enmarcha.Sources.Renfe.RenfeRealtimeEstimatesProvider>();
+builder.Services.AddHttpClient<Enmarcha.Sources.Xunta.XuntaRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
 var app = builder.Build();
