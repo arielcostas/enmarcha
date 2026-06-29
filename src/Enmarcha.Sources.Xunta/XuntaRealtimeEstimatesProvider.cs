@@ -36,7 +36,11 @@ public class XuntaRealtimeEstimatesProvider
             });
 
             var response = await _http.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception(
+                    $"Error received when calling MoBT API: {response.StatusCode} {response.Content.ReadAsStringAsync()}");
+            }
             allResponses.AddRange(await response.Content.ReadFromJsonAsync<List<CompanyResponse>>() ??
                                   []); // TODO: Error handling
         });

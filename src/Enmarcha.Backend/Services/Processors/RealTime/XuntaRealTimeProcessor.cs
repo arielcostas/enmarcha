@@ -61,8 +61,18 @@ public class XuntaRealTimeProcessor : AbstractRealTimeProcessor
             .Select(a => a.AgencyId!)
             .Distinct()
             .ToArray();
+        List<VehiclePositions> results;
 
-        var results = await _provider.GetEstimatesForAgencies(agencies);
+        try
+        {
+            results = await _provider.GetEstimatesForAgencies(agencies);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching realtime information");
+            return;
+        }
+
         foreach (var res in results)
         {
             if (_equivalenceMatrix.ContainsKey(res.Trip.RouteShortName))
