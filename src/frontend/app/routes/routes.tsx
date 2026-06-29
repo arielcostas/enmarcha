@@ -65,7 +65,7 @@ export default function RoutesPage() {
     "tussa",
     "ourense",
     "lugo",
-    "renfe:1071VC",
+    "renfe",
   ];
 
   const { data: routes, isLoading } = useQuery({
