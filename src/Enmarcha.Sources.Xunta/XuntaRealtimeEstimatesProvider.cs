@@ -23,7 +23,6 @@ public class XuntaRealtimeEstimatesProvider
                 HttpMethod.Post,
                 "https://www.mobt.xunta.gal/api/meep/tripplan/api/v1/rtprocessor/galicia/vehiclePositions"
             );
-            request.Headers.Add("Content-Type", "application/json");
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("User-Agent", "Mozilla/5.0 (compatible; EnMarcha/0.1; https://enmarcha.app)");
 
