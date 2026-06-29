@@ -388,7 +388,7 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                       paint={{
                         "line-color": selectedBus.textColour,
                         "line-width": 7,
-                        "line-opacity": 0.6,
+                        "line-opacity": 0.4,
                       }}
                       layout={{
                         "line-cap": "round",
@@ -490,9 +490,9 @@ export const StopMapModal: React.FC<StopMapModalProps> = ({
                         >
                           <path
                             d="M12 2 L22 22 L12 17 L2 22 Z"
-                            fill="#FFF"
-                            stroke={selectedBus.colour}
-                            strokeWidth="2"
+                            fill={selectedBus.colour}
+                            stroke="#000"
+                            strokeWidth="1"
                             strokeLinejoin="round"
                           />
                         </svg>
