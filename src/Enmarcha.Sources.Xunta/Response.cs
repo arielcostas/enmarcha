@@ -13,7 +13,7 @@ public class VehiclePositions
     [JsonPropertyName("trip")] public required Trip Trip { get; set; }
     [JsonPropertyName("position")] public required Position Position { get; set; }
     [JsonPropertyName("vehicle")] public required Vehicle Vehicle { get; set; }
-    [JsonPropertyName("occupancyStatus")] public required string OccupancyStatus { get; set; }
+    [JsonPropertyName("occupancyStatus")] public string? OccupancyStatus { get; set; }
 }
 
 public class Trip

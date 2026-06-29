@@ -23,6 +23,7 @@ public class XuntaRealtimeEstimatesProvider
                 HttpMethod.Post,
                 "https://www.mobt.xunta.gal/api/meep/tripplan/api/v1/rtprocessor/galicia/vehiclePositions"
             );
+            request.Headers.Add("Content-Type", "application/json");
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("User-Agent", "Mozilla/5.0 (compatible; EnMarcha/0.1; https://enmarcha.app)");
 
@@ -41,11 +42,16 @@ public class XuntaRealtimeEstimatesProvider
                 throw new Exception(
                     $"Error received when calling MoBT API: {response.StatusCode} {await response.Content.ReadAsStringAsync()}");
             }
-            allResponses.AddRange(await response.Content.ReadFromJsonAsync<List<CompanyResponse>>() ??
-                                  []); // TODO: Error handling
+
+            var contents = await response.Content.ReadFromJsonAsync<List<CompanyResponse>>() ?? [];
+
+            lock (allResponses)
+            {
+                allResponses.AddRange(contents);
+            }
         });
 
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
 
         return allResponses.SelectMany(r => r.VehiclePositions).ToList();
     }
