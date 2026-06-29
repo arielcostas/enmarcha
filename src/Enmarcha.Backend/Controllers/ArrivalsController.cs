@@ -52,7 +52,7 @@ public partial class ArrivalsController : ControllerBase
         [FromQuery] bool reduced
     )
     {
-        using var activity = Telemetry.Source.StartActivity("GetArrivals");
+        using var activity = Telemetry.Source.StartActivity();
         activity?.SetTag("stop.id", id);
         activity?.SetTag("reduced", reduced);
 
@@ -62,7 +62,7 @@ public partial class ArrivalsController : ControllerBase
 
         var feedId = id.Split(':')[0];
         var timeThreshold = GetThresholdForFeed(id);
-        var (fallbackColor, fallbackTextColor) = _feedService.GetFallbackColourForFeed(feedId);
+        var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
 
         return Ok(new StopArrivalsResponse
         {
@@ -196,12 +196,6 @@ public partial class ArrivalsController : ControllerBase
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
-            //if (item.PickupTypeParsed.Equals(ArrivalsAtStopResponse.PickupType.None)) continue;
-            //if (
-            //    item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
-            //    item.Trip.DepartureStoptime.Stop.GtfsId != id
-            //) continue;
-
             // Delete loop routes that aren't starting here
             if (
                 item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
@@ -215,6 +209,13 @@ public partial class ArrivalsController : ControllerBase
             var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
             var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledAt);
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
+
+            var operation = GetVehicleOperation(item);
+            if ((reduced && operation == VehicleOperation.Arrival) ||
+                (reduced && minutesToArrive < 0))
+            {
+                continue;
+            }
 
             arrivals.Add(new Arrival
             {
@@ -234,7 +235,7 @@ public partial class ArrivalsController : ControllerBase
                 },
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
                 RawOtpTrip = item,
-                Operation = GetVehicleOperation(item)
+                Operation = operation
             });
         }
 
@@ -426,7 +427,7 @@ public partial class ArrivalsController : ControllerBase
         [FromQuery] string? date
     )
     {
-        using var activity = Telemetry.Source.StartActivity("GetSchedule");
+        using var activity = Telemetry.Source.StartActivity();
         activity?.SetTag("stop.id", id);
 
         if (string.IsNullOrWhiteSpace(id))

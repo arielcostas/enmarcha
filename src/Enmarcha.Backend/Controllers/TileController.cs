@@ -124,7 +124,7 @@ public class TileController : ControllerBase
 
             // TODO: Duplicate from ArrivalsController
             var (Color, TextColor) = _feedService.GetFallbackColourForFeed(idParts[0]);
-            var distinctRoutes = GetDistinctRoutes(feedId, stop.Routes ?? []);
+            var distinctRoutes = GetDistinctRoutes(stop.Routes ?? []);
 
             if (distinctRoutes.Count == 0)
             {
@@ -190,28 +190,13 @@ public class TileController : ControllerBase
         };
     }
 
-    private List<StopTileResponse.Route> GetDistinctRoutes(string feedId, List<StopTileResponse.Route> routes)
+    private List<StopTileResponse.Route> GetDistinctRoutes(List<StopTileResponse.Route> routes)
     {
-        List<StopTileResponse.Route> distinctRoutes = [];
-        HashSet<string> seen = new();
-
-        foreach (var route in routes)
-        {
-            var seenId = _feedService.GetUniqueRouteShortName(feedId, route.ShortName ?? string.Empty);
-            route.ShortName = seenId;
-
-            if (seen.Contains(seenId))
-            {
-                continue;
-            }
-
-            seen.Add(seenId);
-            distinctRoutes.Add(route);
-        }
-
-        return [.. distinctRoutes.OrderBy(
+        return routes
+            .DistinctBy(r => r.ShortName)
+            .OrderBy(
             r => r.ShortName,
             Comparer<string?>.Create(SortingHelper.SortRouteShortNames)
-        )];
+        ).ToList();
     }
 }

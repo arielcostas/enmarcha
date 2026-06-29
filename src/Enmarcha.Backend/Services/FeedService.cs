@@ -3,10 +3,12 @@ using Enmarcha.Backend.Types.Arrivals;
 
 namespace Enmarcha.Backend.Services;
 
-public class FeedService
+public partial class FeedService
 {
     private static readonly Regex RemoveQuotationMarks = new(@"[""”]", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly Regex StreetNameRegex = new(@"^(.*?)(?:,|\s\s|\s-\s| \d| S\/N|\s\()", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex StreetNameRegex = new(@"^(.*?)(?:,|\s\s|\s-\s| \d| S\/N|\s\()",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     private static readonly Dictionary<string, string> NameReplacements = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -57,52 +59,58 @@ public class FeedService
                 return numericCode.ToString();
             }
         }
+
         return code;
     }
 
-    public string NormalizeRouteShortName(string feedId, string shortName)
+    public string NormalizeRouteShortName(string feedId, string shortName, bool stripOperator = false)
     {
-        if (feedId == "xunta" && shortName.StartsWith("XG"))
+        if (feedId != "xunta")
         {
-            if (shortName.Length >= 8)
+            return shortName;
+        }
+
+        if (shortName.StartsWith("XG"))
+        {
+            var match = XuntaRouteRegex.Match(shortName);
+            if (match.Success)
             {
                 // XG817014 -> 817.14
-                var contract = shortName.Substring(2, 3);
-                var lineStr = shortName.Substring(5);
+                var contract = match.Groups["contract"].Value;
+                var lineStr = match.Groups["line"].Value;
                 if (int.TryParse(lineStr, out int line))
                 {
                     return $"{contract}.{line:D2}";
                 }
             }
-            else if (shortName.Length > 2)
+        }
+
+        if (stripOperator)
+        {
+            var parts = shortName.Split(" - ", 2);
+            if (parts.Length == 2)
             {
-                // XG883 -> 883
-                return shortName.Substring(2);
+                return parts[1];
             }
         }
+
         return shortName;
     }
 
-    public string GetUniqueRouteShortName(string feedId, string shortName)
-    {
-        if (feedId == "xunta" && shortName.StartsWith("XG") && shortName.Length >= 8)
-        {
-            var contract = shortName.Substring(2, 3);
-            return $"XG{contract}";
-        }
-
-        return NormalizeRouteShortName(feedId, shortName);
-    }
+    [GeneratedRegex(@"^XG(?<contract>\d{3})(?<line>\d{3})")]
+    private static partial Regex XuntaRouteRegex { get; }
 
     /// <summary>
     /// When 5 or more distinct routes share the same 3-character short-name prefix,
     /// they are collapsed into a single entry showing "XG{prefix}" (xunta feed only).
     /// </summary>
-    private const int RouteCollapseThreshold = 5;
+    private const int NumericRouteCollapseThreshold = 4;
+
+    private const int OperatorNamedRouteCollapseThreshold = 8;
 
     /// <summary>
     /// Deduplicates routes by <see cref="RouteInfo.ShortName"/> (always). For the xunta feed only,
-    /// also collapses groups of <see cref="RouteCollapseThreshold"/> or more routes that share the
+    /// also collapses groups of <see cref="NumericRouteCollapseThreshold"/> or more routes that share the
     /// same 3-character prefix into a single entry named "XG{prefix}" (e.g. "XG621").
     /// Other feeds are returned deduplicated but otherwise unchanged.
     /// </summary>
@@ -125,10 +133,38 @@ public class FeedService
         // When collapsing, the first entry's colour is used — routes in the same prefix
         // group (e.g. all xunta "621.*" lines) share the same operator colour.
         var result = new List<RouteInfo>();
-        foreach (var group in deduplicated.GroupBy(r => r.ShortName.Length >= 3 ? r.ShortName[..3] : r.ShortName))
+
+        var numericRoutes = deduplicated
+            .Where(r => NumericRoute.IsMatch(r.ShortName));
+
+        var operatorNamedRoutes = deduplicated.Except(numericRoutes);
+
+        foreach (var group in operatorNamedRoutes.GroupBy(r => r.ShortName.Split(" - ", 2)[0]))
         {
             var items = group.ToList();
-            if (items.Count >= RouteCollapseThreshold)
+            if (items.Count >= OperatorNamedRouteCollapseThreshold)
+            {
+                result.Add(new RouteInfo
+                {
+                    GtfsId = items[0].GtfsId,
+                    ShortName = group.Key.Trim(),
+                    Colour = items[0].Colour,
+                    TextColour = items[0].TextColour
+                });
+            }
+            else
+            {
+                result.AddRange(items);
+            }
+        }
+
+        var numericRouteGroups = numericRoutes
+            .GroupBy(r => r.ShortName.Length >= 3 ? r.ShortName[..3] : r.ShortName);
+
+        foreach (var group in numericRouteGroups)
+        {
+            var items = group.ToList();
+            if (items.Count >= NumericRouteCollapseThreshold)
             {
                 result.Add(new RouteInfo
                 {
@@ -146,6 +182,8 @@ public class FeedService
 
         return result;
     }
+
+    [GeneratedRegex(@"\d{3}\.\d+")] private partial Regex NumericRoute { get; }
 
     public static string NormalizeStopName(string feedId, string name)
     {
@@ -272,6 +310,6 @@ public class FeedService
         "vitrasa:20001", // Samil por Beiramar (15B)
         "vitrasa:20002", // Samil por Torrecedeira (15C)
         "vitrasa:20144", // Samil por Coia (C3d, C3i)
-        "vitrasa:20145"  // Samil por Bouzs (C3d, C3i)
+        "vitrasa:20145" // Samil por Bouzs (C3d, C3i)
     ];
 }

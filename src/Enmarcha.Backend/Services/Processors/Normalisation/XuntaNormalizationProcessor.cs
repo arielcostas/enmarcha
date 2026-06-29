@@ -12,11 +12,13 @@ public class XuntaNormalizationProcessor : IArrivalsProcessor
     public Task ProcessAsync(ArrivalsContext context)
     {
         if (context.StopId.Split(':')[0] != "xunta")
+        {
             return Task.CompletedTask;
+        }
 
         foreach (var arrival in context.Arrivals)
         {
-            arrival.Route.ShortName = _feedService.NormalizeRouteShortName("xunta", arrival.Route.ShortName);
+            arrival.Route.ShortName = _feedService.NormalizeRouteShortName("xunta", arrival.Route.ShortName, true);
         }
 
         return Task.CompletedTask;
