@@ -43,6 +43,6 @@ public class XuntaRealtimeEstimatesProvider
 
         Task.WaitAll(tasks);
 
-        return allResponses.SelectMany(r => r.vehiclePositions).ToList();
+        return allResponses.SelectMany(r => r.VehiclePositions).ToList();
     }
 }

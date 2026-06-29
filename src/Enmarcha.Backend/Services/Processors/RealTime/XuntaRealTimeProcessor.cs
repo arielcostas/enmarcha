@@ -65,9 +65,9 @@ public class XuntaRealTimeProcessor : AbstractRealTimeProcessor
         var results = await _provider.GetEstimatesForAgencies(agencies);
         foreach (var res in results)
         {
-            if (_equivalenceMatrix.ContainsKey(res.trip.routeShortName))
+            if (_equivalenceMatrix.ContainsKey(res.Trip.RouteShortName))
             {
-                res.trip.routeShortName = _equivalenceMatrix[res.trip.routeShortName];
+                res.Trip.RouteShortName = _equivalenceMatrix[res.Trip.RouteShortName];
             }
         }
 
@@ -81,27 +81,28 @@ public class XuntaRealTimeProcessor : AbstractRealTimeProcessor
                 osn = osnPartsMaybe[1];
             }
 
-            var possibilities = results.Where(r => r.trip.routeShortName == osn);
+            var possibilities = results.Where(r => r.Trip.RouteShortName == osn &&
+                                                   r.Trip.DirectionId.ToString() == arrival.RawOtpArrival?.Trip.DirectionId);
             foreach (var p in possibilities)
             {
-                var totalSeconds = (int)TimeSpan.Parse(p.trip.startTime).TotalSeconds;
+                var totalSeconds = (int)TimeSpan.Parse(p.Trip.StartTime).TotalSeconds;
 
                 if (totalSeconds == arrival.RawOtpArrival?.Trip.DepartureStoptime.ScheduledDeparture)
                 {
                     arrival.CurrentPosition = new Position
                     {
-                        Latitude = p.position.latitude,
-                        Longitude = p.position.longitude,
-                        Bearing = (int)p.position.bearing,
+                        Latitude = p.Position.Latitude,
+                        Longitude = p.Position.Longitude,
+                        Bearing = (int)p.Position.Bearing,
                     };
                     arrival.VehicleInformation = new VehicleBadge
                     {
-                        Identifier = p.vehicle.licensePlate
+                        Identifier = p.Vehicle.LicensePlate
                     };
                     arrival.Shift = new ShiftBadge
                     {
-                        ShiftName = p.trip.startTime,
-                        ShiftTrip = p.trip.directionId == 1 ? "Vuelta" : "Ida"
+                        ShiftName = p.Trip.StartTime,
+                        ShiftTrip = p.Trip.DirectionId == 1 ? "Vuelta" : "Ida"
                     };
                 }
 
