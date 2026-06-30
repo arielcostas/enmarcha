@@ -30,7 +30,7 @@ public class FilterAndSortProcessor : IArrivalsProcessor
         }).ToList();
 
         // 3. Limit results — nano requests a full set so route/via filtering in the controller doesn't starve
-        var limit = context.IsNano ? 100 : context.IsReduced ? 4 : 10;
+        var limit = context.IsNano ? 100 : context.IsReduced ? 4 : 20;
         var limited = filtered.Take(limit).ToList();
 
         // Update the context list in-place
