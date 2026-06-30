@@ -13,7 +13,7 @@ public class XuntaRealtimeEstimatesProvider
 
     public async Task<List<VehiclePositions>> GetEstimatesForAgencies(string[] agencyIds)
     {
-        var chunks = agencyIds.Chunk(5);
+        var chunks = agencyIds.Chunk(3);
 
         List<CompanyResponse> allResponses = [];
 
@@ -52,6 +52,9 @@ public class XuntaRealtimeEstimatesProvider
 
         await Task.WhenAll(tasks);
 
-        return allResponses.SelectMany(r => r.VehiclePositions).ToList();
+        return allResponses
+            .SelectMany(r => r.VehiclePositions)
+            .Where(r => r.Trip.RouteShortName is not null)
+            .ToList();
     }
 }

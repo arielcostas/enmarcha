@@ -20,7 +20,7 @@ public class Trip
 {
     [JsonPropertyName("startTime")] public required string StartTime { get; set; }
     [JsonPropertyName("directionId")] public int DirectionId { get; set; }
-    [JsonPropertyName("routeShortName")] public required string RouteShortName { get; set; }
+    [JsonPropertyName("routeShortName")] public string? RouteShortName { get; set; }
 }
 
 public class Position
