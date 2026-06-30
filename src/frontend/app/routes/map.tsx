@@ -172,14 +172,17 @@ function MapSearchBar({ mapRef }: MapSearchBarProps) {
               {results.map((place, i) => {
                 const isStop = place.layer === "stop";
                 const feedId = place.stopId?.split(":")[0];
-                const feedLabel = feedId ? (FEED_LABELS[feedId] ?? feedId) : undefined;
-                const subtitle = isStop && feedLabel && place.stopCode
-                  ? `${feedLabel} · ${place.stopCode}`
-                  : isStop && feedLabel
-                    ? feedLabel
-                    : !isStop && place.label && place.label !== place.name
-                      ? place.label
-                      : null;
+                const feedLabel = feedId
+                  ? (FEED_LABELS[feedId] ?? feedId)
+                  : undefined;
+                const subtitle =
+                  isStop && feedLabel && place.stopCode
+                    ? `${feedLabel} · ${place.stopCode}`
+                    : isStop && feedLabel
+                      ? feedLabel
+                      : !isStop && place.label && place.label !== place.name
+                        ? place.label
+                        : null;
                 return (
                   <button
                     key={`${place.lat}-${place.lon}-${i}`}
@@ -414,7 +417,9 @@ export default function StopMap() {
     const deduped = candidates.filter((stop) => {
       if (!stop.stopId?.startsWith("xunta:")) return true;
       const code = stop.stopCode ?? "";
-      const base = code.startsWith("xunta:") ? code.slice("xunta:".length + 2) : code.slice(2);
+      const base = code.startsWith("xunta:")
+        ? code.slice("xunta:".length + 2)
+        : code.slice(2);
       if (xuntaBaseSeen.has(base)) return false;
       xuntaBaseSeen.add(base);
       return true;
@@ -631,7 +636,7 @@ export default function StopMap() {
               1,
               0,
             ],
-            "text-allow-overlap": false,
+            "text-allow-overlap": true,
           }}
           paint={{
             "text-color": [

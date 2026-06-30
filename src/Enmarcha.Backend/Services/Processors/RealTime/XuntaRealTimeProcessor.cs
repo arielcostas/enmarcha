@@ -54,7 +54,7 @@ public class XuntaRealTimeProcessor : AbstractRealTimeProcessor
 
     public override async Task ProcessAsync(ArrivalsContext context)
     {
-        if (!context.StopId.StartsWith("xunta:")) return;
+        if (!context.StopId.StartsWith("xunta:") || context.IsNano || context.IsReduced) return;
 
         var agencies = context.Arrivals
             .Where(a => a.AgencyId != null)
