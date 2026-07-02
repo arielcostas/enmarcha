@@ -107,6 +107,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     dropoff_only: t("journey.dropoff_only", "Solo bajada"),
     departure: t("journey.departure", "Salida"),
     arrival: t("journey.arrival", "Llegada"),
+    circular_terminus: t("journey.circular_terminus", "Circular")
   };
 
   type OperationKind = "pickup" | "dropoff" | "departure" | "arrival";
@@ -116,6 +117,7 @@ export const ArrivalCard: React.FC<ArrivalCardProps> = ({
     dropoff_only: "dropoff",
     departure: "departure",
     arrival: "arrival",
+    circular_terminus: "arrival",
   };
 
   const metaChips = useMemo(() => {

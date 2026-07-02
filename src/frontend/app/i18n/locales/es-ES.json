@@ -263,6 +263,7 @@
     "notification_body": "Línea {{line}} dirección {{destination}} — {{stop}}",
     "view_on_map": "Ver en el mapa",
     "pickup_only": "Solo subida",
-    "dropoff_only": "Solo descenso"
+    "dropoff_only": "Solo descenso",
+    "circular_terminus": "Fin de circular"
   }
 }

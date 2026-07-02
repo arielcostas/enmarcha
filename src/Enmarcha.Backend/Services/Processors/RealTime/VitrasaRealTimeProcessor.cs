@@ -283,7 +283,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 
         foreach (var arr in context.Arrivals)
         {
-            if (arr.Estimate.Minutes < 1 && arr.Estimate.Precision == ArrivalPrecision.Scheduled)
+            if (arr.Operation == VehicleOperation.CircularTerminus)
             {
                 arr.Delete = true; // Remove arrivals that are scheduled right now, since they are likely already departed
             }

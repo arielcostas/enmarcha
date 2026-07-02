@@ -69,20 +69,23 @@ public partial class ArrivalsController : ControllerBase
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
             StopName = FeedService.NormalizeStopName(feedId, stop.Name),
             StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon },
-            Routes = [.. _feedService.ConsolidateRoutes(feedId,
-                stop.Routes
-                    .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
-                    .Select(r => new RouteInfo
-                    {
-                        GtfsId = r.GtfsId,
-                        OriginalShortName = r.ShortName ?? "",
-                        ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                        Colour = r.Color ?? fallbackColor,
-                        TextColour = r.TextColor is null or "000000" ?
-                            ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
-                            r.TextColor
-                    }))],
-            Arrivals = [.. context.Arrivals.Where(a => a.Estimate.Minutes >= timeThreshold)],
+            Routes =
+            [
+                .. _feedService.ConsolidateRoutes(feedId,
+                    stop.Routes
+                        .OrderBy(r => SortingHelper.GetRouteSortKey(r.ShortName, r.GtfsId))
+                        .Select(r => new RouteInfo
+                        {
+                            GtfsId = r.GtfsId,
+                            OriginalShortName = r.ShortName ?? "",
+                            ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                            Colour = r.Color ?? fallbackColor,
+                            TextColour = r.TextColor is null or "000000"
+                                ? ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor)
+                                : r.TextColor
+                        }))
+            ],
+            Arrivals = context.Arrivals,
             Usage = context.Usage
         });
     }
@@ -144,7 +147,8 @@ public partial class ArrivalsController : ControllerBase
     }
 
     private static VehicleOperation GetVehicleOperation(
-        ArrivalsAtStopResponse.Arrival item
+        ArrivalsAtStopResponse.Arrival item,
+        bool isCircular = false
     )
     {
         var pickup = item.PickupTypeParsed;
@@ -157,11 +161,21 @@ public partial class ArrivalsController : ControllerBase
 
         if (item.StopPositionInPattern == item.Trip.Stoptimes.Count - 1)
         {
-            return VehicleOperation.Arrival;
+            return isCircular ? VehicleOperation.CircularTerminus : VehicleOperation.Arrival;
         }
 
-        if (Equals(pickup, ArrivalsAtStopResponse.PickupType.None) && Equals(dropoff, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.PickupDropoff;
-        if (!Equals(pickup, ArrivalsAtStopResponse.PickupType.None) && !Equals(dropoff, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.PickupDropoff;
+        if (Equals(pickup, ArrivalsAtStopResponse.PickupType.None) &&
+            Equals(dropoff, ArrivalsAtStopResponse.PickupType.None))
+        {
+            return VehicleOperation.PickupDropoff;
+        }
+
+        if (!Equals(pickup, ArrivalsAtStopResponse.PickupType.None) &&
+            !Equals(dropoff, ArrivalsAtStopResponse.PickupType.None))
+        {
+            return VehicleOperation.PickupDropoff;
+        }
+
         if (!Equals(pickup, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.PickupOnly;
         if (!Equals(dropoff, ArrivalsAtStopResponse.PickupType.None)) return VehicleOperation.DropoffOnly;
         return VehicleOperation.PickupDropoff;
@@ -192,26 +206,30 @@ public partial class ArrivalsController : ControllerBase
         }
 
         var stop = responseBody.Data.Stop;
-        _logger.LogInformation("Fetched {Count} arrivals for stop {StopName} ({StopId})", stop.Arrivals.Count, stop.Name, id);
+        _logger.LogInformation("Fetched {Count} arrivals for stop {StopName} ({StopId})", stop.Arrivals.Count,
+            stop.Name, id);
 
         List<Arrival> arrivals = [];
         foreach (var item in stop.Arrivals)
         {
             // Delete loop routes that aren't starting here
-            if (
-                item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
-                item.Trip.DepartureStoptime.Stop.GtfsId == id &&
-                item.StopPositionInPattern != 1
-            )
-            {
-                continue;
-            }
+            // if (
+            //     item.Trip.ArrivalStoptime.Stop.GtfsId == id &&
+            //     item.Trip.DepartureStoptime.Stop.GtfsId == id &&
+            //     item.StopPositionInPattern != 0
+            // )
+            // {
+            //     continue;
+            // }
 
             var serviceDayLocal = TimeZoneInfo.ConvertTime(DateTimeOffset.FromUnixTimeSeconds(item.ServiceDay), tz);
             var departureTime = serviceDayLocal.Date.AddSeconds(item.ScheduledAt);
             var minutesToArrive = (int)(departureTime - nowLocal).TotalMinutes;
 
-            var operation = GetVehicleOperation(item);
+            var operation = GetVehicleOperation(
+                item,
+                item.Trip.ArrivalStoptime.Stop.GtfsId == id && item.Trip.DepartureStoptime.Stop.GtfsId == id
+            );
             if ((reduced && operation == VehicleOperation.Arrival) ||
                 (reduced && minutesToArrive < 0))
             {
@@ -233,7 +251,9 @@ public partial class ArrivalsController : ControllerBase
                 Estimate = new ArrivalDetails
                 {
                     Minutes = minutesToArrive,
-                    Precision = departureTime < nowLocal.AddMinutes(-1) ? ArrivalPrecision.Past : ArrivalPrecision.Scheduled
+                    Precision = departureTime < nowLocal.AddMinutes(-1)
+                        ? ArrivalPrecision.Past
+                        : ArrivalPrecision.Scheduled
                 },
                 AgencyId = item.Trip.Route.Agency?.Id,
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
@@ -307,40 +327,41 @@ public partial class ArrivalsController : ControllerBase
         var result = responseBody.Data.Stops
             .Where(s => s != null)
             .ToDictionary(
-            s => s!.GtfsId,
-            s =>
-            {
-                var feedId = s!.GtfsId.Split(':', 2)[0];
-                var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
-
-                return new
+                s => s!.GtfsId,
+                s =>
                 {
-                    id = s.GtfsId,
-                    code = _feedService.NormalizeStopCode(feedId, s.Code ?? ""),
-                    name = s.Name,
-                    routes = _feedService.ConsolidateRoutes(feedId,
-                        s.Routes
-                            .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
-                            .Select(r => new RouteInfo
+                    var feedId = s!.GtfsId.Split(':', 2)[0];
+                    var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
+
+                    return new
+                    {
+                        id = s.GtfsId,
+                        code = _feedService.NormalizeStopCode(feedId, s.Code ?? ""),
+                        name = s.Name,
+                        routes = _feedService.ConsolidateRoutes(feedId,
+                                s.Routes
+                                    .OrderBy(r => r.ShortName,
+                                        Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
+                                    .Select(r => new RouteInfo
+                                    {
+                                        GtfsId = r.GtfsId,
+                                        OriginalShortName = r.ShortName ?? "",
+                                        ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
+                                        Colour = r.Color ?? fallbackColor,
+                                        TextColour = r.TextColor is null or "000000"
+                                            ? ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor)
+                                            : r.TextColor
+                                    }))
+                            .Select(r => new
                             {
-                                GtfsId = r.GtfsId,
-                                OriginalShortName = r.ShortName ?? "",
-                                ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
-                                Colour = r.Color ?? fallbackColor,
-                                TextColour = r.TextColor is null or "000000" ?
-                                    ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
-                                    r.TextColor
-                            }))
-                        .Select(r => new
-                        {
-                            shortName = r.ShortName,
-                            colour = r.Colour,
-                            textColour = r.TextColour
-                        })
-                        .ToList()
-                };
-            }
-        );
+                                shortName = r.ShortName,
+                                colour = r.Colour,
+                                textColour = r.TextColour
+                            })
+                            .ToList()
+                    };
+                }
+            );
 
         return Ok(result);
     }
@@ -373,7 +394,7 @@ public partial class ArrivalsController : ControllerBase
                     latitude = s.Lat,
                     longitude = s.Lon,
                     lines = _feedService.ConsolidateRoutes(feedId,
-                        (s.Routes ?? [])
+                            (s.Routes ?? [])
                             .OrderBy(r => r.ShortName, Comparer<string?>.Create(SortingHelper.SortRouteShortNames))
                             .Select(r => new RouteInfo
                             {
@@ -381,9 +402,9 @@ public partial class ArrivalsController : ControllerBase
                                 OriginalShortName = r.ShortName ?? "",
                                 ShortName = _feedService.NormalizeRouteShortName(feedId, r.ShortName ?? ""),
                                 Colour = r.Color ?? fallbackColor,
-                                TextColour = r.TextColor is null or "000000" ?
-                                    ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor) :
-                                    r.TextColor
+                                TextColour = r.TextColor is null or "000000"
+                                    ? ContrastHelper.GetBestTextColour(r.Color ?? fallbackColor)
+                                    : r.TextColor
                             }))
                         .Select(r => new
                         {
@@ -441,7 +462,8 @@ public partial class ArrivalsController : ControllerBase
         string serviceDate;
         if (!string.IsNullOrWhiteSpace(date))
         {
-            if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+            if (!DateOnly.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                    out var parsedDate))
                 return BadRequest("Invalid date. Use yyyy-MM-dd.");
 
             serviceDate = parsedDate.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
@@ -504,7 +526,8 @@ public partial class ArrivalsController : ControllerBase
         };
 
         var tz2 = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
-        var todayKey = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz2).ToString("yyyyMMdd", CultureInfo.InvariantCulture);
+        var todayKey = TimeZoneInfo.ConvertTime(DateTime.UtcNow, tz2)
+            .ToString("yyyyMMdd", CultureInfo.InvariantCulture);
         var cacheDuration = serviceDate == todayKey ? TimeSpan.FromHours(1) : TimeSpan.FromHours(6);
         _cache.Set(cacheKey, result, cacheDuration);
 

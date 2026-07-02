@@ -1,3 +1,5 @@
+using Enmarcha.Backend.Types.Arrivals;
+
 namespace Enmarcha.Backend.Services.Processors;
 
 /// <summary>
@@ -23,6 +25,11 @@ public class FilterAndSortProcessor : IArrivalsProcessor
                 // For Vitrasa, we hide past arrivals because we have real-time
                 // If a past arrival was matched to a real-time estimate, its Minutes will be >= 0
                 return a.Estimate.Minutes >= 0;
+            }
+
+            if (feedId != "xunta" && a.Operation == VehicleOperation.CircularTerminus)
+            {
+                return false;
             }
 
             // For others, show up to 10 minutes ago

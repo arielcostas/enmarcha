@@ -263,6 +263,7 @@
     "notification_body": "Line {{line}} towards {{destination}} — {{stop}}",
     "view_on_map": "View on map",
     "pickup_only": "Boarding only",
-    "dropoff_only": "Alighting only"
+    "dropoff_only": "Alighting only",
+    "circular_terminus": "Circular terminus"
   }
 }

@@ -73,6 +73,7 @@ export const ArrivalSchema = z.object({
     "dropoff_only",
     "departure",
     "arrival",
+    "circular_terminus"
   ]),
 });
 

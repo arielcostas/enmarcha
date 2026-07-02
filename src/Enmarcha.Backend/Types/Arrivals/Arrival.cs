@@ -54,7 +54,9 @@ public enum VehicleOperation
     [JsonStringEnumMemberName("departure")]
     Departure = 3,
     [JsonStringEnumMemberName("arrival")]
-    Arrival = 4
+    Arrival = 4,
+    [JsonStringEnumMemberName("circular_terminus")]
+    CircularTerminus
 }
 
 public enum SeatInformation
