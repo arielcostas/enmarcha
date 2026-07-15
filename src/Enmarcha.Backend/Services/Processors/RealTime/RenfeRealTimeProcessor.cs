@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
@@ -46,8 +47,6 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
             {
                 var trainNumber = RenfeTrainNumberExpression.Match(contextArrival.TripId).Groups[1].Value;
 
-                contextArrival.Headsign.Destination = trainNumber + " - " + contextArrival.Headsign.Destination;
-
                 int oldEstimate = contextArrival.Estimate.Minutes;
 
                 if (ldRealtime.TryGetValue(trainNumber, out var ldTrain))
@@ -68,12 +67,32 @@ public partial class RenfeRealTimeProcessor : AbstractRealTimeProcessor
                     };
 
                     // TODO: Handle multiple vehicles properly
-                    var firstVehicle = ldTrain.RollingStock.Split(",")[0];
+                    var material = new Dictionary<string, List<string>>();
+                    var vehicles = ldTrain.RollingStock.Split(",");
+
+                    foreach (var veh in vehicles)
+                    {
+                        var serie = veh[..3];
+                        var rama = veh[3..];
+
+                        if (!material.ContainsKey(serie))
+                        {
+                            material[serie] = new();
+                        }
+
+                        material[serie].Add(rama);
+                    }
+
+                    var mat = material.ToArray();
+                    var idStrings = new string[material.Count];
+                    for (int i = 0; i < idStrings.Length; i++)
+                    {
+                        idStrings[i] = $"S{mat[i].Key} R{string.Join('+', mat[i].Value)}";
+                    }
+
                     contextArrival.VehicleInformation = new VehicleBadge
                     {
-                        Identifier = context.IsReduced || context.IsNano
-                            ? $"S{firstVehicle[..3]} R{firstVehicle[3..]}"
-                            : $"Serie {firstVehicle[..3]} Rama {firstVehicle[3..]}"
+                        Identifier = string.Join("; ", idStrings)
                     };
 
                     if (contextArrival.Estimate.Minutes < 0)

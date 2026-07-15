@@ -168,8 +168,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     Position? currentPosition = null;
 
-                    if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival &&
-                        otpArrival.Trip.Geometry?.Points != null)
+                    if (arrival.RawOtpArrival is { Trip.Geometry.Points: not null } otpArrival)
                     {
                         var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)
                             .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })

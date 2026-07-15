@@ -117,6 +117,7 @@ public class DelayBadge
     [JsonPropertyName("minutes")] public int Minutes { get; set; }
 }
 
+// TODO: Make these optional without frontend going nuts
 public class ShiftBadge
 {
     [JsonPropertyName("shiftName")] public required string ShiftName { get; set; }

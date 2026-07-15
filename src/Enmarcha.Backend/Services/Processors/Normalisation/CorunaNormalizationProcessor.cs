@@ -17,6 +17,7 @@ public class CorunaNormalizationProcessor : IArrivalsProcessor
         foreach (var arrival in context.Arrivals)
         {
             if (arrival.RealTimeOnly) continue;
+            // TODO: Bring that code here
             arrival.Shift = FeedService.GetShiftBadge("tranvias", arrival.TripId);
 
             if (sharedTerminus && arrival.Operation == VehicleOperation.Arrival)

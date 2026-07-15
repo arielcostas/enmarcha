@@ -213,6 +213,7 @@ builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, XuntaRealTimeProcessor>();
 
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaUsageProcessor>();
@@ -222,6 +223,7 @@ builder.Services.AddScoped<IArrivalsProcessor, NextStopsProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ShapeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, XuntaNormalizationProcessor>();
+builder.Services.AddScoped<IArrivalsProcessor, RenfeNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaNormalizationProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, ColourProcessor>();
 
