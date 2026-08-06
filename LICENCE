@@ -1,9 +1,3 @@
-Copyright (C) 2024-2026 Ariel Costas Guerrero <ariel@costas.dev>.
-Software provided AS-IS under the GNU Affero General Public License version 3 OR LATER,
-as published by the Free Software Foundation Inc.
-
----
-
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
@@ -437,7 +431,7 @@ modify any covered work.  These actions infringe copyright if you do
 not accept this License.  Therefore, by modifying or propagating a
 covered work, you indicate your acceptance of this License to do so.
 
-  1. Automatic Licensing of Downstream Recipients.
+   1. Automatic Licensing of Downstream Recipients.
 
   Each time you convey a covered work, the recipient automatically
 receives a license from the original licensors, to run, modify and
@@ -462,7 +456,7 @@ rights granted under this License, and you may not initiate litigation
 any patent claim is infringed by making, using, selling, offering for
 sale, or importing the Program or any portion of it.
 
-  1. Patents.
+   1. Patents.
 
   A "contributor" is a copyright holder who authorizes use under this
 License of the Program or a work on which the Program is based.  The
@@ -531,7 +525,7 @@ or that patent license was granted, prior to 28 March 2007.
 any implied license or other defenses to infringement that may
 otherwise be available to you under applicable patent law.
 
-  1. No Surrender of Others' Freedom.
+   1. No Surrender of Others' Freedom.
 
   If conditions are imposed on you (whether by court order, agreement or
 otherwise) that contradict the conditions of this License, they do not
@@ -543,7 +537,7 @@ to collect a royalty for further conveying from those to whom you convey
 the Program, the only way you could satisfy both those terms and this
 License would be to refrain entirely from conveying the Program.
 
-  1. Remote Network Interaction; Use with the GNU General Public License.
+   1. Remote Network Interaction; Use with the GNU General Public License.
 
   Notwithstanding any other provision of this License, if you modify the
 Program, your modified version must prominently offer all users
@@ -564,7 +558,7 @@ License will continue to apply to the part which is the covered work,
 but the work with which it is combined will remain governed by version
 3 of the GNU General Public License.
 
-  1. Revised Versions of this License.
+   1. Revised Versions of this License.
 
   The Free Software Foundation may publish revised and/or new versions of
 the GNU Affero General Public License from time to time.  Such new versions
@@ -590,7 +584,7 @@ permissions.  However, no additional obligations are imposed on any
 author or copyright holder as a result of your choosing to follow a
 later version.
 
-  1. Disclaimer of Warranty.
+   1. Disclaimer of Warranty.
 
   THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
 APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
@@ -601,7 +595,7 @@ PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
 IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
 ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
 
-  1. Limitation of Liability.
+   1. Limitation of Liability.
 
   IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
 WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
@@ -613,7 +607,7 @@ PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
 EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGES.
 
-  1. Interpretation of Sections 15 and 16.
+   1. Interpretation of Sections 15 and 16.
 
   If the disclaimer of warranty and limitation of liability provided
 above cannot be given local legal effect according to their terms,
