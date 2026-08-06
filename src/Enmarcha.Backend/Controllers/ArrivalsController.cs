@@ -61,7 +61,6 @@ public partial class ArrivalsController : ControllerBase
         var (stop, context) = result.Value;
 
         var feedId = id.Split(':')[0];
-        var timeThreshold = GetThresholdForFeed(id);
         var (fallbackColor, _) = _feedService.GetFallbackColourForFeed(feedId);
 
         return Ok(new StopArrivalsResponse

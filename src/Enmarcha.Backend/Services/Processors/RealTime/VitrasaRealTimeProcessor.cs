@@ -112,7 +112,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                         };
                     })
                     .Where(x => x.RouteMatch) // Strict route matching
-                    .Where(x => x.TimeDiff >= -7 && x.TimeDiff <= 75) // Allow 7m early (RealTime < Schedule) or 75m late (RealTime > Schedule)
+                    .Where(x => x.TimeDiff is >= -7 and <= 75) // Allow 7m early (RealTime < Schedule) or 75m late (RealTime > Schedule)
                     .OrderBy(x => Math.Abs(x.TimeDiff)) // Best time fit
                     .FirstOrDefault();
 
@@ -151,17 +151,17 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     continue;
                 }
 
-                var arrival = bestMatch.Arrival;
+                var bestMatchArrival = bestMatch.Arrival;
 
-                var scheduledMinutes = arrival.Estimate.Minutes;
-                arrival.Estimate.Minutes = estimate.Minutes;
+                var scheduledMinutes = bestMatchArrival.Estimate.Minutes;
+                bestMatchArrival.Estimate.Minutes = estimate.Minutes;
 
                 // Calculate delay badge
                 var delayMinutes = estimate.Minutes - scheduledMinutes;
-                arrival.Delay = new DelayBadge { Minutes = delayMinutes };
+                bestMatchArrival.Delay = new DelayBadge { Minutes = delayMinutes };
 
-                string scheduledHeadsign = arrival.Headsign.Destination;
-                if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
+                string scheduledHeadsign = bestMatchArrival.Headsign.Destination;
+                if (bestMatchArrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArr && !string.IsNullOrWhiteSpace(otpArr.Trip.TripHeadsign))
                 {
                     scheduledHeadsign = otpArr.Trip.TripHeadsign;
                 }
@@ -171,7 +171,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     bool isJustLastStop = false;
 
-                    if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival)
+                    if (bestMatchArrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival)
                     {
                         var lastStop = otpArrival.Trip.Stoptimes.LastOrDefault();
                         if (lastStop != null)
@@ -184,7 +184,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                     // Use real-time headsign unless it's just the final stop name
                     if (!isJustLastStop)
                     {
-                        arrival.Headsign.Destination = estimate.Route;
+                        bestMatchArrival.Headsign.Destination = estimate.Route;
                     }
                 }
 
@@ -193,8 +193,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     Position? currentPosition = null;
 
-                    if (arrival.RawOtpArrival is ArrivalsAtStopResponse.Arrival otpArrival &&
-                        otpArrival.Trip.Geometry?.Points != null)
+                    if (bestMatchArrival.RawOtpArrival is { Trip.Geometry.Points: not null } otpArrival)
                     {
                         var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)
                             .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })
@@ -246,7 +245,7 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
                                 }
                             }
 
-                            arrival.Shape = new
+                            bestMatchArrival.Shape = new
                             {
                                 type = "FeatureCollection",
                                 features
@@ -256,22 +255,22 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 
                     if (currentPosition != null)
                     {
-                        arrival.CurrentPosition = currentPosition;
-                        arrival.Estimate.Precision = ArrivalPrecision.Confident;
+                        bestMatchArrival.CurrentPosition = currentPosition;
+                        bestMatchArrival.Estimate.Precision = ArrivalPrecision.Confident;
                     }
                     else if (!context.IsNano && !context.IsReduced) // Full mode, no position means actually no position
                     {
                         // If we can't calculate a position, degrade precision to "Unsure" to indicate less confidence
-                        arrival.Estimate.Precision = ArrivalPrecision.Unsure;
+                        bestMatchArrival.Estimate.Precision = ArrivalPrecision.Unsure;
                     }
                     else
                     {
                         // In Nano/Reduced mode we don't have shape data, so we can't calculate position. Don't degrade precision since it's expected.
-                        arrival.Estimate.Precision = ArrivalPrecision.Confident;
+                        bestMatchArrival.Estimate.Precision = ArrivalPrecision.Confident;
                     }
                 }
 
-                usedTripIds.Add(arrival.TripId);
+                usedTripIds.Add(bestMatchArrival.TripId);
             }
 
             context.Arrivals.AddRange(newArrivals);

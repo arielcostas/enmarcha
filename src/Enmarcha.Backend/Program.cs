@@ -212,7 +212,6 @@ builder.Services.AddHostedService<AlertPhaseNotificationHostedService>();
 builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, CorunaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, TussaRealTimeProcessor>();
-builder.Services.AddScoped<IArrivalsProcessor, VitrasaRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, RenfeRealTimeProcessor>();
 builder.Services.AddScoped<IArrivalsProcessor, XuntaRealTimeProcessor>();
 
