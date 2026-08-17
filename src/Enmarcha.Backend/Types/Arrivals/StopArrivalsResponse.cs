@@ -21,4 +21,7 @@ public class StopArrivalsResponse
 
     [JsonPropertyName("usage")]
     public List<BusStopUsagePoint>? Usage { get; set; }
+
+    [JsonPropertyName("operator")]
+    public required string OperatorName { get; set; }
 }

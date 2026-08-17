@@ -65,6 +65,7 @@ public partial class ArrivalsController : ControllerBase
 
         return Ok(new StopArrivalsResponse
         {
+            OperatorName = _feedService.GetStopOwnerByCode(feedId),
             StopCode = _feedService.NormalizeStopCode(feedId, stop.Code),
             StopName = FeedService.NormalizeStopName(feedId, stop.Name),
             StopLocation = new Position { Latitude = stop.Lat, Longitude = stop.Lon },

@@ -314,4 +314,19 @@ public partial class FeedService
         "vitrasa:20144", // Samil por Coia (C3d, C3i)
         "vitrasa:20145" // Samil por Bouzs (C3d, C3i)
     ];
+
+    public string GetStopOwnerByCode(string feedId)
+    {
+        return feedId switch
+        {
+            "vitrasa" => "Vitrasa",
+            "tussa" => "TUSSA",
+            "tranvias" => "Tranvías Coruña",
+            "ourense" => "Urbanos de Ourense",
+            "lugo" => "Urbanos de Lugo",
+            "xunta" => "Xunta de Galicia",
+            "renfe" => "Renfe Viajeros",
+            _ => feedId.ToUpperInvariant()
+        };
+    }
 }
