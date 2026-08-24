@@ -19,6 +19,11 @@ public class GraphClientResponse<T> where T : AbstractGraphResponse
     public bool IsSuccess => Errors == null || Errors.Count == 0;
 }
 
+public interface IGraphRequest
+{
+    static abstract string Query();
+}
+
 public interface IGraphRequest<T>
 {
     static abstract string Query(T parameters);

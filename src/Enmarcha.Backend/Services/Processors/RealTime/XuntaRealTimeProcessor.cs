@@ -1,13 +1,7 @@
 using System.Collections.Frozen;
 using System.Globalization;
-using System.Text.RegularExpressions;
-using Enmarcha.Sources.OpenTripPlannerGql.Queries;
-using Costasdev.VigoTransitApi;
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
-using Enmarcha.Backend.Configuration;
-using Enmarcha.Backend.Services.Providers;
-using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
 using Enmarcha.Sources.Xunta;
 using Position = Enmarcha.Backend.Types.Position;

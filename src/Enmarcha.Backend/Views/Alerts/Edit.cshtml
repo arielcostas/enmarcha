@@ -1,6 +1,4 @@
 @model Enmarcha.Backend.ViewModels.AlertFormViewModel
-@using Enmarcha.Backend.Data.Models
-@using Enmarcha.Backend.Helpers
 @{
     var isCreate = Model.Id is null;
     ViewData["Title"] = isCreate ? "Nueva alerta" : "Editar alerta";

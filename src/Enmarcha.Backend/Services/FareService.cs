@@ -1,5 +1,5 @@
 using Enmarcha.Backend.Configuration;
-using Enmarcha.Backend.Services.Providers;
+using Enmarcha.Backend.Services.Fares;
 using Enmarcha.Backend.Types.Planner;
 using Microsoft.Extensions.Options;
 

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Enmarcha.Backend.Configuration;
 using Enmarcha.Backend.Data;
 using Enmarcha.Backend.Services;
+using Enmarcha.Backend.Services.Fares;
 using Enmarcha.Backend.Services.Geocoding;
 using Enmarcha.Backend.Services.Processors;
-using Enmarcha.Backend.Services.Providers;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +15,8 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Enmarcha.Backend.Services.Processors.Normalisation;
 using Enmarcha.Backend.Services.Processors.RealTime;
+using Enmarcha.Sources.OpenTripPlannerGql;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -137,6 +139,10 @@ builder.Services
 
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
+builder.Services.AddResponseCaching(options =>
+{
+    options.UseCaseSensitivePaths = false;
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -202,6 +208,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddSingleton<XuntaFareProvider>();
 
+builder.Services.AddHttpClient<OpenTripPlannerClient>((sp, client) =>
+{
+    var config = sp.GetService<IOptions<AppConfiguration>>()!.Value;
+    client.BaseAddress = new Uri(config.OpenTripPlannerBaseUrl);
+});
+
 builder.Services.AddSingleton<ShapeTraversalService>();
 builder.Services.AddSingleton<FeedService>();
 builder.Services.AddSingleton<FareService>();
@@ -254,6 +266,8 @@ app.UseForwardedHeaders(forwardedHeaderOptions);
 app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseResponseCaching();
 
 app.Use(async (context, next) =>
 {

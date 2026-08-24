@@ -3,7 +3,7 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
 
-namespace Enmarcha.Backend.Services.Providers;
+namespace Enmarcha.Backend.Services.Fares;
 
 public class PriceRecord
 {

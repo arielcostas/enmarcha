@@ -1,4 +1,3 @@
-using Enmarcha.Sources.OpenTripPlannerGql.Queries;
 using Enmarcha.Sources.TranviasCoruna;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;

@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Enmarcha.Backend.Types;
 
 namespace Enmarcha.Backend.Types.Schedule;
 
