@@ -315,7 +315,13 @@ public partial class FeedService
         "vitrasa:20145" // Samil por Bouzs (C3d, C3i)
     ];
 
-    public string GetStopOwnerByCode(string feedId)
+    public static string GetStopOwnerByStopGtfsId(string stopId)
+    {
+        var parts = stopId.Split(':', 2);
+        return GetStopOwnerByFeedId(parts[0]); // FIXME: Unsafe, but shouldn't break
+    }
+
+    public static string GetStopOwnerByFeedId(string feedId)
     {
         return feedId switch
         {

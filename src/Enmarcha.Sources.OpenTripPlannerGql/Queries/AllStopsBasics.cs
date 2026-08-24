@@ -10,6 +10,7 @@ public class AllStopsBasicsContent : IGraphRequest
         return string.Create(CultureInfo.InvariantCulture, $$"""
                                                                     query Query {
                                                                          stops {
+                                                                             gtfsId
                                                                              code
                                                                              name
                                                                              lat
@@ -34,6 +35,7 @@ public class AllStopsBasicsResponse : AbstractGraphResponse
 
     public class Stop
     {
+        [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
         [JsonPropertyName("code")] public string? Code { get; set; }
         [JsonPropertyName("name")] public required string Name { get; set; }
         [JsonPropertyName("lat")] public double Lat { get; set; }

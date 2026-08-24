@@ -1,3 +1,4 @@
+using Enmarcha.Backend.Services;
 using Enmarcha.Sources.OpenTripPlannerGql;
 using Enmarcha.Sources.OpenTripPlannerGql.Exceptions;
 using FuzzySharp;
@@ -70,6 +71,14 @@ public class StopsController : ControllerBase
             .GroupBy(s => s.Code)
             .Select(g => g.First())
             .Take(10)
+            .Select(s => new
+            {
+                Id = s.GtfsId,
+                s.Code,
+                Owner = FeedService.GetStopOwnerByStopGtfsId(s.GtfsId),
+                s.Name,
+                s.Routes
+            })
             .ToList();
 
         return Ok(results);
@@ -86,7 +95,16 @@ public class StopsController : ControllerBase
             var stopBasics = await _otpClient.GetStopBasics(id);
             if (stopBasics.Stop is not null)
             {
-                return Ok(stopBasics.Stop);
+                return Ok(new
+                {
+                    Id = id,
+                    stopBasics.Stop.Code,
+                    stopBasics.Stop.Lon,
+                    stopBasics.Stop.Lat,
+                    Owner = FeedService.GetStopOwnerByStopGtfsId(id),
+                    stopBasics.Stop.Name,
+                    stopBasics.Stop.Routes
+                });
             }
 
             return NotFound();
