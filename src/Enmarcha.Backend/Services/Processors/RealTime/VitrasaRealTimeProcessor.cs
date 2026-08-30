@@ -38,9 +38,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
 
         try
         {
-            // Load schedule
-            var todayDate = context.NowLocal.Date.ToString("yyyy-MM-dd");
-
             Epsg25829? stopLocation = null;
             if (context.StopLocation != null)
             {
@@ -51,8 +48,6 @@ public class VitrasaRealTimeProcessor : AbstractRealTimeProcessor
             var estimates = realtime.Estimates
                 .Where(e => !string.IsNullOrWhiteSpace(e.Route) && !e.Route.Trim().EndsWith('*'))
                 .ToList();
-
-            System.Diagnostics.Activity.Current?.SetTag("realtime.count", estimates.Count);
 
             var usedTripIds = new HashSet<string>();
             var newArrivals = new List<Arrival>();

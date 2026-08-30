@@ -1,16 +1,17 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 
-namespace Enmarcha.Sources.OpenTripPlannerGql.Queries;
+namespace Enmarcha.Sources.OpenTripPlannerGql.Queries.V2;
 
-public class AllStopsBasicsContent : IGraphRequest
+public class StopBasicsContent : IGraphRequest<StopBasicsContent.Args>
 {
-    public static string Query()
+    public record Args(string Id);
+
+    public static string Query(Args args)
     {
         return string.Create(CultureInfo.InvariantCulture, $$"""
                                                                     query Query {
-                                                                         stops {
-                                                                             gtfsId
+                                                                         stop(id: "{{args.Id}}") {
                                                                              code
                                                                              name
                                                                              lat
@@ -29,13 +30,12 @@ public class AllStopsBasicsContent : IGraphRequest
     }
 }
 
-public class AllStopsBasicsResponse : AbstractGraphResponse
+public class StopBasicsResponse : AbstractGraphResponse
 {
-    [JsonPropertyName("stops")] public Stop[] Stops { get; set; }
+    [JsonPropertyName("stop")] public StopStop? Stop { get; set; }
 
-    public class Stop
+    public class StopStop
     {
-        [JsonPropertyName("gtfsId")] public required string GtfsId { get; set; }
         [JsonPropertyName("code")] public string? Code { get; set; }
         [JsonPropertyName("name")] public required string Name { get; set; }
         [JsonPropertyName("lat")] public double Lat { get; set; }

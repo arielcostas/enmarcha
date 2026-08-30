@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Enmarcha.Sources.OpenTripPlannerGql.Exceptions;
 using Enmarcha.Sources.OpenTripPlannerGql.Queries;
+using Enmarcha.Sources.OpenTripPlannerGql.Queries.V2;
 using Microsoft.Extensions.Logging;
 
 namespace Enmarcha.Sources.OpenTripPlannerGql;
@@ -35,12 +36,12 @@ public class OpenTripPlannerClient
         return await DoGraphqlHttpRequest<AllStopsBasicsResponse>(requestContent);
     }
 
-    public async Task<StopTileResponse> GetStopsInBbox(double minLat, double minLon, double maxLat, double maxLon)
+    public async Task<StopArrivalsResponse> GetStopArrivals(string stopId, bool includeGeometry)
     {
         var requestContent =
-            StopTileRequestContent.Query(new StopTileRequestContent.TileRequestParams(minLon, minLat, maxLon, maxLat));
+            StopArrivalsContent.Query(new StopArrivalsContent.Args(stopId, includeGeometry));
 
-        return await DoGraphqlHttpRequest<StopTileResponse>(requestContent);
+        return await DoGraphqlHttpRequest<StopArrivalsResponse>(requestContent);
     }
 
     /**

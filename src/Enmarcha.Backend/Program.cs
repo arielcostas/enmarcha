@@ -3,6 +3,8 @@ using Enmarcha.Backend;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Enmarcha.Backend.Configuration;
 using Enmarcha.Backend.Data;
+using Enmarcha.Backend.Providers.RealTimeInformation;
+using Enmarcha.Backend.Providers.StopUsage;
 using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Services.Fares;
 using Enmarcha.Backend.Services.Geocoding;
@@ -250,6 +252,15 @@ builder.Services.AddHttpClient<Enmarcha.Sources.Renfe.RenfeRealtimeEstimatesProv
 builder.Services.AddHttpClient<Enmarcha.Sources.Xunta.XuntaRealtimeEstimatesProvider>();
 builder.Services.AddHttpClient<Costasdev.VigoTransitApi.VigoTransitApiClient>();
 
+builder.Services.AddKeyedScoped<IStopUsageProvider, VitrasaStopUsageProvider>("vitrasa");
+builder.Services.AddScoped<IStopUsageProvider, NullStopUsageProvider>();
+
+builder.Services.AddKeyedScoped<IRealTimeInformationProvider, CorunaRealTimeInformationProvider>("coruna");
+builder.Services.AddKeyedScoped<IRealTimeInformationProvider, RenfeRealTimeInformationProvider>("renfe");
+builder.Services.AddKeyedScoped<IRealTimeInformationProvider, TussaRealTimeInformationProvider>("tussa");
+builder.Services.AddKeyedScoped<IRealTimeInformationProvider, VitrasaRealTimeInformationProvider>("vitrasa");
+builder.Services.AddKeyedScoped<IRealTimeInformationProvider, XuntaRealTimeInformationProvider>("xunta");
+
 var app = builder.Build();
 
 var forwardedHeaderOptions = new ForwardedHeadersOptions
@@ -276,7 +287,7 @@ app.Use(async (context, next) =>
         System.Diagnostics.Activity.Current?.SetTag("session.id", sessionId.ToString());
     }
 
-    await next();
+    await next(context);
 });
 
 app.MapControllers();

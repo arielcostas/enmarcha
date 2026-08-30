@@ -11,13 +11,11 @@ namespace Enmarcha.Backend.Services;
 /// </summary>
 public class ShapeTraversalService
 {
-    private readonly AppConfiguration _configuration;
     private readonly ILogger<ShapeTraversalService> _logger;
     private readonly ICoordinateTransformation _transformation;
 
-    public ShapeTraversalService(IOptions<AppConfiguration> options, ILogger<ShapeTraversalService> logger)
+    public ShapeTraversalService(ILogger<ShapeTraversalService> logger)
     {
-        _configuration = options.Value;
         _logger = logger;
 
         // Set up coordinate transformation from EPSG:25829 (meters) to EPSG:4326 (lat/lng)

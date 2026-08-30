@@ -1,10 +1,8 @@
-namespace Enmarcha.Backend.Services.Processors;
+﻿namespace Enmarcha.Backend.Services;
 
-public abstract class AbstractRealTimeProcessor : IArrivalsProcessor
+public class ShapeDecoder
 {
-    public abstract Task ProcessAsync(ArrivalsContext context);
-
-    protected static List<(double Lat, double Lon)> Decode(string encodedPoints)
+    public static List<(double Lat, double Lon)> Decode(string encodedPoints)
     {
         if (string.IsNullOrEmpty(encodedPoints))
             return new List<(double, double)>();

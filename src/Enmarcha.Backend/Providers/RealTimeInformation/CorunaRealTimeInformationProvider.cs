@@ -1,58 +1,58 @@
-using Enmarcha.Sources.TranviasCoruna;
+using Enmarcha.Backend.Dto;
+using Enmarcha.Backend.Helpers;
+using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Types;
 using Enmarcha.Backend.Types.Arrivals;
-using Arrival = Enmarcha.Backend.Types.Arrivals.Arrival;
+using HeadsignInfo = Enmarcha.Backend.Dto.HeadsignInfo;
+using RouteInfo = Enmarcha.Backend.Dto.RouteInfo;
+using StopArrivalsResponse = Enmarcha.Sources.OpenTripPlannerGql.Queries.V2.StopArrivalsResponse;
+using VehicleOperation = Enmarcha.Backend.Dto.VehicleOperation;
+using Enmarcha.Sources.TranviasCoruna;
 
-namespace Enmarcha.Backend.Services.Processors.RealTime;
+namespace Enmarcha.Backend.Providers.RealTimeInformation;
 
-public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
+public class CorunaRealTimeInformationProvider : IRealTimeInformationProvider
 {
     private readonly CorunaRealtimeEstimatesProvider _realtime;
-    private readonly FeedService _feedService;
-    private readonly ILogger<CorunaRealTimeProcessor> _logger;
+    private readonly ILogger<CorunaRealTimeInformationProvider> _logger;
     private readonly ShapeTraversalService _shapeService;
 
-    public CorunaRealTimeProcessor(
+    public CorunaRealTimeInformationProvider(
         CorunaRealtimeEstimatesProvider realtime,
-        FeedService feedService,
-        ILogger<CorunaRealTimeProcessor> logger,
+        ILogger<CorunaRealTimeInformationProvider> logger,
         ShapeTraversalService shapeService
-    ) {
+    )
+    {
         _realtime = realtime;
-        _feedService = feedService;
         _logger = logger;
         _shapeService = shapeService;
     }
 
-    public override async Task ProcessAsync(ArrivalsContext context)
+    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(
+        StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals)
     {
-        if (!context.StopId.StartsWith("tranvias:")) return;
-
-        var normalizedCode = _feedService.NormalizeStopCode("tranvias", context.StopCode);
-        if (!int.TryParse(normalizedCode, out var numericStopId)) return;
+        if (!int.TryParse(stop.Code, out var numericStopId))
+        {
+            return (arrivals, null);
+        }
 
         try
         {
-            Epsg25829? stopLocation = null;
-            if (context.StopLocation != null)
-            {
-                stopLocation =
-                    _shapeService.TransformToEpsg25829(context.StopLocation.Latitude, context.StopLocation.Longitude);
-            }
+            Epsg25829? stopLocation = _shapeService.TransformToEpsg25829(stop.Lat, stop.Lon);
 
             var realtime = await _realtime.GetEstimatesForStop(numericStopId);
             System.Diagnostics.Activity.Current?.SetTag("realtime.count", realtime.Count);
 
             var usedTripIds = new HashSet<string>();
-            var newArrivals = new List<Arrival>();
+            var newArrivals = new List<StopEstimate>();
             // TODO: Use context.Routes too, since that will contain routes that may not have any trips
-            var routeTemplates = context.Arrivals
+            var routeTemplates = arrivals
                 .GroupBy(a => a.Route.RouteIdInGtfs.Trim())
                 .ToDictionary(g => g.Key, g => g.First());
 
             foreach (var estimate in realtime)
             {
-                var bestMatch = context.Arrivals
+                var bestMatch = arrivals
                     .Where(a => !usedTripIds.Contains(a.TripId))
                     .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
                     .Where(a => a.Operation != VehicleOperation.Arrival)
@@ -70,7 +70,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                 if (bestMatch == null)
                 {
-                    var goodEnoughMatch = context.Arrivals
+                    var goodEnoughMatch = arrivals
                         .Where(a => !usedTripIds.Contains(a.TripId))
                         .Where(a => a.Route.RouteIdInGtfs.Trim() == estimate.RouteId.Trim())
                         .Where(a => a.Operation != VehicleOperation.Arrival)
@@ -100,13 +100,10 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 {
                     routeTemplates.TryGetValue(estimate.RouteId.Trim(), out var template);
 
-                    var routeByGtfsId = context.Routes
-                        .FirstOrDefault(r => IsRouteMatch(r.GtfsId, estimate.RouteId));
-
                     var templateBusInfo = GetBusInfoByNumber(estimate.VehicleNumber);
-                    newArrivals.Add(new Arrival
+                    newArrivals.Add(new StopEstimate
                     {
-                        TripId = $"tranvias:rtonly:{estimate.RouteId}:{estimate.VehicleNumber}",
+                        TripId = $"tranvias:rtonly_{estimate.RouteId}_{estimate.VehicleNumber}",
                         RealTimeOnly = true,
                         Route = new RouteInfo
                         {
@@ -118,20 +115,18 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                         },
                         Headsign = new HeadsignInfo
                         {
-                            Badge = "T.REAL",
                             Destination = template?.Headsign.Destination ?? $"Línea {estimate.RouteId}"
                         },
-                        Estimate = new ArrivalDetails
+                        Estimate = new EstimateDetails
                         {
                             Minutes = estimate.Minutes,
-                            Precision = ArrivalPrecision.Confident
+                            Confidence = ArrivalConfidence.RealtimeCirculating
                         },
-                        VehicleInformation = new VehicleBadge
+                        VehicleInformation = new VehicleInformation
                         {
-                            Identifier = estimate.VehicleNumber,
+                            CompanyNumber = estimate.VehicleNumber,
                             Make = templateBusInfo?.Make,
                             Model = templateBusInfo?.Model,
-                            Kind = templateBusInfo?.Kind,
                             Year = templateBusInfo?.Year
                         }
                     });
@@ -142,23 +137,20 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                 var scheduledMinutes = arrival.Estimate.Minutes;
                 arrival.Estimate.Minutes = estimate.Minutes;
-                arrival.Estimate.Precision = ArrivalPrecision.Confident;
-
-                // Calculate delay badge
-                var delayMinutes = estimate.Minutes - scheduledMinutes;
-                if (delayMinutes != 0)
-                {
-                    arrival.Delay = new DelayBadge { Minutes = delayMinutes };
-                }
+                arrival.Estimate.DelayMinutes = estimate.Minutes - scheduledMinutes;
+                arrival.Estimate.Confidence =
+                    arrival.RawOtpArrival?.Trip.DepartureStoptime.ScheduledDeparture -
+                    DateTime.UtcNow.TimeOfDay.TotalSeconds > 0
+                        ? ArrivalConfidence.RealtimeCirculating
+                        : ArrivalConfidence.RealtimeBeforeDeparture;
 
                 // Populate vehicle information
                 var busInfo = GetBusInfoByNumber(estimate.VehicleNumber);
-                arrival.VehicleInformation = new VehicleBadge
+                arrival.VehicleInformation = new VehicleInformation
                 {
-                    Identifier = estimate.VehicleNumber,
+                    CompanyNumber = estimate.VehicleNumber,
                     Make = busInfo?.Make,
                     Model = busInfo?.Model,
-                    Kind = busInfo?.Kind,
                     Year = busInfo?.Year
                 };
 
@@ -169,7 +161,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
 
                     if (arrival.RawOtpArrival is { Trip.Geometry.Points: not null } otpArrival)
                     {
-                        var decodedPoints = Decode(otpArrival.Trip.Geometry.Points)
+                        var decodedPoints = ShapeDecoder.Decode(otpArrival.Trip.Geometry.Points)
                             .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })
                             .ToList();
 
@@ -189,7 +181,7 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                         }
 
                         // Populate Shape GeoJSON
-                        if (!context.IsReduced && currentPosition != null)
+                        if (true)
                         {
                             var features = new List<object>();
                             features.Add(new
@@ -204,25 +196,22 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                             });
 
                             // Add stops if available
-                            if (otpArrival.Trip.Stoptimes != null)
+                            foreach (var stoptime in otpArrival.Trip.Stoptimes)
                             {
-                                foreach (var stoptime in otpArrival.Trip.Stoptimes)
+                                features.Add(new
                                 {
-                                    features.Add(new
+                                    type = "Feature",
+                                    geometry = new
                                     {
-                                        type = "Feature",
-                                        geometry = new
-                                        {
-                                            type = "Point",
-                                            coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
-                                        },
-                                        properties = new
-                                        {
-                                            type = "stop",
-                                            name = stoptime.Stop.Name
-                                        }
-                                    });
-                                }
+                                        type = "Point",
+                                        coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
+                                    },
+                                    properties = new
+                                    {
+                                        type = "stop",
+                                        name = stoptime.Stop.Name
+                                    }
+                                });
                             }
 
                             arrival.Shape = new
@@ -242,12 +231,14 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
                 usedTripIds.Add(arrival.TripId);
             }
 
-            context.Arrivals.AddRange(newArrivals);
+            arrivals.AddRange(newArrivals);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching Tranvías real-time data for stop {StopId}", context.StopId);
+            _logger.LogError(ex, "Error fetching Tranvías real-time data for stop {Stop}", stop.Code);
         }
+
+        return (arrivals, null);
     }
 
     private static bool IsRouteMatch(string a, string b)
@@ -255,48 +246,48 @@ public class CorunaRealTimeProcessor : AbstractRealTimeProcessor
         return a == b || a.Contains(b) || b.Contains(a);
     }
 
-    private (string Make, string Model, string Kind, string Year)? GetBusInfoByNumber(string identifier)
+    private (string Make, string Model, string Year)? GetBusInfoByNumber(string identifier)
     {
         int number = int.Parse(identifier);
 
         return number switch
         {
             // 2000
-            >= 326 and <= 336 => ("MB", "O405N2 Venus", "RIG", "2000"),
-            337 => ("MB", "O405G Alce", "ART", "2000"),
+            >= 326 and <= 336 => ("MB", "O405N2 Venus", "2000"),
+            337 => ("MB", "O405G Alce", "2000"),
             // 2002-2003
-            >= 340 and <= 344 => ("MAN", "NG313F Delfos Venus", "ART", "2002"),
-            >= 345 and <= 347 => ("MAN", "NG313F Delfos Venus", "ART", "2003"),
+            >= 340 and <= 344 => ("MAN", "NG313F Delfos Venus", "2002"),
+            >= 345 and <= 347 => ("MAN", "NG313F Delfos Venus", "2003"),
             // 2004
-            >= 348 and <= 349 => ("MAN", "NG313F Delfos Venus", "ART", "2004"),
-            >= 350 and <= 355 => ("MAN", "NL263F Luxor II", "RIG", "2004"),
+            >= 348 and <= 349 => ("MAN", "NG313F Delfos Venus", "2004"),
+            >= 350 and <= 355 => ("MAN", "NL263F Luxor II", "2004"),
             // 2005
-            >= 356 and <= 359 => ("MAN", "NL263F Luxor II", "RIG", "2005"),
-            >= 360 and <= 362 => ("MAN", "NG313F Delfos", "ART", "2005"),
+            >= 356 and <= 359 => ("MAN", "NL263F Luxor II", "2005"),
+            >= 360 and <= 362 => ("MAN", "NG313F Delfos", "2005"),
             // 2007
-            >= 363 and <= 370 => ("MAN", "NL273F Luxor II", "RIG", "2007"),
+            >= 363 and <= 370 => ("MAN", "NL273F Luxor II", "2007"),
             // 2008
-            >= 371 and <= 377 => ("MAN", "NL273F Luxor II", "RIG", "2008"),
+            >= 371 and <= 377 => ("MAN", "NL273F Luxor II", "2008"),
             // 2009
-            >= 378 and <= 387 => ("MAN", "NL273F Luxor II", "RIG", "2009"),
+            >= 378 and <= 387 => ("MAN", "NL273F Luxor II", "2009"),
             // 2012
-            >= 388 and <= 392 => ("MAN", "NL283F Ceres", "RIG", "2012"),
-            >= 393 and <= 395 => ("MAN", "NG323F Ceres", "ART", "2012"),
+            >= 388 and <= 392 => ("MAN", "NL283F Ceres", "2012"),
+            >= 393 and <= 395 => ("MAN", "NG323F Ceres", "2012"),
             // 2013
-            >= 396 and <= 403 => ("MAN", "NL283F Ceres", "RIG", "2013"),
+            >= 396 and <= 403 => ("MAN", "NL283F Ceres", "2013"),
             // 2014
-            >= 404 and <= 407 => ("MB", "Citaro C2", "RIG", "2014"),
-            >= 408 and <= 411 => ("MAN", "NL283F Ceres", "RIG", "2014"),
+            >= 404 and <= 407 => ("MB", "Citaro C2", "2014"),
+            >= 408 and <= 411 => ("MAN", "NL283F Ceres", "2014"),
             // 2015
-            >= 412 and <= 414 => ("MB", "Citaro C2 G", "ART", "2015"),
-            >= 415 and <= 419 => ("MB", "Citaro C2", "RIG", "2015"),
+            >= 412 and <= 414 => ("MB", "Citaro C2 G", "2015"),
+            >= 415 and <= 419 => ("MB", "Citaro C2", "2015"),
             // 2016
-            >= 420 and <= 427 => ("MB", "Citaro C2", "RIG", "2016"),
+            >= 420 and <= 427 => ("MB", "Citaro C2", "2016"),
             // 2024
-            428 => ("MAN", "Lion's City 12 E", "RIG", "2024"),
+            428 => ("MAN", "Lion's City 12 E", "2024"),
             // 2025
-            429 => ("MAN", "Lion's City 18", "RIG", "2025"),
-            >= 430 and <= 432 => ("MAN", "Lion's City 12", "RIG", "2025"),
+            429 => ("MAN", "Lion's City 18", "2025"),
+            >= 430 and <= 432 => ("MAN", "Lion's City 12", "2025"),
             _ => null
         };
     }
