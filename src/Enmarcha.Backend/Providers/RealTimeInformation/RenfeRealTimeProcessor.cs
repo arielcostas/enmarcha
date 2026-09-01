@@ -24,7 +24,10 @@ public partial class RenfeRealTimeInformationProvider : IRealTimeInformationProv
         _logger = logger;
     }
 
-    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals)
+    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>? dataSources)> ApplyRealtimeInformation(
+        StopArrivalsResponse.StopItem stop,
+        List<StopEstimate> arrivals
+    )
     {
         // FIXME: ñapa, perhaps make the feed have different route types or whatever
         var cercanias = stop.Routes.Any(r => r.ShortName == "C1");
@@ -42,7 +45,7 @@ public partial class RenfeRealTimeInformationProvider : IRealTimeInformationProv
                 cercaniasRealtime = await _realtime.GetCercaniasTrainInformation();
             }
 
-            foreach (StopEstimate  contextArrival in arrivals)
+            foreach (StopEstimate contextArrival in arrivals)
             {
                 var trainNumber = RenfeTrainNumberExpression.Match(contextArrival.TripId).Groups[1].Value;
 
@@ -91,7 +94,9 @@ public partial class RenfeRealTimeInformationProvider : IRealTimeInformationProv
 
                     contextArrival.VehicleInformation = new VehicleInformation
                     {
-                        CompanyNumber = string.Join("; ", idStrings) // TODO: Maybe allow multiple vehicles, or another field, or smth
+                        CompanyNumber =
+                            string.Join("; ",
+                                idStrings) // TODO: Maybe allow multiple vehicles, or another field, or smth
                     };
 
                     if (contextArrival.Estimate.Minutes < 0)
@@ -124,7 +129,6 @@ public partial class RenfeRealTimeInformationProvider : IRealTimeInformationProv
                     Longitude = cercaniasTrain.Longitude,
                     Bearing = null
                 };
-
             }
         }
         catch (Exception ex)
@@ -137,5 +141,4 @@ public partial class RenfeRealTimeInformationProvider : IRealTimeInformationProv
 
     [GeneratedRegex(@"renfe:(?:\d{4}[A-Z]|)(\d{5})")]
     private static partial Regex RenfeTrainNumberExpression { get; }
-
 }

@@ -21,8 +21,10 @@ public class TussaRealTimeInformationProvider : IRealTimeInformationProvider
         _logger = logger;
     }
 
-    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(
-        StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals)
+    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>? dataSources)> ApplyRealtimeInformation(
+        StopArrivalsResponse.StopItem stop,
+        List<StopEstimate> arrivals
+    )
     {
         if (!int.TryParse(stop.Code, out var numericStopId))
         {

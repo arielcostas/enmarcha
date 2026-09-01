@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using Enmarcha.Backend.Dto;
+using Enmarcha.Backend.Providers.Normalisation;
 using Enmarcha.Backend.Providers.RealTimeInformation;
 using Enmarcha.Backend.Providers.StopUsage;
 using Enmarcha.Backend.Services;
+using Enmarcha.Backend.Types;
 using Enmarcha.Sources.OpenTripPlannerGql;
 using Enmarcha.Sources.OpenTripPlannerGql.Exceptions;
 using FuzzySharp;
@@ -65,19 +67,21 @@ public class StopsController : ControllerBase
             .Select(g => g.First())
             .Take(10)
             .Select(s =>
-                new StopSearchResult(
-                    s.GtfsId,
-                    s.Code,
-                    FeedService.GetStopOwnerByStopGtfsId(s.GtfsId),
-                    s.Name,
-                    s.Routes.Select(r => new StopSearchRoute(
-                            r.GtfsId,
-                            r.ShortName,
-                            r.Color,
-                            r.TextColor
-                        )
+                new StopSearchResult
+                {
+                    Id = s.GtfsId,
+                    Code = s.Code,
+                    Owner = FeedService.GetStopOwnerByStopGtfsId(s.GtfsId),
+                    Name = s.Name,
+                    Routes = s.Routes.Select(r => new StopSearchRoute
+                        {
+                            GtfsId = r.GtfsId,
+                            ShortName = r.ShortName,
+                            Color = r.Color,
+                            TextColor = r.TextColor
+                        }
                     )
-                )
+                }
             ).ToList();
 
         return Ok(results);
@@ -135,11 +139,11 @@ public class StopsController : ControllerBase
 
     [HttpGet("{id}/estimates")]
     [ResponseCache(Duration = 10)]
-    public async Task<IActionResult> GetStopEstimates(
+    public async Task<ActionResult<StopEstimatesResponse>> GetStopEstimates(
         [FromRoute] string id,
         [FromQuery] bool includeGeometry,
         [FromQuery] bool includeVehiclePosition,
-        [FromQuery, Range(0, int.MaxValue)] int limit
+        [FromQuery, Range(0, int.MaxValue)] int limit // 0 -> everything
     )
     {
         var tz = TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
@@ -196,6 +200,7 @@ public class StopsController : ControllerBase
                     DepartureTime = departureFromOriginTime,
                     Way = item.Trip.DirectionId == "1" ? CirculationDirection.Inbound : CirculationDirection.Outbound
                 },
+                Shape = includeGeometry ? GenerateArrivalShape(item) : null,
                 AgencyId = item.Trip.Route.Agency?.Id,
                 Operator = feedId == "xunta" ? item.Trip.Route.Agency?.Name : null,
                 Operation = operation,
@@ -204,17 +209,196 @@ public class StopsController : ControllerBase
             });
         }
 
+        var dataSources = GetStaticDataSources(feedId);
+
         var rtiProvider = GetRealTimeInformationProvider(feedId);
         if (rtiProvider is not null)
         {
             var rtinfo = await rtiProvider.ApplyRealtimeInformation(stop, estimates);
             estimates = rtinfo.arrivals;
+
+            if (rtinfo.dataSources is not null)
+            {
+                dataSources.AddRange(rtinfo.dataSources);
+            }
         }
+
+        var normalisationProvider = GetNormalisationProvider(feedId);
+        if (rtiProvider is not null)
+        {
+        }
+
 
         return Ok(new StopEstimatesResponse
         {
-            Estimates = estimates
+            Estimates = estimates,
+            DataSources = dataSources
         });
+    }
+
+    private static object? GenerateArrivalShape(StopArrivalsResponse.Arrival arrival)
+    {
+        if (arrival.Trip.Geometry is not { Points: not null })
+        {
+            return null;
+        }
+
+        var decodedPoints = ShapeDecoder.Decode(arrival.Trip.Geometry.Points)
+            .Select(p => new Position { Latitude = p.Lat, Longitude = p.Lon })
+            .ToList();
+
+        var features = new List<object>();
+        features.Add(new
+        {
+            type = "Feature",
+            geometry = new
+            {
+                type = "LineString",
+                coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
+            },
+            properties = new { type = "route" }
+        });
+
+        // Add stops if available
+        foreach (var stoptime in arrival.Trip.Stoptimes)
+        {
+            features.Add(new
+            {
+                type = "Feature",
+                geometry = new
+                {
+                    type = "Point",
+                    coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
+                },
+                properties = new
+                {
+                    type = "stop",
+                    name = stoptime.Stop.Name
+                }
+            });
+        }
+
+        return new
+        {
+            type = "FeatureCollection",
+            features
+        };
+    }
+
+    private static List<DataSource> GetStaticDataSources(string feedId)
+    {
+        return feedId switch
+        {
+            "vitrasa" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "GTFS Vigo",
+                    Authors = ["Concello de Vigo", "Viguesa de Transportes SL"],
+                    Source = "Open Data Vigo",
+                    Url = "https://datos-ckan.vigo.org/dataset/gtfs-vitrasa"
+                },
+                new DataSource
+                {
+                    DatasetName = "Arreglos feed Vitrasa",
+                    Authors = ["arielcostas", "gmontes", "otros"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/build_vitrasa"
+                }
+            ],
+            "renfe" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Media, Larga Distancia y AVE",
+                    Authors = ["Renfe Viajeros SME S.A."],
+                    Source = "NAP Transportes",
+                    Url = "https://nap.transportes.gob.es/Files/Detail/897"
+                },
+                new DataSource
+                {
+                    DatasetName = "Generador de GTFS Renfe Galicia",
+                    Authors = ["arielcostas", "gmontes", "otros"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/build_renfe"
+                }
+            ],
+            "xunta" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Autobuses Xunta de Galicia",
+                    Authors = ["Xunta de Galicia"],
+                    Source = "NAP Transportes",
+                    Url = "https://nap.transportes.gob.es/Files/Detail/1386"
+                },
+                new DataSource
+                {
+                    DatasetName = "Feed GTFS mejorado de la Xunta de Galicia",
+                    Authors = ["arielcostas", "gmontes", "otros"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/build_xunta"
+                }
+            ],
+            "tranvias" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Autobús urbano de la Coruña",
+                    Authors = ["Compañía de Tranvías de La Coruña S.A."],
+                    Source = "NAP Transportes",
+                    Url = "https://nap.transportes.gob.es/Files/Detail/1376"
+                },
+                new DataSource
+                {
+                    DatasetName = "Generador de GTFS Transporte Urbano de A Coruña",
+                    Authors = ["arielcostas", "gmontes", "otros"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/build_tranvias"
+                }
+            ],
+            "lugo" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Feed autobuses urbanos de Lugo",
+                    Authors = ["gmontes"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/custom_feeds"
+                }
+            ],
+            "barco" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Feed barcos Ría de Vigo",
+                    Authors = ["gmontes"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/custom_feeds"
+                }
+            ],
+            "ourense" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Feed autobuses urbanos de Ourense",
+                    Authors = ["arielcostas"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/custom_feeds"
+                }
+            ],
+            "tussa" =>
+            [
+                new DataSource
+                {
+                    DatasetName = "Feed transporte urbano de Santiago",
+                    Authors = ["arielcostas", "gmontes"],
+                    Source = "Codeberg",
+                    Url = "https://codeberg.org/tpgalicia/opentripplanner-galicia/src/branch/main/custom_feeds"
+                }
+            ],
+            _ => []
+        };
     }
 
     private static VehicleOperation GetVehicleOperation(
@@ -259,25 +443,35 @@ public class StopsController : ControllerBase
         return _serviceProvider.GetKeyedService<IRealTimeInformationProvider>(feedId);
     }
 
-    [HttpGet("{id}/timetable")]
-    [ResponseCache(VaryByQueryKeys = [nameof(date)], Duration = 60 * 5)]
-    public async Task<IActionResult> GetStopTimetable(
-        [FromRoute] string id,
-        [FromQuery] string date
-    )
+    private INormalisationProvider? GetNormalisationProvider(string feedId)
     {
-        return Ok();
+        return _serviceProvider.GetKeyedService<INormalisationProvider>(feedId);
     }
 
+    // [HttpGet("{id}/timetable")]
+    // [ResponseCache(VaryByQueryKeys = [nameof(date)], Duration = 60 * 5)]
+    // public async Task<IActionResult> GetStopTimetable(
+    //     [FromRoute] string id,
+    //     [FromQuery] string date
+    // )
+    // {
+    //     return Ok();
+    // }
+
     [HttpGet("{id}/usage")]
-    public async Task<IActionResult> GetStopUsage(
+    public async Task<ActionResult<StopUsageResponse>> GetStopUsage(
         [FromRoute] string id
     )
     {
         var usageProvider = GetStopUsageProvider(id.Split(":", 2)[0]); // TODO: Unify this split logic somehow
         var usageData = await usageProvider.GetUsageAsync(id);
 
-        return Ok(new
+        if (usageData is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(new StopUsageResponse
         {
             Usage = usageData
         });

@@ -28,8 +28,10 @@ public class CorunaRealTimeInformationProvider : IRealTimeInformationProvider
         _shapeService = shapeService;
     }
 
-    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(
-        StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals)
+    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>? dataSources)> ApplyRealtimeInformation(
+        StopArrivalsResponse.StopItem stop,
+        List<StopEstimate> arrivals
+    )
     {
         if (!int.TryParse(stop.Code, out var numericStopId))
         {
@@ -178,47 +180,6 @@ public class CorunaRealTimeInformationProvider : IRealTimeInformationProvider
                             _logger.LogInformation(
                                 "Calculated position from OTP geometry for trip {TripId}: {Lat}, {Lon}", arrival.TripId,
                                 currentPosition.Latitude, currentPosition.Longitude);
-                        }
-
-                        // Populate Shape GeoJSON
-                        if (true)
-                        {
-                            var features = new List<object>();
-                            features.Add(new
-                            {
-                                type = "Feature",
-                                geometry = new
-                                {
-                                    type = "LineString",
-                                    coordinates = decodedPoints.Select(p => new[] { p.Longitude, p.Latitude }).ToList()
-                                },
-                                properties = new { type = "route" }
-                            });
-
-                            // Add stops if available
-                            foreach (var stoptime in otpArrival.Trip.Stoptimes)
-                            {
-                                features.Add(new
-                                {
-                                    type = "Feature",
-                                    geometry = new
-                                    {
-                                        type = "Point",
-                                        coordinates = new[] { stoptime.Stop.Lon, stoptime.Stop.Lat }
-                                    },
-                                    properties = new
-                                    {
-                                        type = "stop",
-                                        name = stoptime.Stop.Name
-                                    }
-                                });
-                            }
-
-                            arrival.Shape = new
-                            {
-                                type = "FeatureCollection",
-                                features
-                            };
                         }
                     }
 

@@ -1,19 +1,18 @@
-﻿using Enmarcha.Sources.OpenTripPlannerGql.Queries;
-using Enmarcha.Sources.OpenTripPlannerGql.Queries.V2;
+﻿namespace Enmarcha.Backend.Dto;
 
-namespace Enmarcha.Backend.Dto;
-
-public record StopSearchResult(string Id, string? Code, string Owner, string Name, IEnumerable<StopSearchRoute> Routes)
+public class StopSearchResult
 {
-    public override string ToString()
-    {
-        return $"{{ Id = {Id}, Code = {Code}, Owner = {Owner}, Name = {Name}, Routes = {Routes} }}";
-    }
+    public required string Id { get; init; }
+    public required string? Code { get; init; }
+    public required string Owner { get; init; }
+    public required string Name { get; init; }
+    public required IEnumerable<StopSearchRoute> Routes { get; init; }
 }
 
-public record StopSearchRoute(
-    string GtfsId,
-    string? ShortName,
-    string? Color,
-    string? TextColor
-);
+public class StopSearchRoute
+{
+    public required string GtfsId { get; init; }
+    public required string? ShortName { get; init; }
+    public required string? Color { get; init; }
+    public required string? TextColor { get; init; }
+}

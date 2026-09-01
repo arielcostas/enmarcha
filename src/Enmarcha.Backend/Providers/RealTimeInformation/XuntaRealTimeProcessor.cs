@@ -46,8 +46,10 @@ public class XuntaRealTimeInformationProvider : IRealTimeInformationProvider
             );
     }
 
-    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(
-        StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals)
+    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>? dataSources)> ApplyRealtimeInformation(
+        StopArrivalsResponse.StopItem stop,
+        List<StopEstimate> arrivals
+    )
     {
         var agencies = arrivals
             .Where(a => a.AgencyId != null)

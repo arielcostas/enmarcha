@@ -22,7 +22,7 @@ public class VitrasaRealTimeInformationProvider : IRealTimeInformationProvider
         _shapeService = shapeService;
     }
 
-    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(
+    public async Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>? dataSources)> ApplyRealtimeInformation(
         StopArrivalsResponse.StopItem stop,
         List<StopEstimate> arrivals
     )

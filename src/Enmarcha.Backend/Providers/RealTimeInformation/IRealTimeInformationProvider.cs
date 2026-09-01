@@ -5,5 +5,5 @@ namespace Enmarcha.Backend.Providers.RealTimeInformation;
 
 public interface IRealTimeInformationProvider
 {
-    Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>?)> ApplyRealtimeInformation(StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals);
+    Task<(List<StopEstimate> arrivals, IEnumerable<DataSource>? dataSources)> ApplyRealtimeInformation(StopArrivalsResponse.StopItem stop, List<StopEstimate> arrivals);
 }

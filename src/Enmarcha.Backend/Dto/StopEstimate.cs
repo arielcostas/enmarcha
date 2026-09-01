@@ -14,7 +14,8 @@ public class StopEstimatesResponse
 public class DataSource
 {
     public required string DatasetName { get; set; }
-    public required string SourceName { get; set; }
+    public required string[] Authors { get; set; }
+    public required string Source { get; set; }
     public required string Url { get; set; }
 }
 
@@ -128,7 +129,6 @@ public enum ArrivalRelationship
     [JsonStringEnumMemberName("new")] New = 2
 }
 
-// TODO: Make these optional without frontend going nuts
 public class EstimateCirculation
 {
     [JsonPropertyName("shiftName")] public string? ShiftName { get; set; }
