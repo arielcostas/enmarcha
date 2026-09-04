@@ -98,11 +98,6 @@ public class ShapeTraversalService
         // Traverse backwards from the closest point to find the position at the given distance
         var (busPoint, forwardIndex) = TraverseBackwards(shape.Points.ToArray(), closestPointIndex, distanceMeters);
 
-        if (busPoint == null)
-        {
-            return (null, closestPointIndex);
-        }
-
         var forwardPoint = shape.Points[forwardIndex];
 
         // Compute orientation in EPSG:25829 (meters): 0°=North, 90°=East (azimuth)
@@ -114,7 +109,7 @@ public class ShapeTraversalService
         // Transform from EPSG:25829 (meters) to EPSG:4326 (lat/lng)
         var pos = TransformToLatLng(busPoint);
         pos.Bearing = (int)Math.Round(bearing);
-        pos.ShapeIndex = forwardIndex;
+        pos.Distance = distanceMeters;
         return (pos, closestPointIndex);
     }
 

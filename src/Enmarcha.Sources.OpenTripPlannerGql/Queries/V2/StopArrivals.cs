@@ -11,7 +11,7 @@ public class StopArrivalsContent : IGraphRequest<StopArrivalsContent.Args>
     {
         var startTime = DateTimeOffset.UtcNow.AddMinutes(-75);
         var startTimeUnix = startTime.ToUnixTimeSeconds();
-        var geometryField = args.LoadGeometry ? "" : @"tripGeometry { points }";
+        var geometryField = args.LoadGeometry ? @"tripGeometry { points }" : "";
 
         return string.Create(CultureInfo.InvariantCulture, $@"
         query Query {{

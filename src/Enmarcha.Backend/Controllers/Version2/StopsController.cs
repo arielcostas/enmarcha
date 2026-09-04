@@ -1,5 +1,8 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using Enmarcha.Backend.Dto;
+using Enmarcha.Backend.Helpers;
+using Enmarcha.Backend.Providers.FilterAndSort;
 using Enmarcha.Backend.Providers.Normalisation;
 using Enmarcha.Backend.Providers.RealTimeInformation;
 using Enmarcha.Backend.Providers.StopUsage;
@@ -7,8 +10,9 @@ using Enmarcha.Backend.Services;
 using Enmarcha.Backend.Types;
 using Enmarcha.Sources.OpenTripPlannerGql;
 using Enmarcha.Sources.OpenTripPlannerGql.Exceptions;
-using FuzzySharp;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Process = FuzzySharp.Process;
 using StopArrivalsResponse = Enmarcha.Sources.OpenTripPlannerGql.Queries.V2.StopArrivalsResponse;
 
 namespace Enmarcha.Backend.Controllers.Version2;
@@ -19,17 +23,20 @@ public class StopsController : ControllerBase
 {
     private readonly ILogger<StopsController> _logger;
     private readonly OpenTripPlannerClient _otpClient;
+    private readonly IMemoryCache _cache;
     private readonly IServiceProvider _serviceProvider;
 
     public StopsController(
         ILogger<StopsController> logger,
         OpenTripPlannerClient otpClient,
-        IServiceProvider serviceProvider
+        IServiceProvider serviceProvider,
+        IMemoryCache cache
     )
     {
         _logger = logger;
         _otpClient = otpClient;
         _serviceProvider = serviceProvider;
+        _cache = cache;
     }
 
     [HttpGet("")]
@@ -45,7 +52,17 @@ public class StopsController : ControllerBase
             );
         }
 
-        var allStopsBasics = (await _otpClient.GetAllStopsBasics()).Stops;
+        var allStopsBasics = await _cache.GetOrCreateAsync("SearchStops__allStopsBasics", async (entry) =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(2);
+            return (await _otpClient.GetAllStopsBasics()).Stops;
+        });
+
+        if (allStopsBasics is null)
+        {
+            // TODO: Handle this
+            return Ok();
+        }
 
         // 1. Exact or prefix matches by stop code
         var codeMatches = allStopsBasics
@@ -114,7 +131,17 @@ public class StopsController : ControllerBase
                     Owner = FeedService.GetStopOwnerByStopGtfsId(id),
                     Lon = stopBasics.Stop.Lon,
                     Lat = stopBasics.Stop.Lat,
-                    Routes = stopBasics.Stop.Routes,
+                    Routes = stopBasics.Stop.Routes.Select(r => new StopBasicInformationRoute
+                    {
+                        GtfsId = r.GtfsId,
+                        ShortName = r.ShortName ?? "",
+                        LongName = r.LongName ?? "",
+                        // TODO: Generate these colours per feed
+                        Colour = r.Color ?? "000000",
+                        TextColour = r.TextColor is null or "000000"
+                            ? ContrastHelper.GetBestTextColour(r.Color ?? "000000")
+                            : r.TextColor,
+                    }).ToList(),
                     HasUsageData = hasUsageData
                 }
             );
@@ -138,11 +165,11 @@ public class StopsController : ControllerBase
     }
 
     [HttpGet("{id}/estimates")]
-    [ResponseCache(Duration = 10)]
     public async Task<ActionResult<StopEstimatesResponse>> GetStopEstimates(
         [FromRoute] string id,
         [FromQuery] bool includeGeometry,
         [FromQuery] bool includeVehiclePosition,
+        [FromQuery] bool acceptPast,
         [FromQuery, Range(0, int.MaxValue)] int limit // 0 -> everything
     )
     {
@@ -184,8 +211,10 @@ public class StopsController : ControllerBase
                     GtfsId = item.Trip.Route.GtfsId,
                     OriginalShortName = item.Trip.RouteShortName,
                     ShortName = item.Trip.RouteShortName,
-                    Colour = item.Trip.Route.Color ?? "FFFFFF",
-                    TextColour = item.Trip.Route.TextColor ?? "000000"
+                    Colour = item.Trip.Route.Color ?? "000000",
+                    TextColour = item.Trip.Route.TextColor is null or "000000"
+                        ? ContrastHelper.GetBestTextColour(item.Trip.Route.Color ?? "FFFFFF")
+                        : item.Trip.Route.TextColor
                 },
                 Headsign = new HeadsignInfo
                 {
@@ -224,14 +253,16 @@ public class StopsController : ControllerBase
         }
 
         var normalisationProvider = GetNormalisationProvider(feedId);
-        if (rtiProvider is not null)
+        if (normalisationProvider is not null)
         {
         }
 
+        var fsProvider = GetFilterAndSortingProvider(feedId);
+        estimates = fsProvider.FilterAndSort(estimates, acceptPast);
 
         return Ok(new StopEstimatesResponse
         {
-            Estimates = estimates,
+            Estimates = limit != 0 ? estimates.Take(limit) : estimates,
             DataSources = dataSources
         });
     }
@@ -446,6 +477,12 @@ public class StopsController : ControllerBase
     private INormalisationProvider? GetNormalisationProvider(string feedId)
     {
         return _serviceProvider.GetKeyedService<INormalisationProvider>(feedId);
+    }
+
+    private IFilterAndSortingProvider GetFilterAndSortingProvider(string feedId)
+    {
+        return _serviceProvider.GetKeyedService<IFilterAndSortingProvider>(feedId) ??
+               _serviceProvider.GetRequiredService<IFilterAndSortingProvider>();
     }
 
     // [HttpGet("{id}/timetable")]

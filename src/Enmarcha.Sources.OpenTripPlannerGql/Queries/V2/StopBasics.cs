@@ -40,7 +40,7 @@ public class StopBasicsResponse : AbstractGraphResponse
         [JsonPropertyName("name")] public required string Name { get; set; }
         [JsonPropertyName("lat")] public double Lat { get; set; }
         [JsonPropertyName("lon")] public double Lon { get; set; }
-        [JsonPropertyName("routes")] public List<StopRoute> Routes { get; set; } = [];
+        [JsonPropertyName("routes")] public IEnumerable<StopRoute> Routes { get; set; } = [];
     }
 
     public class StopRoute

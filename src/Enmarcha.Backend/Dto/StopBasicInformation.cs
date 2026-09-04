@@ -11,6 +11,15 @@ public class StopBasicInformation
     public required string Owner { get; set; }
     public required double Lat { get; set; }
     public required double Lon { get; set; }
-    public required List<StopBasicsResponse.StopRoute> Routes { get; set; }
+    public required List<StopBasicInformationRoute> Routes { get; set; }
     public required bool HasUsageData { get; set; }
+}
+
+public class StopBasicInformationRoute
+{
+    public required string GtfsId { get; set; }
+    public required string ShortName { get; set; }
+    public required string LongName { get; set; }
+    public required string Colour { get; set; }
+    public required string TextColour { get; set; }
 }

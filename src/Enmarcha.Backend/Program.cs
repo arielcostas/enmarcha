@@ -3,6 +3,7 @@ using Enmarcha.Backend;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Enmarcha.Backend.Configuration;
 using Enmarcha.Backend.Data;
+using Enmarcha.Backend.Providers.FilterAndSort;
 using Enmarcha.Backend.Providers.RealTimeInformation;
 using Enmarcha.Backend.Providers.StopUsage;
 using Enmarcha.Backend.Services;
@@ -260,6 +261,9 @@ builder.Services.AddKeyedScoped<IRealTimeInformationProvider, RenfeRealTimeInfor
 builder.Services.AddKeyedScoped<IRealTimeInformationProvider, TussaRealTimeInformationProvider>("tussa");
 builder.Services.AddKeyedScoped<IRealTimeInformationProvider, VitrasaRealTimeInformationProvider>("vitrasa");
 builder.Services.AddKeyedScoped<IRealTimeInformationProvider, XuntaRealTimeInformationProvider>("xunta");
+
+builder.Services.AddKeyedScoped<IFilterAndSortingProvider, XuntaFilterAndSortingProvider>("xunta");
+builder.Services.AddScoped<IFilterAndSortingProvider, GenericFilterAndSortingProvider>();
 
 var app = builder.Build();
 

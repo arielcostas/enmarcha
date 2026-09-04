@@ -1,4 +1,6 @@
 # https://just.systems
+DEPLOY_HOST := "bravo"
+DEPLOY_USER := "app"
 
 default:
     just --list
@@ -30,6 +32,16 @@ format-frontend:
     npx prettier --write "src/frontend/**/*.{ts,tsx,css}"
 
 format: format-backend format-frontend
+
+
+deploy-backend:
+    dotnet publish -c Release -r linux-arm64 --self-contained false src/Enmarcha.Backend/Enmarcha.Backend.csproj -o dist/backend
+    ssh {{DEPLOY_USER}}@{{DEPLOY_HOST}} "sudo /usr/bin/systemctl stop enmarcha"
+    @rclone copy dist/backend/ :sftp,user={{DEPLOY_USER}},host={{DEPLOY_HOST}},key_use_agent=true:/opt/enmarcha --transfers 5 --progress
+    ssh {{DEPLOY_USER}}@{{DEPLOY_HOST}} "chmod +x /opt/enmarcha/Enmarcha.Backend /opt/enmarcha/efbundle"
+    ssh {{DEPLOY_USER}}@{{DEPLOY_HOST}} "cd /opt/enmarcha && ASPNETCORE_ENVIRONMENT=Production ./efbundle"
+    ssh {{DEPLOY_USER}}@{{DEPLOY_HOST}} "sudo /usr/bin/systemctl start enmarcha"
+
 
 db-migrate NAME:
     dotnet ef migrations add {{NAME}} --project src/Enmarcha.Backend/Enmarcha.Backend.csproj

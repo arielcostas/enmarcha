@@ -7,7 +7,7 @@ namespace Enmarcha.Backend.Dto;
 
 public class StopEstimatesResponse
 {
-    [JsonPropertyName("estimates")] public required List<StopEstimate> Estimates { get; set; }
+    [JsonPropertyName("estimates")] public required IEnumerable<StopEstimate> Estimates { get; set; }
     [JsonPropertyName("sources")] public List<DataSource> DataSources { get; set; } = [];
 }
 
@@ -98,7 +98,7 @@ public class EstimateDetails
 {
     [JsonPropertyName("minutes")] public required int Minutes { get; set; }
     [JsonPropertyName("confidence")] public ArrivalConfidence Confidence { get; set; } = ArrivalConfidence.Schedule;
-    [JsonPropertyName("delay")] public int DelayMinutes { get; set; }
+    [JsonPropertyName("delay")] public int? DelayMinutes { get; set; } = null;
 
     [JsonPropertyName("relationship")]
     public ArrivalRelationship Relationship { get; set; } = ArrivalRelationship.Scheduled;
